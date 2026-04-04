@@ -86,6 +86,34 @@
     <div class="container col-xxl-8 px-4 py-5">
       <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
         <div class="col-10 col-sm-8 col-lg-6 hero-mockup-wrap">
+          <div class="mockup-orbit">
+
+            <!-- Floating badges orbitando o mockup -->
+            <div class="mockup-badge badge-social">
+              <span class="badge-icon">❤️</span>
+              <div class="badge-text">
+                <strong>+1.000</strong>
+                <span>pessoas emocionadas</span>
+              </div>
+            </div>
+
+            <div class="mockup-badge badge-qr">
+              <div class="badge-qr-grid">
+                <div></div><div></div><div></div>
+                <div></div><div></div><div></div>
+                <div></div><div></div><div></div>
+              </div>
+              <span class="badge-qr-label">QR Code</span>
+            </div>
+
+            <div class="mockup-badge badge-couple">
+              <span class="badge-icon">✨</span>
+              <div class="badge-text">
+                <strong>Ana & Lucas</strong>
+                <span>juntos há 3 anos</span>
+              </div>
+            </div>
+
           <div class="hero-phone-mockup">
             <div class="hero-phone-frame">
               <div class="hero-phone-notch"></div>
@@ -128,6 +156,7 @@
               </div>
             </div>
           </div>
+          </div><!-- /mockup-orbit -->
         </div>
         <div class="col-lg-6">
           <h1 class="display-5 fw-bold lh-1 mb-3 d2c_hero_title">Presenteie a sua Alma Gêmea.</h1>
@@ -145,35 +174,61 @@
 
 
   <!-- FEATURES -->
-  <section class="feature-section">
-    <div class="container px-4 py-5" id="featured-3">
-      <h2 class="pb-2 border-bottom memoria-unica">Crie Memórias <span class="unica">Únicas.</span> Lembranças <span
-          class="inesquecivel">Inesquecíveis.</span></h2>
-      <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-        <div class="feature col">
-          <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3 icone-feature">
-            <i class="fa-solid fa-heart"></i>
+  <section class="feature-section" id="about">
+    <div class="container px-4 py-5">
+
+      <!-- Header -->
+      <div class="text-center mb-5">
+        <span class="features-pill">Como Funciona</span>
+        <h2 class="memoria-unica mt-4 mb-2">Crie Memórias <span class="unica">Únicas.</span> Lembranças <span class="inesquecivel">Inesquecíveis.</span></h2>
+        <p class="features-subtitle">Tudo que você precisa para emocionar quem você ama.</p>
+      </div>
+
+      <!-- Cards -->
+      <div class="row g-4 row-cols-1 row-cols-lg-3 justify-content-center align-items-center">
+
+        <!-- Card 1 -->
+        <div class="col d-flex justify-content-center">
+          <div class="feature-card-featured-wrap">
+          <div class="feature-card feature-card-featured">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" class="feature-card-icon" aria-hidden="true">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+            </svg>
+            <h3 class="feature-card-title">100% Personalizado</h3>
+            <p class="feature-card-desc">Adicione fotos, a música de vocês, uma mensagem do coração e a data exata em que tudo começou. Cada detalhe feito para a sua história.</p>
+            <a href="./criar/index.html" class="feature-card-link">Começar agora →</a>
           </div>
-          <h3 class="fs-2">100% Personalizado</h3>
-          <p class="text-light">Adicione fotos do casal, a música de vocês, uma mensagem do coração e a data exata em que tudo começou. Cada detalhe é feito para a sua história, não para a de ninguém mais.</p>
-          <a href="./criar/index.html" class="icon-link">Começar agora</a>
-        </div>
-        <div class="feature col">
-          <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3 icone-feature">
-            <i class="fa-solid fa-qrcode"></i>
           </div>
-          <h3 class="fs-2">Entrega por QR Code</h3>
-          <p class="text-light">Seu presente chega como um QR Code misterioso. A pessoa aponta o celular, abre o link e se depara com uma página linda feita só para ela — uma emoção que nenhum presente físico consegue provocar.</p>
-          <a href="./criar/index.html" class="icon-link">Criar o meu</a>
         </div>
-        <div class="feature col">
-          <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3 icone-feature">
-            <i class="fa-regular fa-cloud"></i>
+
+        <!-- Card 2 — destaque com borda gradiente -->
+        <div class="col d-flex justify-content-center">
+          <div class="feature-card-featured-wrap">
+            <div class="feature-card feature-card-featured">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" class="feature-card-icon" aria-hidden="true">
+                <rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>
+              </svg>
+              <h3 class="feature-card-title">Entrega por QR Code</h3>
+              <p class="feature-card-desc">Seu presente chega como um QR Code misterioso. A pessoa aponta o celular e se depara com uma página linda feita só para ela.</p>
+              <a href="./criar/index.html" class="feature-card-link">Criar o meu →</a>
+            </div>
           </div>
-          <h3 class="fs-2">Para Sempre no Ar</h3>
-          <p class="text-light">No plano vitalício, a sua página fica online permanentemente — sem prazo de expiração, sem mensalidade. Aquele momento especial vai existir na internet para sempre, sempre que quiser revisitar.</p>
-          <a href="./criar/index.html" class="icon-link">Ver planos</a>
         </div>
+
+        <!-- Card 3 -->
+        <div class="col d-flex justify-content-center">
+          <div class="feature-card-featured-wrap">
+          <div class="feature-card feature-card-featured">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" class="feature-card-icon" aria-hidden="true">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+            <h3 class="feature-card-title">Para Sempre no Ar</h3>
+            <p class="feature-card-desc">No plano vitalício, a sua página fica online permanentemente — sem prazo de expiração, sem mensalidade. Para sempre.</p>
+            <a href="./criar/index.html" class="feature-card-link">Ver planos →</a>
+          </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -247,6 +302,72 @@
     </div>
   </section>
 
+
+  <!-- FAQ -->
+  <section class="faq-section" id="team">
+    <div class="container">
+
+      <!-- Header -->
+      <div class="text-center mb-5">
+        <span class="features-pill">FAQ</span>
+        <h2 class="faq-heading mt-4 mb-3">Dúvidas Frequentes</h2>
+        <p class="features-subtitle">Tudo que você precisa saber antes de criar sua homenagem.</p>
+      </div>
+
+      <!-- Lista de perguntas -->
+      <div class="faq-list">
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span class="faq-number">1</span>
+            <span class="faq-question">O que é o SoulMates?</span>
+            <i class="fa-solid fa-chevron-down faq-chevron"></i>
+          </summary>
+          <p class="faq-answer">O SoulMates é uma plataforma para criar homenagens digitais personalizadas para casais. Você monta uma página com fotos, música, mensagem e contador de tempo juntos — e entrega via link ou QR Code.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span class="faq-number">2</span>
+            <span class="faq-question">Como funciona a entrega por QR Code?</span>
+            <i class="fa-solid fa-chevron-down faq-chevron"></i>
+          </summary>
+          <p class="faq-answer">Após criar sua homenagem, você recebe um QR Code para imprimir ou compartilhar. Quando a pessoa escaneia, ela é redirecionada para a página personalizada — sem precisar de app ou cadastro.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span class="faq-number">3</span>
+            <span class="faq-question">Qual a diferença entre o Plano 24h e o Vitalício?</span>
+            <i class="fa-solid fa-chevron-down faq-chevron"></i>
+          </summary>
+          <p class="faq-answer">No Plano 24h a página fica acessível por 24 horas a partir da criação — ideal para datas especiais pontuais. No Plano Vitalício a página fica no ar para sempre, com edição ilimitada incluída.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span class="faq-number">4</span>
+            <span class="faq-question">Posso editar minha homenagem depois de criada?</span>
+            <i class="fa-solid fa-chevron-down faq-chevron"></i>
+          </summary>
+          <p class="faq-answer">Sim, mas apenas no Plano Vitalício. Você pode atualizar fotos, texto e música a qualquer momento sem perder o link ou QR Code já compartilhado.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span class="faq-number">5</span>
+            <span class="faq-question">Como adiciono a música do casal?</span>
+            <i class="fa-solid fa-chevron-down faq-chevron"></i>
+          </summary>
+          <p class="faq-answer">Basta colar o link do YouTube da música desejada no campo indicado durante a criação. O player toca automaticamente quando a pessoa abre a página.</p>
+        </details>
+
+      </div>
+
+      <p class="faq-contact">Ainda tem dúvidas? <a href="#">Fale com a gente →</a></p>
+
+    </div>
+  </section>
 
   <!-- FOOTER -->
 

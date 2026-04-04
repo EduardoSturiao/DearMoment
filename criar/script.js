@@ -70,18 +70,18 @@ async function loadCidades() {
 }
 
 const TITULOS_ALEATORIOS = [
-  'Nossa história de amor',
-  'Para sempre ao seu lado',
-  'O dia em que te encontrei',
-  'Dois corações, uma história',
-  'Você é o meu lar',
-  'Juntos contra o mundo',
-  'Uma vida, um amor',
-  'Tudo que preciso és tu',
-  'Escritos no destino',
-  'Amor que não tem fim',
-  'Nossa aventura juntos',
-  'A história que ainda estamos escrevendo',
+  'Nossa história de amor 💘',
+  'Para sempre ao seu lado 💞',
+  'O dia em que te encontrei 😍',
+  'Dois corações, uma história ❤️‍🔥',
+  'Você é o meu lar 💝',
+  'Juntos contra o mundo 😍',
+  'Uma vida, um amor 💌',
+  'Tudo que preciso é você  ❤️‍🔥',
+  'Escritos no destino 💞',
+  'Amor que não tem fim 🥰',
+  'Nossa aventura juntos 💘',
+  'A história que ainda estamos escrevendo 💌',
 ];
 
 const MENSAGENS_ALEATORIAS = [

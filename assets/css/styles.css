@@ -204,6 +204,118 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+}
+
+/* ── Orbit wrapper — referência de posicionamento ─────── */
+.mockup-orbit {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+/* ── Floating badges orbitando o mockup ───────────────── */
+.mockup-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border-radius: 14px;
+  background: rgba(22, 27, 36, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 109, 186, 0.28);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 14px rgba(255, 109, 186, 0.12);
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.badge-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.badge-text strong {
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.badge-text span {
+  font-family: "Sora", sans-serif;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ❤️ social proof — esquerda superior, encostado no frame */
+.badge-social {
+  top: 48px;
+  left: -148px;
+  animation: badgeFloat 4s ease-in-out infinite;
+}
+
+/* QR Code — direita inferior, encostado no frame */
+.badge-qr {
+  bottom: 80px;
+  right: -110px;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  animation: badgeFloat 5s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.badge-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 10px);
+  grid-template-rows: repeat(3, 10px);
+  gap: 2px;
+}
+
+.badge-qr-grid div {
+  border-radius: 2px;
+  background: rgba(255, 109, 186, 0.9);
+}
+
+.badge-qr-grid div:nth-child(1),
+.badge-qr-grid div:nth-child(3),
+.badge-qr-grid div:nth-child(7),
+.badge-qr-grid div:nth-child(9) { background: rgba(255, 109, 186, 1); }
+.badge-qr-grid div:nth-child(5) { background: rgba(255, 109, 186, 0.3); }
+.badge-qr-grid div:nth-child(2),
+.badge-qr-grid div:nth-child(4),
+.badge-qr-grid div:nth-child(6),
+.badge-qr-grid div:nth-child(8) { background: rgba(255, 255, 255, 0.12); }
+
+.badge-qr-label {
+  font-family: "Sora", sans-serif;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ✨ casal — esquerda inferior, encostado no frame */
+.badge-couple {
+  bottom: 60px;
+  left: -142px;
+  animation: badgeFloat 4.5s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+@keyframes badgeFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
 }
 
 .d2c_hero_title {
@@ -502,45 +614,224 @@ body {
 
 /* FEATURES */
 
+.feature-section {
+  margin-top: 60px;
+}
+
 .memoria-unica {
+  font-family: "Syne", sans-serif;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
   color: rgb(198, 182, 221);
 }
 
 .unica,
 .inesquecivel {
   background: linear-gradient(90deg, #ff7eb3, #ffb6d9, #ffffff);
-  /* webkit-background-clip: text; */
   background-clip: text;
-
   -webkit-text-fill-color: transparent;
 }
 
-.feature-icon {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 0.75rem;
+.features-pill {
+  display: inline-block;
+  font-family: "Sora", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ff6dba;
+  background: rgba(255, 109, 186, 0.08);
+  border: 1px solid rgba(255, 109, 186, 0.28);
+  padding: 5px 16px;
+  border-radius: 99px;
+  letter-spacing: 0.3px;
 }
 
-.feature-section {
-  margin-top: 50px;
+.features-subtitle {
+  font-family: "Sora", sans-serif;
+  font-size: 14px;
+  color: #8892a4;
+  max-width: 460px;
+  margin: 0 auto;
 }
 
-.card-pricing {
-  border-radius: 20px;
+/* Cards */
+.feature-card {
+  background: #161b24;
+  border: none;
+  border-radius: 16px;
+  padding: 28px 24px 24px;
+  width: 300px;
+  max-width: 100%;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
 }
 
-.icone-feature {
-  background-color: #ff7eb3;
+.feature-card:hover {
+  transform: translateY(-5px);
 }
 
-h3 {
-  color: rgb(198, 182, 221);
+/* Wrapper com borda gradiente no card do meio */
+.feature-card-featured-wrap {
+  padding: 1px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #ff6dba, #7b3fa6);
+}
+
+.feature-card-featured {
+  border: none;
+  border-radius: 15px;
+}
+
+.feature-card-icon {
+  color: #ff6dba;
+  display: block;
+  flex-shrink: 0;
+}
+
+.feature-card-title {
+  font-family: "Sora", sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin: 0;
+}
+
+.feature-card-desc {
+  font-family: "Sora", sans-serif;
+  font-size: 13.5px;
+  color: #8892a4;
+  line-height: 1.65;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.feature-card-link {
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  color: #ff6dba;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.feature-card-link:hover {
+  opacity: 0.75;
 }
 
 
 
 
 
+
+/* FAQ */
+
+.faq-section {
+  padding: 80px 0 60px;
+}
+
+.faq-heading {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.faq-list {
+  max-width: 620px;
+  margin: 48px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.faq-item {
+  background: #161b24;
+  border: 1px solid #262d3d;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.faq-item[open] {
+  border-color: rgba(255, 109, 186, 0.3);
+}
+
+.faq-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.faq-summary::-webkit-details-marker { display: none; }
+
+.faq-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: rgba(255, 109, 186, 0.1);
+  border: 1px solid rgba(255, 109, 186, 0.22);
+  font-family: "Sora", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ff6dba;
+}
+
+.faq-question {
+  font-family: "Sora", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f0f0f0;
+  flex: 1;
+}
+
+.faq-chevron {
+  font-size: 12px;
+  color: #8892a4;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  font-family: "Sora", sans-serif;
+  font-size: 13.5px;
+  color: #8892a4;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0 18px 18px 58px;
+}
+
+.faq-contact {
+  text-align: center;
+  margin-top: 32px;
+  font-family: "Sora", sans-serif;
+  font-size: 14px;
+  color: #8892a4;
+}
+
+.faq-contact a {
+  color: #ff6dba;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.faq-contact a:hover {
+  opacity: 0.75;
+}
 
 /* PLANOS */
 
@@ -555,6 +846,7 @@ h2 {
 .pricing-card {
   border: none;
   border-radius: 15px;
+  overflow: hidden;
   transition: all 0.3s ease;
 }
 
