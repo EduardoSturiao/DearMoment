@@ -746,11 +746,42 @@ function restoreInputValues() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   15. NAVEGAÇÃO — Botões Avançar / Voltar
+   15. SALVAR PRESENTE CONCLUÍDO
+═══════════════════════════════════════════════════════════════ */
+const GIFTS_KEY = 'soulmates_gifts';
+
+function saveGift() {
+  try {
+    const gifts = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
+    const gift = {
+      name1:      state.name1,
+      name2:      state.name2,
+      startDate:  state.startDate,
+      city:       state.city,
+      title:      state.title,
+      youtubeId:  state.youtubeId,
+      songName:   state.songName,
+      artistName: state.artistName,
+      photos:     state.photos,
+      message:    state.message,
+      extraPhoto: state.extraPhoto,
+      giftType:   state.giftType,
+      createdAt:  new Date().toISOString(),
+    };
+    gifts.push(gift);
+    localStorage.setItem(GIFTS_KEY, JSON.stringify(gifts));
+    // Limpa o estado do wizard para um novo presente
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (_) { /* ignora erros de storage */ }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   16. NAVEGAÇÃO — Botões Avançar / Voltar
 ═══════════════════════════════════════════════════════════════ */
 function navigateNext() {
   if (!validateStep(state.currentStep)) return;
   if (state.currentStep <= TOTAL_STEPS) {
+    if (state.currentStep === TOTAL_STEPS) saveGift();
     state.currentStep++;
     showStep(state.currentStep);
   }
@@ -780,7 +811,7 @@ function setupNavigation() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   16. ANIMAÇÃO BARRA DO PLAYER (fake)
+   17. ANIMAÇÃO BARRA DO PLAYER (fake)
 ═══════════════════════════════════════════════════════════════ */
 function animatePlayerBar() {
   const fill = document.getElementById('playerBarFill');
@@ -792,7 +823,7 @@ function animatePlayerBar() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   17. INICIALIZAÇÃO
+   18. INICIALIZAÇÃO
 ═══════════════════════════════════════════════════════════════ */
 function init() {
   loadState();

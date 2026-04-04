@@ -1,0 +1,205 @@
+/* ================================================================
+   MEUS PRESENTES — styles
+================================================================ */
+
+.mp-main {
+  min-height: calc(100vh - 80px);
+  background: var(--secondary_color);
+  padding: 60px 0 80px;
+}
+
+/* Cabeçalho */
+.mp-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.mp-title {
+  font-family: var(--secondary_font);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  color: var(--primary_text_color);
+  margin-bottom: 12px;
+}
+
+.mp-title-accent {
+  color: var(--primary_color);
+}
+
+.mp-subtitle {
+  font-family: var(--secondary_font);
+  font-size: 1rem;
+  color: var(--secondary_text_shade);
+  margin-bottom: 28px;
+}
+
+.mp-btn-new {
+  font-family: var(--secondary_font);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 12px 32px;
+  background: var(--primary_color);
+  color: #121820;
+  border: 1px solid var(--primary_color);
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mp-btn-new:hover {
+  background: transparent;
+  color: var(--primary_color);
+}
+
+/* Estado vazio */
+.mp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.mp-empty-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(255, 109, 186, 0.08);
+  border: 1px solid rgba(255, 109, 186, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.mp-empty-icon i {
+  font-size: 2.2rem;
+  color: var(--primary_color);
+  opacity: 0.7;
+}
+
+.mp-empty-title {
+  font-family: var(--primary_font);
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  font-weight: 600;
+  color: var(--primary_text_color);
+  max-width: 480px;
+}
+
+.mp-empty-desc {
+  font-family: var(--secondary_font);
+  font-size: 0.95rem;
+  color: var(--secondary_text_shade);
+  max-width: 400px;
+  margin-bottom: 8px;
+}
+
+/* Grid de cards */
+.mp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Card individual */
+.mp-card {
+  background: #1a2230;
+  border: 1px solid rgba(255, 109, 186, 0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  cursor: pointer;
+}
+
+.mp-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 109, 186, 0.4);
+  box-shadow: 0 8px 32px rgba(255, 109, 186, 0.1);
+}
+
+.mp-card-cover {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background: rgba(255, 109, 186, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-card-cover-placeholder {
+  width: 100%;
+  height: 160px;
+  background: linear-gradient(135deg, rgba(255,109,186,0.08) 0%, rgba(18,24,32,0.6) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-card-cover-placeholder i {
+  font-size: 2.5rem;
+  color: rgba(255, 109, 186, 0.35);
+}
+
+.mp-card-cover img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.mp-card-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-card-names {
+  font-family: var(--primary_font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary_text_color);
+}
+
+.mp-card-date {
+  font-family: var(--secondary_font);
+  font-size: 0.8rem;
+  color: var(--secondary_text_shade);
+}
+
+.mp-card-plan {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mp-card-plan-badge {
+  font-family: var(--secondary_font);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 109, 186, 0.1);
+  color: var(--primary_color);
+  border: 1px solid rgba(255, 109, 186, 0.2);
+}
+
+.mp-card-arrow {
+  color: rgba(255, 109, 186, 0.5);
+  font-size: 0.85rem;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.mp-card:hover .mp-card-arrow {
+  color: var(--primary_color);
+  transform: translateX(4px);
+}
