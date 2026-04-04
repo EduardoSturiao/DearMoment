@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Criar Presente | SoulMates</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- ═══════════════════════════════════════
+         PAINEL ESQUERDO — ETAPAS DO FORMULÁRIO
+    ════════════════════════════════════════════ -->
+    <div class="steps-panel">
+
+      <!-- Cabeçalho com progresso -->
+      <header class="progress-header">
+        <a href="../index.html" class="back-home" id="btnBackHome">← Sair</a>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="step-label" id="stepLabel">1 / 8</span>
+      </header>
+
+      <!-- Container de etapas -->
+      <main class="steps-container" id="stepsContainer">
+
+        <!-- ── ETAPA 1: Tipo de presente ── -->
+        <div class="step active" id="step-1">
+          <div class="step-header">
+            <div class="step-num">01</div>
+            <h2 class="step-title">Para quem é esse presente?</h2>
+            <p class="step-sub">Escolha o tipo de presente que deseja criar</p>
+          </div>
+          <div class="gift-options">
+            <button class="gift-card" data-value="amoroso">
+              <span class="gift-emoji">❤️</span>
+              <strong>Presente amoroso</strong>
+              <small>Para seu parceiro(a)</small>
+            </button>
+            <button class="gift-card" data-value="amigo">
+              <span class="gift-emoji">🎁</span>
+              <strong>Presente para amigo(a)</strong>
+              <small>Amizade especial</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── ETAPA 2: Nomes ── -->
+        <div class="step" id="step-2">
+          <div class="step-header">
+            <div class="step-num">02</div>
+            <h2 class="step-title">Como vocês se chamam? 💕</h2>
+            <p class="step-sub">Esses nomes aparecerão no presente</p>
+          </div>
+          <div class="form-group">
+            <label for="name1">Qual o seu nome?</label>
+            <input type="text" id="name1" placeholder="Seu nome..." maxlength="30" autocomplete="given-name" />
+          </div>
+          <div class="form-group">
+            <label for="name2">E o nome do seu parceiro(a)?</label>
+            <input type="text" id="name2" placeholder="Nome do parceiro(a)..." maxlength="30" />
+          </div>
+        </div>
+
+        <!-- ── ETAPA 3: Relacionamento ── -->
+        <div class="step" id="step-3">
+          <div class="step-header">
+            <div class="step-num">03</div>
+            <h2 class="step-title">Sobre o relacionamento 📅</h2>
+            <p class="step-sub">Quando tudo começou?</p>
+          </div>
+          <div class="form-group">
+            <label for="startDate">Data de início do relacionamento</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div class="form-group autocomplete-wrap">
+            <label for="cityInput">Cidade onde se conheceram</label>
+            <input type="text" id="cityInput" placeholder="Digite uma cidade..." autocomplete="off" />
+            <ul class="autocomplete-list hidden" id="autocompleteList"></ul>
+          </div>
+
+          <!-- Contador em tempo real -->
+          <div class="counter-box" id="counterBox">
+            <div class="counter-label">Juntos há</div>
+            <div class="counter-grid" id="counterGrid">
+              <div class="counter-unit"><span id="cYears">—</span><small>anos</small></div>
+              <div class="counter-unit"><span id="cMonths">—</span><small>meses</small></div>
+              <div class="counter-unit"><span id="cDays">—</span><small>dias</small></div>
+              <div class="counter-unit"><span id="cHours">—</span><small>horas</small></div>
+              <div class="counter-unit"><span id="cMinutes">—</span><small>min</small></div>
+              <div class="counter-unit"><span id="cSeconds">—</span><small>seg</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ETAPA 4: Título ── -->
+        <div class="step" id="step-4">
+          <div class="step-header">
+            <div class="step-num">04</div>
+            <h2 class="step-title">Dê um título ao presente ✨</h2>
+            <p class="step-sub">Uma frase que resume tudo</p>
+          </div>
+          <div class="form-group">
+            <label for="titleInput">Título do presente</label>
+            <input type="text" id="titleInput" placeholder="Ex: Nossa história de amor..." maxlength="60" />
+            <small class="char-hint"><span id="titleCount">0</span>/60</small>
+          </div>
+          <button class="btn-random" id="btnRandomTitle">
+            <span>🎲</span> Gerar título aleatório
+          </button>
+        </div>
+
+        <!-- ── ETAPA 5: Música ── -->
+        <div class="step" id="step-5">
+          <div class="step-header">
+            <div class="step-num">05</div>
+            <h2 class="step-title">Escolha a música de vocês 🎵</h2>
+            <p class="step-sub">Cole o link de um vídeo do YouTube</p>
+          </div>
+          <div class="form-group yt-input-group">
+            <label for="youtubeUrl">Link do YouTube</label>
+            <div class="input-row">
+              <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
+              <button class="btn-load" id="btnLoadYt">Carregar</button>
+            </div>
+          </div>
+          <!-- Preview embed do YouTube -->
+          <div class="yt-embed-wrap hidden" id="ytEmbedWrap">
+            <iframe id="ytFrame" width="100%" height="160" frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
+          </div>
+          <div class="form-group">
+            <label for="songName">Nome da música (editável)</label>
+            <input type="text" id="songName" placeholder="Ex: Perfect" />
+          </div>
+          <div class="form-group">
+            <label for="artistName">Nome do artista (editável)</label>
+            <input type="text" id="artistName" placeholder="Ex: Ed Sheeran" />
+          </div>
+        </div>
+
+        <!-- ── ETAPA 6: Fotos ── -->
+        <div class="step" id="step-6">
+          <div class="step-header">
+            <div class="step-num">06</div>
+            <h2 class="step-title">Adicione fotos de vocês 📸</h2>
+            <p class="step-sub">Até 6 imagens — arraste ou clique para adicionar</p>
+          </div>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="photoInput" multiple accept="image/*" style="display:none" />
+            <div class="upload-icon-wrap">
+              <span class="upload-icon">📷</span>
+              <p>Clique aqui ou arraste suas fotos</p>
+              <small>JPG, PNG, WEBP • Máx. 6 imagens</small>
+            </div>
+          </div>
+          <div class="photos-grid" id="photosGrid"></div>
+          <div class="photos-count"><span id="photosCountNum">0</span>/6 fotos adicionadas</div>
+        </div>
+
+        <!-- ── ETAPA 7: Mensagem ── -->
+        <div class="step" id="step-7">
+          <div class="step-header">
+            <div class="step-num">07</div>
+            <h2 class="step-title">Escreva uma mensagem especial 💌</h2>
+            <p class="step-sub">Do seu coração para o dela(e)</p>
+          </div>
+          <div class="form-group">
+            <label for="msgText">Sua mensagem</label>
+            <textarea id="msgText" placeholder="Escreva aqui sua mensagem especial..." rows="6" maxlength="500"></textarea>
+            <small class="char-hint"><span id="msgCount">0</span>/500</small>
+          </div>
+          <button class="btn-random" id="btnRandomMsg">
+            <span>💌</span> Gerar mensagem aleatória
+          </button>
+        </div>
+
+        <!-- ── ETAPA 8: Foto de destaque ── -->
+        <div class="step" id="step-8">
+          <div class="step-header">
+            <div class="step-num">08</div>
+            <h2 class="step-title">Foto de capa do casal 🖼️</h2>
+            <p class="step-sub">Essa imagem aparece em destaque no presente</p>
+          </div>
+          <div class="upload-zone single" id="uploadZoneExtra">
+            <input type="file" id="extraPhotoInput" accept="image/*" style="display:none" />
+            <div class="upload-icon-wrap" id="extraUploadPlaceholder">
+              <span class="upload-icon">🖼️</span>
+              <p>Clique para adicionar a foto principal</p>
+            </div>
+            <div class="extra-preview hidden" id="extraPhotoPreview">
+              <img id="extraPhotoImg" src="" alt="Foto de capa" />
+              <button class="btn-remove-extra" id="btnRemoveExtra" title="Remover foto">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ETAPA FINAL: Conversão ── -->
+        <div class="step step-final" id="step-final">
+          <div class="final-top">
+            <div class="final-emoji">🎉</div>
+            <h2>Ficou incrível!</h2>
+            <p>Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
+          </div>
+
+          <!-- Planos -->
+          <div class="plans-grid">
+            <div class="plan-card featured">
+              <div class="plan-badge">⭐ Mais popular</div>
+              <h3>Plano Vitalício</h3>
+              <div class="plan-price">R$ 29<span>,90</span></div>
+              <ul class="plan-features">
+                <li>✅ Acesso vitalício</li>
+                <li>✅ Link personalizado</li>
+                <li>✅ QR Code para impressão</li>
+                <li>✅ Galeria com até 6 fotos</li>
+                <li>✅ Player de música</li>
+                <li>✅ Edição ilimitada</li>
+              </ul>
+              <button class="btn-plan primary">Finalizar com esse plano</button>
+            </div>
+            <div class="plan-card">
+              <h3>Plano 24h</h3>
+              <div class="plan-price">R$ 19<span>,90</span></div>
+              <ul class="plan-features">
+                <li>✅ Acesso por 24 horas</li>
+                <li>✅ Link personalizado</li>
+                <li>✅ QR Code para impressão</li>
+                <li>✅ Galeria com até 6 fotos</li>
+                <li>⬜ Edição ilimitada</li>
+              </ul>
+              <button class="btn-plan">Escolher esse plano</button>
+            </div>
+          </div>
+
+          <!-- Upgrade Wrapped -->
+          <div class="upgrade-banner" id="upgradeBanner">
+            <div class="upgrade-info">
+              <strong>🎁 Adicionar versão Wrapped</strong>
+              <small>Apresentação animada estilo Spotify Wrapped</small>
+            </div>
+            <div class="upgrade-action">
+              <span class="upgrade-price">+ R$ 7,90</span>
+              <button class="btn-upgrade" id="btnUpgrade">Adicionar</button>
+            </div>
+          </div>
+
+          <!-- FAQ -->
+          <div class="faq-section">
+            <h3>Dúvidas frequentes</h3>
+            <div class="faq-list" id="faqList">
+              <div class="faq-item">
+                <button class="faq-question">O presente fica online para sempre?</button>
+                <div class="faq-answer">No plano vitalício, sim! Sua página ficará disponível permanentemente. No plano 24h, o link expira após 24 horas.</div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question">Como entrego o presente?</button>
+                <div class="faq-answer">Após finalizar, você recebe um link único e um QR Code que pode enviar por WhatsApp, Instagram ou imprimir e entregar pessoalmente.</div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question">Posso editar o presente depois?</button>
+                <div class="faq-answer">No plano vitalício você pode editar fotos, mensagem e música a qualquer momento. No plano 24h não é possível editar após finalizar.</div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question">O pagamento é seguro?</button>
+                <div class="faq-answer">Sim! Utilizamos criptografia SSL e processamos pagamentos via Stripe e Pagar.me, plataformas seguras e confiáveis.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main><!-- /steps-container -->
+
+      <!-- Botões de navegação -->
+      <footer class="nav-footer" id="navFooter">
+        <div class="nav-footer-inner">
+          <button class="btn-back-step" id="btnBack">← Voltar</button>
+          <button class="btn-next-step" id="btnNext">Continuar →</button>
+        </div>
+      </footer>
+''
+    </div><!-- /steps-panel -->
+
+
+    <!-- ═══════════════════════════════════════
+         PAINEL DIREITO — PREVIEW EM TEMPO REAL
+    ════════════════════════════════════════════ -->
+    <aside class="preview-panel" id="previewPanel">
+      <div class="preview-header">
+        <span class="preview-badge">👁 Preview ao vivo</span>
+        <!-- botão para abrir/fechar no mobile -->
+        <button class="btn-toggle-preview" id="btnTogglePreview">Ver preview</button>
+      </div>
+
+      <!-- Mockup de celular -->
+      <div class="phone-mockup">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen" id="phoneScreen">
+
+            <!-- Player estilo Spotify -->
+            <div class="player-section">
+              <!-- Capa do casal -->
+              <div class="player-cover-wrap">
+                <div class="player-cover-placeholder" id="coverPlaceholder">❤️</div>
+                <img class="player-cover-img hidden" id="coverImg" src="" alt="Capa" />
+              </div>
+              <!-- Infos da música -->
+              <div class="player-meta">
+                <div class="player-song-name" id="prevSong">Nossa Música</div>
+                <div class="player-artist-name" id="prevArtist">Artista</div>
+              </div>
+              <!-- Controles -->
+              <div class="player-controls">
+                <button class="ctrl-btn">⏮</button>
+                <button class="ctrl-btn play" id="btnPlay">▶</button>
+                <button class="ctrl-btn">⏭</button>
+              </div>
+              <!-- Barra de progresso fake -->
+              <div class="player-bar">
+                <div class="player-bar-fill" id="playerBarFill"></div>
+              </div>
+              <div class="player-times"><span>0:00</span><span id="fakeDuration">3:27</span></div>
+            </div>
+
+            <!-- Seção "Sobre o casal" -->
+            <div class="about-section">
+              <div class="about-names" id="prevNames">Nome1 & Nome2</div>
+              <div class="about-title" id="prevTitle">Nosso presente especial</div>
+              <div class="about-since">
+                <span>juntos desde</span>
+                <strong id="prevYear">—</strong>
+              </div>
+              <div class="mini-counter" id="miniCounter">
+                <span id="mcYears">—</span>a
+                <span id="mcMonths">—</span>m
+                <span id="mcDays">—</span>d
+              </div>
+              <div class="about-city" id="prevCity">📍 —</div>
+            </div>
+
+            <!-- YouTube embed oculto (aparece ao clicar play) -->
+            <div class="yt-overlay hidden" id="ytOverlay">
+              <iframe id="ytOverlayFrame" width="100%" height="90" frameborder="0"
+                allow="autoplay; encrypted-media" allowfullscreen></iframe>
+              <button class="yt-overlay-close" id="btnYtClose">✕ Fechar player</button>
+            </div>
+
+          </div><!-- /phone-screen -->
+        </div><!-- /phone-frame -->
+      </div><!-- /phone-mockup -->
+
+    </aside><!-- /preview-panel -->
+
+  </div><!-- /app-wrapper -->
+
+  <!-- Toast de notificação -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

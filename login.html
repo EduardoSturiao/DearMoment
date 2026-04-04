@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./assets/css/login.css">
+    <title>Login</title>
+</head>
+<body>
+     <main id="form_container">
+        <div id="form_header">
+            <h1 id="form_title">
+                Fazer Login
+            </h1>
+            <a style="font-size: 13px" class="btn-default" href="./cadastro.html">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Cadastro
+            </a>
+        </div>
+
+        <form action="" id="form">
+            <div id="input_container">
+                <div class="input-box">
+                    <label for="name" class="form-label">
+                        E-mail
+                    </label>
+                    <div class="input-field">
+                        <input type="text" name="name" id="name" class="form-control" placeholder="E-mail">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <span class="error"></span>
+                </div>
+
+                <div class="input-box">
+                    <label for="password" class="form-label">
+                        Senha
+                    </label>
+                    <div class="input-field">
+                        <input type="password" name="password" id="password" class="form-control" placeholder="*******">
+                        <i class="fa-regular fa-eye-slash password-icon"></i>
+                    </div>
+                    <span class="error"></span>
+                </div>
+
+               
+            </div>
+
+            <button type="sumbit" class="btn-default">
+                <i class="fa-solid fa-check"></i>
+                Entrar
+            </button>
+        </form>
+    </main>
+
+
+    <script src="./assets/js/login.js"></script>
+</body>
+</html>
