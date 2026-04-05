@@ -866,6 +866,132 @@ body {
   opacity: 0.75;
 }
 
+/* DEPOIMENTOS */
+
+.testimonials-section {
+  padding: 80px 0 60px;
+  overflow: hidden;
+}
+
+.testimonials-heading {
+  font-family: "Syne", sans-serif;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+/* Faixa rolante */
+.tm-track-outer {
+  overflow: hidden;
+  width: 100%;
+  /* fade nas bordas */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+.tm-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+}
+
+.tm-track--left {
+  animation: tm-marquee-left 40s linear infinite;
+}
+
+.tm-track--right {
+  animation: tm-marquee-right 44s linear infinite;
+}
+
+.tm-track-outer:hover .tm-track {
+  animation-play-state: paused;
+}
+
+@keyframes tm-marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes tm-marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* Card */
+.tm-card {
+  flex-shrink: 0;
+  width: 300px;
+  background: #161b24;
+  border: 1px solid rgba(255, 109, 186, 0.15);
+  border-radius: 16px;
+  padding: 22px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  cursor: default;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  margin: 6px 0;
+}
+
+.tm-card:hover {
+  transform: scale(1.04) rotate(0.4deg);
+  border-color: rgba(255, 109, 186, 0.45);
+}
+
+.tm-text {
+  font-family: "Sora", sans-serif;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #c8d0dc;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.tm-highlight {
+  color: #ff6dba;
+  font-weight: 600;
+}
+
+.tm-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tm-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Syne", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tm-name {
+  font-family: "Sora", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f0f0;
+  line-height: 1.2;
+}
+
+.tm-role {
+  font-family: "Sora", sans-serif;
+  font-size: 12px;
+  color: #8892a4;
+}
+
 /* PLANOS */
 
 body {

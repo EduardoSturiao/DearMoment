@@ -1,0 +1,401 @@
+/* ================================================================
+   SOULMATES — PÁGINA DE PAGAMENTO
+   pagamento.css
+================================================================ */
+
+body {
+  background: #121820;
+  color: #f0f0f0;
+  font-family: 'Sora', sans-serif;
+  min-height: 100vh;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.pay-header {
+  background: #0e1117;
+  border-bottom: 1px solid rgba(255, 109, 186, 0.12);
+  padding: 16px 0;
+}
+
+.pay-header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pay-back-btn {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  color: #8892a4;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+
+.pay-back-btn:hover { color: #f0f0f0; }
+
+.pay-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6dba;
+  text-decoration: none;
+}
+
+.pay-secure {
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  color: #8892a4;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Layout principal ─────────────────────────────────────── */
+.pay-main {
+  max-width: 960px;
+  margin: 48px auto;
+  padding: 0 24px 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .pay-main {
+    grid-template-columns: 1fr;
+    margin: 24px auto;
+  }
+}
+
+/* ── Card base ────────────────────────────────────────────── */
+.pay-card {
+  background: #161b24;
+  border: 1px solid rgba(255, 109, 186, 0.15);
+  border-radius: 16px;
+  padding: 28px 24px;
+}
+
+.pay-card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin: 0 0 20px;
+}
+
+/* ── Resumo do pedido ─────────────────────────────────────── */
+.order-gift-preview {
+  background: rgba(255, 109, 186, 0.06);
+  border: 1px solid rgba(255, 109, 186, 0.2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-gift-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.order-gift-info strong {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f0f0;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.order-gift-info span {
+  font-size: 12px;
+  color: #8892a4;
+}
+
+.order-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+  color: #c8d0dc;
+}
+
+.order-line:last-of-type { border-bottom: none; }
+
+.order-line .label { color: #8892a4; }
+
+.order-line.total {
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 109, 186, 0.2);
+  border-bottom: none;
+}
+
+.order-line.total .label {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.order-line.total .value {
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ff6dba;
+}
+
+.order-plan-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ff6dba;
+  background: rgba(255, 109, 186, 0.1);
+  border: 1px solid rgba(255, 109, 186, 0.25);
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ── Formulário de pagamento ──────────────────────────────── */
+.pay-form-group {
+  margin-bottom: 16px;
+}
+
+.pay-form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8892a4;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.pay-input {
+  width: 100%;
+  background: #1e2534;
+  border: 1px solid #262d3d;
+  border-radius: 10px;
+  padding: 13px 14px;
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  color: #f0f0f0;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.pay-input::placeholder { color: #4a5568; }
+
+.pay-input:focus {
+  border-color: rgba(255, 109, 186, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 109, 186, 0.08);
+}
+
+.pay-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pay-card-icons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pay-card-icon {
+  background: #1e2534;
+  border: 1px solid #262d3d;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #8892a4;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.btn-pay {
+  width: 100%;
+  background: linear-gradient(135deg, #ff6dba, #c0396e);
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-family: 'Sora', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.3px;
+}
+
+.btn-pay:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-pay:active { transform: translateY(0); }
+
+.pay-security-note {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/* ── Container do QR Code ────────────────────────────────── */
+.qr-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 24px;
+}
+
+#qrcodeContainer {
+  background: #fff;
+  padding: 12px;
+  border-radius: 12px;
+  display: inline-block;
+  box-shadow: 0 0 32px rgba(255, 109, 186, 0.2);
+}
+
+#qrcodeContainer img,
+#qrcodeContainer canvas {
+  display: block;
+  border-radius: 4px;
+}
+
+/* ── Estado de sucesso ────────────────────────────────────── */
+.pay-success {
+  display: none;
+  text-align: center;
+  padding: 20px 0 8px;
+}
+
+.pay-success.visible { display: block; }
+
+.pay-success-emoji {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 16px;
+  animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes successPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.pay-success h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #ff7eb3, #ffb6d9, #ffffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.pay-success p {
+  font-size: 14px;
+  color: #8892a4;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.pay-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-success-primary {
+  display: block;
+  background: linear-gradient(135deg, #ff6dba, #c0396e);
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-success-primary:hover { opacity: 0.88; color: #fff; }
+
+.btn-success-secondary {
+  display: block;
+  background: rgba(255, 109, 186, 0.08);
+  border: 1px solid rgba(255, 109, 186, 0.25);
+  border-radius: 10px;
+  padding: 13px;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ff6dba;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-success-secondary:hover { background: rgba(255, 109, 186, 0.14); }
+
+/* ── QR Code placeholder ──────────────────────────────────── */
+.qr-placeholder {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 20px;
+  background: #1e2534;
+  border: 1px solid rgba(255, 109, 186, 0.25);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 3px;
+  padding: 10px;
+}
+
+.qr-placeholder div {
+  border-radius: 2px;
+  background: rgba(255, 109, 186, 0.15);
+}
+
+.qr-placeholder div:nth-child(1),
+.qr-placeholder div:nth-child(3),
+.qr-placeholder div:nth-child(11),
+.qr-placeholder div:nth-child(13),
+.qr-placeholder div:nth-child(15),
+.qr-placeholder div:nth-child(5),
+.qr-placeholder div:nth-child(21),
+.qr-placeholder div:nth-child(23),
+.qr-placeholder div:nth-child(25) {
+  background: rgba(255, 109, 186, 0.9);
+}
+
+.qr-placeholder div:nth-child(7),
+.qr-placeholder div:nth-child(9),
+.qr-placeholder div:nth-child(17),
+.qr-placeholder div:nth-child(19) {
+  background: rgba(255, 109, 186, 0.5);
+}

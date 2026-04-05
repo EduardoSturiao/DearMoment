@@ -614,12 +614,33 @@ function setupUpgrade() {
     if (btn.classList.contains('added')) {
       btn.classList.remove('added');
       btn.textContent = 'Adicionar';
+      localStorage.removeItem('soulmates_pending_wrapped');
       showToast('Versão Wrapped removida');
     } else {
       btn.classList.add('added');
       btn.textContent = '✓ Adicionado';
+      localStorage.setItem('soulmates_pending_wrapped', '1');
       showToast('🎁 Wrapped adicionado ao pedido!');
     }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   13b. BOTÕES DE PLANO — redireciona para login/pagamento
+═══════════════════════════════════════════════════════════════ */
+function setupPlanButtons() {
+  document.querySelectorAll('.btn-plan').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const plan = btn.closest('.plan-card').classList.contains('featured') ? 'vitalicio' : '24h';
+      localStorage.setItem('soulmates_pending_plan', plan);
+
+      const loggedIn = localStorage.getItem('soulmates_session');
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity 0.4s ease';
+      setTimeout(() => {
+        window.location.href = loggedIn ? '../pagamento.html' : '../login.html';
+      }, 400);
+    });
   });
 }
 
@@ -750,10 +771,26 @@ function restoreInputValues() {
 ═══════════════════════════════════════════════════════════════ */
 const GIFTS_KEY = 'soulmates_gifts';
 
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+}
+
 function saveGift() {
+  const id = generateId();
+
+  // Salva o ID separadamente primeiro — é pequeno e nunca falha por quota
+  localStorage.setItem('soulmates_last_gift_id', id);
+
+  // Salva metadados mínimos para o pagamento.html exibir o resumo
+  localStorage.setItem('soulmates_last_gift_meta', JSON.stringify({
+    id, name1: state.name1, name2: state.name2, title: state.title,
+  }));
+
   try {
     const gifts = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
     const gift = {
+      id,
       name1:      state.name1,
       name2:      state.name2,
       startDate:  state.startDate,
@@ -772,7 +809,7 @@ function saveGift() {
     localStorage.setItem(GIFTS_KEY, JSON.stringify(gifts));
     // Limpa o estado do wizard para um novo presente
     localStorage.removeItem(STORAGE_KEY);
-  } catch (_) { /* ignora erros de storage */ }
+  } catch (_) { /* ignora erros de storage — ID já está salvo separadamente */ }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -837,6 +874,7 @@ function init() {
   setupNavigation();
   setupMobilePreview();
   setupUpgrade();
+  setupPlanButtons();
   animatePlayerBar();
 
   /* Restaura a etapa onde o usuário parou */
