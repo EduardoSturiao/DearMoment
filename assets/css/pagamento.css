@@ -77,6 +77,30 @@ body {
   }
 }
 
+@media (max-width: 480px) {
+  .pay-header-inner {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .pay-back-btn {
+    font-size: 12px;
+  }
+
+  /* Oculta texto "Pagamento seguro" em telas muito pequenas — logo já indica o contexto */
+  .pay-secure {
+    display: none;
+  }
+
+  .pay-main {
+    padding: 0 16px 60px;
+  }
+
+  .pay-card {
+    padding: 20px 16px;
+  }
+}
+
 /* ── Card base ────────────────────────────────────────────── */
 .pay-card {
   background: #161b24;

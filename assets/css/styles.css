@@ -1182,4 +1182,79 @@ h2 {
     font-weight: 600;
     color: #fff;
   }
-  
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVO — HERO & SEÇÕES (index.html)
+══════════════════════════════════════════════════════════════ */
+
+/* Tablet e smartphone — oculta badges orbitais e ajusta mockup */
+@media (max-width: 991px) {
+  /* Badges flutuantes têm offsets negativos fixos — ficam cortadas/sobrepostas */
+  .mockup-badge {
+    display: none;
+  }
+
+  /* Mockup menor para caber sem badges */
+  .hero-phone-mockup {
+    max-width: 240px;
+  }
+
+  .hero-phone-screen {
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Título hero responsivo */
+  .d2c_hero_title {
+    font-size: clamp(26px, 7vw, 42px);
+  }
+
+  /* Mockup menor em telas pequenas */
+  .hero-phone-mockup {
+    max-width: 210px;
+  }
+
+  .hero-phone-screen {
+    max-height: 350px;
+  }
+
+  /* Preço dos planos — reduz em telas menores */
+  .pricing-price {
+    font-size: 40px;
+  }
+
+  /* FAQ — remove indent do padding-left */
+  .faq-answer {
+    padding-left: 18px;
+  }
+
+  /* Footer margin menor */
+  #footer-container {
+    margin-top: 60px;
+  }
+}
+
+/* Smartphones muito pequenos (até ~420px) */
+@media (max-width: 420px) {
+  .d2c_hero_title {
+    font-size: clamp(22px, 6.5vw, 30px);
+  }
+
+  .lead {
+    font-size: 13px !important;
+  }
+
+  .hero-rating-stars {
+    font-size: 0.95rem;
+  }
+
+  .hero-rating-text {
+    font-size: 0.75rem;
+  }
+
+  .d2c_btn_hero {
+    font-size: 15px;
+  }
+}
+
