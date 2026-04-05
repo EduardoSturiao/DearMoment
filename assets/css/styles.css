@@ -280,27 +280,13 @@ body {
   animation-delay: 1.5s;
 }
 
-.badge-qr-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 10px);
-  grid-template-rows: repeat(3, 10px);
-  gap: 2px;
+.badge-qr-svg {
+  width: 52px;
+  height: 52px;
+  background: #1a0d14;
+  border-radius: 6px;
+  padding: 2px;
 }
-
-.badge-qr-grid div {
-  border-radius: 2px;
-  background: rgba(255, 109, 186, 0.9);
-}
-
-.badge-qr-grid div:nth-child(1),
-.badge-qr-grid div:nth-child(3),
-.badge-qr-grid div:nth-child(7),
-.badge-qr-grid div:nth-child(9) { background: rgba(255, 109, 186, 1); }
-.badge-qr-grid div:nth-child(5) { background: rgba(255, 109, 186, 0.3); }
-.badge-qr-grid div:nth-child(2),
-.badge-qr-grid div:nth-child(4),
-.badge-qr-grid div:nth-child(6),
-.badge-qr-grid div:nth-child(8) { background: rgba(255, 255, 255, 0.12); }
 
 .badge-qr-label {
   font-family: "Sora", sans-serif;
