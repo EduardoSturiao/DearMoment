@@ -1102,8 +1102,10 @@ body {
 
   .preview-panel.open {
     max-height: 90vh;
-    padding: 20px;
+    padding: 20px 20px 80px; /* 80px no fundo: espaço para o preview-header fixo */
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* scroll momentum no iOS */
+    overscroll-behavior: contain;
   }
 
   .preview-header {
@@ -1129,6 +1131,13 @@ body {
   .nav-footer-inner { padding: 0 16px; }
 
   .phone-mockup { max-width: 220px; margin: 0 auto; }
+
+  /* dentro do painel mobile, o phone-screen não deve ultrapassar o painel */
+  .preview-panel .phone-screen {
+    max-height: 55vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
   .counter-grid { grid-template-columns: repeat(3, 1fr); }
 
