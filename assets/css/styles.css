@@ -205,6 +205,7 @@ body {
   justify-content: center;
   align-items: center;
   position: relative;
+  overflow: hidden;
 }
 
 /* ── Orbit wrapper — referência de posicionamento ─────── */
@@ -1177,20 +1178,58 @@ h2 {
    RESPONSIVO — HERO & SEÇÕES (index.html)
 ══════════════════════════════════════════════════════════════ */
 
-/* Tablet e smartphone — oculta badges orbitais e ajusta mockup */
+/* Tablet e smartphone — reposiciona badges abaixo do mockup em linha */
 @media (max-width: 991px) {
-  /* Badges flutuantes têm offsets negativos fixos — ficam cortadas/sobrepostas */
-  .mockup-badge {
-    display: none;
+  /* Orbit vira flex-wrap: phone ocupa toda a primeira linha (order:-1),
+     os três badges aparecem lado a lado na segunda linha */
+  .mockup-orbit {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
   }
 
-  /* Mockup menor para caber sem badges */
+  /* Phone sobe para o topo e ocupa toda a largura */
   .hero-phone-mockup {
+    order: -1;
+    flex: 0 0 100%;
     max-width: 240px;
+    margin: 0 auto;
   }
 
   .hero-phone-screen {
     max-height: 400px;
+  }
+
+  /* Badges saem do posicionamento absoluto e ficam em linha */
+  .mockup-badge {
+    position: relative;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    flex: 0 0 auto;
+  }
+
+  /* QR badge era flex-direction:column — volta para linha */
+  .badge-qr {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+  }
+
+  .badge-qr-svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .badge-qr-label {
+    font-size: 10px;
   }
 }
 
@@ -1245,6 +1284,214 @@ h2 {
 
   .d2c_btn_hero {
     font-size: 15px;
+  }
+}
+
+/* ══════════════════════════════════════════
+   COMO FUNCIONA
+══════════════════════════════════════════ */
+
+.how-section {
+  padding: 90px 0;
+  background: #121820;
+}
+
+.how-heading {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.how-steps {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.how-step {
+  flex: 1;
+  min-width: 180px;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding: 0 12px;
+}
+
+/* número do passo */
+.how-step-number {
+  font-family: "Sora", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--primary_color);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+/* ícone circular */
+.how-step-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 109, 186, 0.08);
+  border: 1.5px solid rgba(255, 109, 186, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary_color);
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.how-step:hover .how-step-icon {
+  background: rgba(255, 109, 186, 0.18);
+  border-color: var(--primary_color);
+}
+
+/* linha conectora entre ícones */
+.how-connector {
+  position: absolute;
+  top: 84px; /* alinhada ao centro vertical do ícone (número ~28px + icon 64px/2 = 60px → ~84px do topo) */
+  left: calc(50% + 32px);
+  right: calc(-50% + 32px);
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(255, 109, 186, 0.4) 0px,
+    rgba(255, 109, 186, 0.4) 6px,
+    transparent 6px,
+    transparent 14px
+  );
+  z-index: 0;
+}
+
+.how-step:last-child .how-connector {
+  display: none;
+}
+
+.how-step-title {
+  font-family: "Sora", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 10px;
+}
+
+.how-step-desc {
+  font-family: "Sora", sans-serif;
+  font-size: 13.5px;
+  color: rgba(240, 240, 240, 0.55);
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .how-steps {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .how-connector {
+    display: none;
+  }
+
+  .how-step {
+    max-width: 300px;
+  }
+}
+
+
+/* ══════════════════════════════════════════
+   CTA FINAL
+══════════════════════════════════════════ */
+
+.cta-section {
+  padding: 80px 0;
+  background: #121820;
+}
+
+.cta-inner {
+  position: relative;
+  background: linear-gradient(135deg, #ff6dba 0%, #e0458e 60%, #b83070 100%);
+  border-radius: 24px;
+  padding: 72px 40px;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* brilho de fundo decorativo */
+.cta-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% -20%, rgba(255, 255, 255, 0.18) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.cta-hearts {
+  display: block;
+  font-size: 36px;
+  margin-bottom: 20px;
+  line-height: 1;
+}
+
+.cta-heading {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(26px, 5vw, 44px);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.cta-sub {
+  font-family: "Sora", sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 480px;
+  margin: 0 auto 36px;
+  line-height: 1.6;
+}
+
+.cta-btn {
+  font-family: "Sora", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  background: #121820;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 14px 40px;
+  transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.2s;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-btn:hover {
+  background: #fff;
+  color: #b83070;
+  border-color: transparent;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 575px) {
+  .cta-inner {
+    padding: 52px 24px;
+    border-radius: 16px;
+  }
+
+  .cta-btn {
+    width: 100%;
+    padding: 14px 20px;
   }
 }
 
