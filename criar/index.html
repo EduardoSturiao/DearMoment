@@ -28,6 +28,7 @@
 
       <!-- Container de etapas -->
       <main class="steps-container" id="stepsContainer">
+      <div class="steps-inner">
 
         <!-- ── ETAPA 1: Tipo de presente ── -->
         <div class="step active" id="step-1">
@@ -275,6 +276,7 @@
           </div>
         </div>
 
+      </div><!-- /steps-inner -->
       </main><!-- /steps-container -->
 
       <!-- Botões de navegação -->
@@ -301,11 +303,39 @@
       <!-- Mockup de celular -->
       <div class="phone-mockup">
         <div class="phone-frame">
+          <!-- Barra de status simulada -->
+          <div class="phone-status-bar">
+            <span class="status-time" id="statusTime">00:00</span>
+            <div class="status-icons">
+              <svg class="status-icon" viewBox="0 0 17 11" width="13" height="9">
+                <rect x="0"    y="8"   width="3" height="3"  rx="0.6" fill="currentColor"/>
+                <rect x="4.5"  y="5.5" width="3" height="5.5" rx="0.6" fill="currentColor"/>
+                <rect x="9"    y="3"   width="3" height="8"  rx="0.6" fill="currentColor"/>
+                <rect x="13.5" y="0"   width="3" height="11" rx="0.6" fill="currentColor"/>
+              </svg>
+              <svg class="status-icon" viewBox="0 0 16 11" width="13" height="9" fill="none" stroke="currentColor" stroke-linecap="round">
+                <path d="M1 3.8C3.8 1 12.2 1 15 3.8" stroke-width="1.4"/>
+                <path d="M3.4 6.3C5.2 4.4 10.8 4.4 12.6 6.3" stroke-width="1.4"/>
+                <path d="M5.8 8.8C6.8 7.8 9.2 7.8 10.2 8.8" stroke-width="1.4"/>
+                <circle cx="8" cy="11" r="0.9" fill="currentColor" stroke="none"/>
+              </svg>
+              <svg class="status-icon" viewBox="0 0 26 12" width="21" height="10">
+                <rect x="0.5" y="1" width="21" height="10" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                <rect x="22.5" y="4" width="3" height="4" rx="1" fill="currentColor" opacity="0.4"/>
+                <rect x="2" y="2.5" width="16" height="7" rx="1.5" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
           <div class="phone-notch"></div>
           <div class="phone-screen" id="phoneScreen">
 
             <!-- Player estilo Spotify -->
             <div class="player-section">
+              <!-- Partículas decorativas -->
+              <div class="player-particles" aria-hidden="true">
+                <span>♡</span><span>♡</span><span>♡</span>
+                <span>♡</span><span>♡</span><span>♡</span>
+              </div>
               <!-- Capa do casal -->
               <div class="player-cover-wrap">
                 <div class="player-cover-placeholder" id="coverPlaceholder">❤️</div>
@@ -337,12 +367,77 @@
                 <span>juntos desde</span>
                 <strong id="prevYear">—</strong>
               </div>
-              <div class="mini-counter" id="miniCounter">
-                <span id="mcYears">—</span> anos
-                <span id="mcMonths">—</span> meses
-                <span id="mcDays">—</span> dias
+              <div class="about-counter" id="miniCounter">
+                <div class="mc-card">
+                  <div class="mc-num" id="mcYears">—</div>
+                  <div class="mc-unit">anos</div>
+                </div>
+                <div class="mc-card">
+                  <div class="mc-num" id="mcMonths">—</div>
+                  <div class="mc-unit">meses</div>
+                </div>
+                <div class="mc-card">
+                  <div class="mc-num" id="mcDays">—</div>
+                  <div class="mc-unit">dias</div>
+                </div>
+                <div class="mc-card">
+                  <div class="mc-num" id="mcHours">—</div>
+                  <div class="mc-unit">horas</div>
+                </div>
               </div>
               <div class="about-city" id="prevCity">📍 —</div>
+            </div>
+
+            <!-- Seção de mensagem especial -->
+            <div class="message-section" id="msgSectionPreview">
+              <div class="msg-section-label">💌 mensagem especial</div>
+              <div class="msg-cover-wrap" id="msgCoverWrap">
+                <div class="msg-cover-placeholder" id="msgCoverPlaceholder">🖼️</div>
+                <img class="msg-cover-img hidden" id="msgCoverImg" src="" alt="Foto do casal" />
+              </div>
+              <p class="msg-body" id="prevMessage">Sua mensagem especial aparecerá aqui...</p>
+            </div>
+
+            <!-- Timeline Nossa história -->
+            <div class="timeline-section" id="timelineSectionPreview">
+              <div class="timeline-label">🕊️ nossa história</div>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="tl-dot"></div>
+                  <div class="tl-date" id="prevTlDate">—</div>
+                  <div class="tl-text">primeiro encontro em <span id="prevTlCity">—</span></div>
+                </div>
+                <div class="timeline-item">
+                  <div class="tl-dot tl-dot-heart">❤</div>
+                  <div class="tl-date">hoje</div>
+                  <div class="tl-text">e a história continua...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Galeria de fotos -->
+            <div class="gallery-section" id="gallerySectionPreview">
+              <div class="gallery-label">📸 nossa galeria</div>
+              <div class="gallery-strip" id="galleryStrip">
+                <div class="gallery-empty" id="galleryEmpty">Suas fotos aparecerão aqui</div>
+              </div>
+            </div>
+
+            <!-- Barra de compartilhamento -->
+            <div class="share-bar">
+              <button class="share-btn share-wpp">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+                WhatsApp
+              </button>
+              <button class="share-btn share-copy">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Copiar link
+              </button>
             </div>
 
             <!-- YouTube embed oculto (aparece ao clicar play) -->

@@ -138,7 +138,91 @@ function fileToBase64(file) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   4. CONTADOR EM TEMPO REAL
+   4. SLIDESHOW DE FOTOS NO MOCKUP
+═══════════════════════════════════════════════════════════════ */
+let slideshowInterval  = null;
+let slideIndex         = 0;
+let _slideshowPhotoLen = -1; // evita reiniciar o slideshow a cada updatePreview()
+
+function startPhotoSlideshow() {
+  const count = state.photos.length;
+
+  // Só reinicia se a quantidade de fotos mudou ou o intervalo morreu
+  if (count === _slideshowPhotoLen && (count <= 1 || slideshowInterval !== null)) return;
+  _slideshowPhotoLen = count;
+
+  stopPhotoSlideshow();
+  const coverImg         = document.getElementById('coverImg');
+  const coverPlaceholder = document.getElementById('coverPlaceholder');
+
+  if (!count) {
+    coverImg.classList.add('hidden');
+    coverPlaceholder.classList.remove('hidden');
+    return;
+  }
+
+  slideIndex = 0;
+  coverImg.src = state.photos[0];
+  coverImg.style.opacity = '1';
+  coverImg.classList.remove('hidden');
+  coverPlaceholder.classList.add('hidden');
+
+  if (count > 1) {
+    slideshowInterval = setInterval(() => {
+      slideIndex = (slideIndex + 1) % state.photos.length;
+      coverImg.style.opacity = '0';
+      setTimeout(() => {
+        coverImg.src = state.photos[slideIndex];
+        coverImg.style.opacity = '1';
+      }, 800);
+    }, 3000);
+  }
+}
+
+function stopPhotoSlideshow() {
+  if (slideshowInterval) {
+    clearInterval(slideshowInterval);
+    slideshowInterval = null;
+  }
+}
+
+/* ── Hora real na status bar ─────────────────────────────────── */
+function updateStatusTime() {
+  const el = document.getElementById('statusTime');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+/* ── Galeria de fotos no mockup ─────────────────────────────── */
+function updateGalleryPreview() {
+  const strip = document.getElementById('galleryStrip');
+  if (!strip) return;
+
+  strip.innerHTML = '';
+
+  if (!state.photos.length) {
+    const empty = document.createElement('div');
+    empty.className = 'gallery-empty';
+    empty.textContent = 'Suas fotos aparecerão aqui';
+    strip.appendChild(empty);
+    return;
+  }
+
+  state.photos.forEach((src, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'gallery-thumb';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Foto ${i + 1}`;
+    img.loading = 'lazy';
+    thumb.appendChild(img);
+    strip.appendChild(thumb);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. CONTADOR EM TEMPO REAL
 ═══════════════════════════════════════════════════════════════ */
 let counterInterval = null;
 
@@ -183,6 +267,7 @@ function startCounter(dateStr) {
     setTextSafe('mcYears',  t.years);
     setTextSafe('mcMonths', t.months);
     setTextSafe('mcDays',   t.days);
+    setTextSafe('mcHours',  t.hours);
 
     // Ano no preview
     setTextSafe('prevYear', new Date(dateStr + 'T00:00:00').getFullYear());
@@ -296,22 +381,37 @@ function updatePreview() {
   // Cidade
   setTextSafe('prevCity', state.city ? `📍 ${state.city}` : '📍 —');
 
-  // Foto de capa (etapa 8)
-  const coverImg          = document.getElementById('coverImg');
-  const coverPlaceholder  = document.getElementById('coverPlaceholder');
-  if (state.extraPhoto) {
-    coverImg.src = state.extraPhoto;
-    coverImg.classList.remove('hidden');
-    coverPlaceholder.classList.add('hidden');
-  } else if (state.photos.length > 0) {
-    // Usa primeira foto da galeria enquanto não houver foto de destaque
-    coverImg.src = state.photos[0];
-    coverImg.classList.remove('hidden');
-    coverPlaceholder.classList.add('hidden');
-  } else {
-    coverImg.classList.add('hidden');
-    coverPlaceholder.classList.remove('hidden');
+  // Slideshow das fotos da galeria (etapa 6) no player cover
+  startPhotoSlideshow();
+
+  // Foto de capa do casal (etapa 8) → seção de mensagem especial
+  const msgCoverImg         = document.getElementById('msgCoverImg');
+  const msgCoverPlaceholder = document.getElementById('msgCoverPlaceholder');
+  if (msgCoverImg) {
+    if (state.extraPhoto) {
+      msgCoverImg.src = state.extraPhoto;
+      msgCoverImg.classList.remove('hidden');
+      if (msgCoverPlaceholder) msgCoverPlaceholder.classList.add('hidden');
+    } else {
+      msgCoverImg.classList.add('hidden');
+      if (msgCoverPlaceholder) msgCoverPlaceholder.classList.remove('hidden');
+    }
   }
+
+  // Mensagem especial (etapa 7) → seção de mensagem
+  setTextSafe('prevMessage', state.message || 'Sua mensagem especial aparecerá aqui...');
+
+  // Galeria de fotos
+  updateGalleryPreview();
+
+  // Timeline — nossa história
+  if (state.startDate) {
+    const d = new Date(state.startDate + 'T00:00:00');
+    setTextSafe('prevTlDate', d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }));
+  } else {
+    setTextSafe('prevTlDate', '—');
+  }
+  setTextSafe('prevTlCity', state.city || '—');
 
   // Contador já é atualizado pelo intervalo (startCounter)
   if (state.startDate) startCounter(state.startDate);
@@ -712,6 +812,7 @@ function bindInputs() {
     state.message = msgText.value;
     msgCount.textContent = state.message.length;
     saveState();
+    updatePreview();
   });
 
   document.getElementById('btnRandomMsg').addEventListener('click', () => {
@@ -720,6 +821,7 @@ function bindInputs() {
     state.message = m;
     msgCount.textContent = m.length;
     saveState();
+    updatePreview();
   });
 
   /* Restaura valores dos campos de texto */
@@ -876,6 +978,10 @@ function init() {
   setupUpgrade();
   setupPlanButtons();
   animatePlayerBar();
+
+  /* Hora real na status bar — atualiza a cada minuto */
+  updateStatusTime();
+  setInterval(updateStatusTime, 60000);
 
   /* Restaura a etapa onde o usuário parou */
   showStep(state.currentStep);
