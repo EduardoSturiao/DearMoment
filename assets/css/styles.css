@@ -205,7 +205,7 @@ body {
   justify-content: center;
   align-items: center;
   position: relative;
-  overflow: hidden;
+  padding: 12px 0 40px;
 }
 
 /* ── Orbit wrapper — referência de posicionamento ─────── */
@@ -1190,7 +1190,7 @@ h2 {
     gap: 10px;
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
+    padding-bottom: 12px;
   }
 
   /* Phone sobe para o topo e ocupa toda a largura */
