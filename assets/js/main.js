@@ -238,6 +238,39 @@ function passwordMatch(value) {
 
 
 
+// contador de combinações possíveis
+
+(function () {
+  var el = document.getElementById('combCounter');
+  if (!el) return;
+
+  var target   = 1069440;
+  var observed = false;
+
+  function animateCounter() {
+    var start    = null;
+    var duration = 1300;
+    function step(ts) {
+      if (!start) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.floor(ease * target).toLocaleString('pt-BR');
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting && !observed) {
+      observed = true;
+      animateCounter();
+    }
+  }, { threshold: 0.4 });
+
+  observer.observe(el);
+})();
+
+
 //efeito visual do icone da senha
 
 const passwordIcons = document.querySelectorAll('.password-icon');

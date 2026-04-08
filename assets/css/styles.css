@@ -1,3 +1,61 @@
+/* BANNER PROMOCIONAL */
+
+.promo-banner {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, #c4006a 0%, #ff6dba 40%, #ff9ed6 60%, #ff6dba 80%, #c4006a 100%);
+  background-size: 200% 100%;
+  animation: promo-bg-shift 6s linear infinite;
+  padding: 9px 0;
+  position: relative;
+  z-index: 1100;
+  box-shadow: 0 2px 14px rgba(255, 109, 186, 0.45);
+}
+
+@keyframes promo-bg-shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.promo-track {
+  display: flex;
+  white-space: nowrap;
+  animation: promo-scroll 28s linear infinite;
+}
+
+.promo-track:hover {
+  animation-play-state: paused;
+}
+
+.promo-content {
+  display: inline-block;
+  padding: 0 0;
+  font-family: "Sora", sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #121820;
+  letter-spacing: 0.2px;
+}
+
+.promo-content strong {
+  font-weight: 700;
+  font-family: "Syne", sans-serif;
+}
+
+@keyframes promo-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (max-width: 575px) {
+  .promo-content {
+    font-size: 12px;
+  }
+  .promo-track {
+    animation-duration: 20s;
+  }
+}
+
 /* NAVBAR */
 
 :root {
@@ -1143,6 +1201,121 @@ body {
 }
 
 /* DEPOIMENTOS */
+
+/* CONTADOR DE COMBINAÇÕES */
+
+.combinations-section {
+  padding: 0 0 80px;
+}
+
+.combinations-card {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  background: var(--primary_bg);
+  border: 1px solid rgba(255, 109, 186, 0.15);
+  border-radius: 16px;
+  padding: 48px 56px;
+}
+
+.combinations-left {
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.combinations-label {
+  font-family: "Sora", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--primary_color);
+  margin-bottom: 8px;
+}
+
+.combinations-number {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.combinations-number span:first-child {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(48px, 6vw, 72px);
+  font-weight: 400;
+  color: #f0f0f0;
+  letter-spacing: 2px;
+}
+
+.combinations-plus {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 400;
+  color: var(--primary_color);
+  letter-spacing: 1px;
+}
+
+.combinations-desc {
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  color: var(--primary_text_shade);
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.combinations-divider {
+  width: 1px;
+  height: 80px;
+  background: rgba(255, 109, 186, 0.2);
+  flex-shrink: 0;
+}
+
+.combinations-right {
+  flex: 1;
+}
+
+.combinations-right p {
+  font-family: "Sora", sans-serif;
+  font-size: 16px;
+  color: var(--primary_text_shade);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.combinations-cta {
+  display: inline-block;
+  font-family: "Sora", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #121820;
+  background: var(--primary_color);
+  border: 1px solid var(--primary_color);
+  border-radius: var(--primary_radius);
+  padding: 10px 28px;
+  text-decoration: none;
+  transition: 0.3s all;
+}
+
+.combinations-cta:hover {
+  color: var(--primary_color);
+  background: transparent;
+}
+
+@media (max-width: 767px) {
+  .combinations-card {
+    flex-direction: column;
+    gap: 28px;
+    padding: 36px 24px;
+    text-align: center;
+  }
+
+  .combinations-divider {
+    width: 60px;
+    height: 1px;
+  }
+}
 
 .testimonials-section {
   padding: 80px 0 60px;

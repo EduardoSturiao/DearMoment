@@ -11,13 +11,42 @@
   <link rel="stylesheet" href="assets/css/styles.css">
   <link rel="stylesheet" href="assets/css/cookies.css">
   <link
-    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <title>SoulMates — Presenteie sua Alma Gêmea</title>
 </head>
 <body>
 
 
+
+  <!-- BANNER PROMOCIONAL — Dia dos Namorados (6–13 jun) -->
+  <div id="promo-banner" class="promo-banner" style="display:none;" aria-label="Oferta Dia dos Namorados">
+    <div class="promo-track">
+      <span class="promo-content">
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+      </span>
+      <span class="promo-content" aria-hidden="true">
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+      </span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var now = new Date();
+      var start = new Date('2026-04-01T00:00:00');
+      var end   = new Date('2026-04-30T23:59:59');
+      if (now >= start && now <= end) {
+        document.getElementById('promo-banner').style.display = 'block';
+      }
+    })();
+  </script>
 
   <!-- NAVBAR -->
   <section>
@@ -494,6 +523,27 @@
     </div>
   </section>
 
+
+  <!-- CONTADOR DE COMBINAÇÕES -->
+  <section class="combinations-section">
+    <div class="container">
+      <div class="combinations-card">
+        <div class="combinations-left">
+          <p class="combinations-label">cada presente é único</p>
+          <div class="combinations-number">
+            <span id="combCounter">0</span>
+            <span class="combinations-plus">+</span>
+          </div>
+          <p class="combinations-desc">combinações possíveis</p>
+        </div>
+        <div class="combinations-divider"></div>
+        <div class="combinations-right">
+          <p>Tipo de presente, cidade, música, fotos, título e mensagem — tudo personalizado. Nenhum presente igual ao outro.</p>
+          <a href="./criar/index.html" class="combinations-cta">Criar o meu agora</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- TESTIMONIALS -->
   <section class="testimonials-section" id="depoimentos">
