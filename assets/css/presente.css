@@ -434,6 +434,17 @@ body {
   color: var(--text);
   margin-bottom: 12px;
   padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gift-section-hint {
+  font-family: var(--font-b);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.3px;
 }
 
 .gift-gallery {
@@ -461,43 +472,111 @@ body {
 
 .gift-gallery-thumb:hover img { transform: scale(1.07); }
 
-/* ── Lightbox ─────────────────────────────────────────── */
-.lightbox {
+/* ── Stories Overlay ──────────────────────────────────── */
+.stories-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.92);
+  background: #000;
   z-index: 300;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  user-select: none;
 }
 
-.lightbox.open { display: flex; }
+.stories-overlay.open { display: flex; }
 
-.lightbox img {
-  max-width: 100%;
-  max-height: 90vh;
-  border-radius: 12px;
+.stories-img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  box-shadow: 0 0 60px rgba(0,0,0,0.6);
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
-.lightbox-close {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  background: rgba(255,255,255,0.1);
+/* Barras de progresso no topo */
+.stories-bars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: env(safe-area-inset-top, 48px) 12px 8px;
+  padding-top: max(env(safe-area-inset-top, 0px), 48px);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.stories-bar {
+  flex: 1;
+  height: 2.5px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.stories-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  border-radius: 99px;
+}
+
+.stories-bar-fill.done   { width: 100%; }
+.stories-bar-fill.active { animation: storyProgress 4s linear forwards; }
+
+@keyframes storyProgress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* Botão fechar */
+.stories-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  background: rgba(0,0,0,0.45);
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  font-size: 15px;
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+/* Zonas de toque invisíveis */
+.stories-tap-left,
+.stories-tap-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 38%;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.stories-tap-left  { left: 0; }
+.stories-tap-right { right: 0; }
+
+/* Contador "2 / 6" */
+.stories-counter {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-b);
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 1px;
 }
 
 /* ── Footer ───────────────────────────────────────────── */

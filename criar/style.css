@@ -860,13 +860,58 @@ body {
   margin: 0 auto 12px;
 }
 
+/* ── Browser chrome: barra de endereço ─────────────────────── */
+.phone-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin: 6px 2px 0;
+}
+
+.browser-bar-url {
+  flex: 1;
+  font-size: 9px;
+  text-align: center;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.2px;
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.browser-bar-icon {
+  color: rgba(255,255,255,0.4);
+  flex-shrink: 0;
+}
+
+.browser-bar-reload { color: rgba(255,255,255,0.3); }
+
+/* ── Browser chrome: barra de navegação inferior ────────────── */
+.phone-browser-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px 2px;
+  margin-top: 4px;
+}
+
+.phone-browser-nav svg {
+  color: rgba(255,255,255,0.55);
+  display: block;
+}
+
 .phone-screen {
   background: var(--dark-3);
   border-radius: 24px;
   overflow-y: auto;   /* scroll interno — simula o presente sendo rolado */
   overflow-x: hidden;
   /* altura dinâmica: sempre cabe no viewport sem precisar scrolar o painel */
-  max-height: calc(100vh - 168px);
+  max-height: calc(100vh - 248px);
   position: relative;
 
   /* Scrollbar mínima dentro do mockup */

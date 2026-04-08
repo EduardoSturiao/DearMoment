@@ -43,11 +43,18 @@ body {
 .pay-back-btn:hover { color: #f0f0f0; }
 
 .pay-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.pay-logo span {
   font-family: 'Syne', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #ff6dba;
-  text-decoration: none;
+  letter-spacing: 0.5px;
 }
 
 .pay-secure {

@@ -23,9 +23,35 @@
   <section>
     <header class="d2c_navbar sticky-top nav-section">
       <div class="container">
-        <nav class="navbar navbar-expand-lg px-0 py-0" id="d2c_main_nav"> <a class="navbar-brand"
-            href="./index.html"><img src="./assets/images/icons8-relationship-64.png" class="w-100" alt="Logo"
-              height="40"><span class="navbar-brand-name">SoulMates</span></a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        <nav class="navbar navbar-expand-lg px-0 py-0" id="d2c_main_nav"> <a class="navbar-brand" href="./index.html">
+              <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="40" height="28">
+                <defs>
+                  <!-- Clip: metade superior (anel direito na frente) -->
+                  <clipPath id="sm-clip-top">
+                    <rect x="0" y="3" width="34" height="11"/>
+                  </clipPath>
+                  <!-- Clip: metade inferior (anel direito por trás) -->
+                  <clipPath id="sm-clip-bot">
+                    <rect x="0" y="14" width="34" height="13"/>
+                  </clipPath>
+                </defs>
+
+                <!-- Anel direito — metade inferior (passa POR TRÁS do anel esquerdo) -->
+                <circle cx="22" cy="14" r="9"
+                        stroke="#ffb6d9" stroke-width="3.2" fill="none"
+                        clip-path="url(#sm-clip-bot)"/>
+
+                <!-- Anel esquerdo — completo -->
+                <circle cx="12" cy="14" r="9"
+                        stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+
+                <!-- Anel direito — metade superior (passa NA FRENTE do anel esquerdo) -->
+                <circle cx="22" cy="14" r="9"
+                        stroke="#ffb6d9" stroke-width="3.2" fill="none"
+                        clip-path="url(#sm-clip-top)"/>
+              </svg>
+              <span class="navbar-brand-name">SoulMates</span>
+            </a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
             aria-label="Toggle navigation"> <span><i class="fas fa-bars"></i></span> </button>
           <div class="collapse navbar-collapse js-clone-nav justify-content-end">
@@ -113,11 +139,38 @@
 
           <div class="hero-phone-mockup">
             <div class="hero-phone-frame">
+              <!-- Barra de status simulada -->
+              <div class="hero-phone-status-bar">
+                <span class="hero-status-time" id="heroStatusTime">9:41</span>
+                <div class="hero-status-icons">
+                  <svg viewBox="0 0 17 11" width="13" height="9">
+                    <rect x="0"    y="8"   width="3" height="3"  rx="0.6" fill="currentColor"/>
+                    <rect x="4.5"  y="5.5" width="3" height="5.5" rx="0.6" fill="currentColor"/>
+                    <rect x="9"    y="3"   width="3" height="8"  rx="0.6" fill="currentColor"/>
+                    <rect x="13.5" y="0"   width="3" height="11" rx="0.6" fill="currentColor"/>
+                  </svg>
+                  <svg viewBox="0 0 16 11" width="13" height="9" fill="none" stroke="currentColor" stroke-linecap="round">
+                    <path d="M1 3.8C3.8 1 12.2 1 15 3.8" stroke-width="1.4"/>
+                    <path d="M3.4 6.3C5.2 4.4 10.8 4.4 12.6 6.3" stroke-width="1.4"/>
+                    <path d="M5.8 8.8C6.8 7.8 9.2 7.8 10.2 8.8" stroke-width="1.4"/>
+                    <circle cx="8" cy="11" r="0.9" fill="currentColor" stroke="none"/>
+                  </svg>
+                  <svg viewBox="0 0 26 12" width="21" height="10">
+                    <rect x="0.5" y="1" width="21" height="10" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                    <rect x="22.5" y="4" width="3" height="4" rx="1" fill="currentColor" opacity="0.4"/>
+                    <rect x="2" y="2.5" width="16" height="7" rx="1.5" fill="currentColor"/>
+                  </svg>
+                </div>
+              </div>
               <div class="hero-phone-notch"></div>
               <div class="hero-phone-screen">
 
                 <!-- Player estilo Spotify -->
                 <div class="lp-player-section">
+                  <div class="lp-player-particles" aria-hidden="true">
+                    <span>♡</span><span>♡</span><span>♡</span>
+                    <span>♡</span><span>♡</span><span>♡</span>
+                  </div>
                   <div class="lp-player-cover-wrap">
                     <img src="./assets/images/portrait-beautiful-couple-standing-embracing-one-another-while-dreamily-looking-camera-park.jpg" alt="Capa do casal">
                   </div>
@@ -142,15 +195,88 @@
                   <div class="lp-about-title">Para sempre o nosso momento ✨</div>
                   <div class="lp-about-since">
                     <span>juntos desde</span>
-                    <strong>14/02/2022</strong>
+                    <strong>2022</strong>
                   </div>
-                  <div class="lp-mini-counter">
-                    <span>3</span> anos <span>1</span> mês <span>18</span> dias
+                  <div class="lp-about-counter">
+                    <div class="lp-mc-card"><div class="lp-mc-num">3</div><div class="lp-mc-unit">anos</div></div>
+                    <div class="lp-mc-card"><div class="lp-mc-num">1</div><div class="lp-mc-unit">meses</div></div>
+                    <div class="lp-mc-card"><div class="lp-mc-num">18</div><div class="lp-mc-unit">dias</div></div>
+                    <div class="lp-mc-card"><div class="lp-mc-num">07</div><div class="lp-mc-unit">horas</div></div>
                   </div>
                   <div class="lp-about-city">📍 São Paulo, SP</div>
                 </div>
 
+                <!-- Mensagem especial -->
+                <div class="lp-message-section">
+                  <div class="lp-section-label">💌 mensagem especial</div>
+                  <div class="lp-msg-cover-wrap">
+                    <img src="./assets/images/portrait-beautiful-couple-standing-embracing-one-another-while-dreamily-looking-camera-park.jpg" alt="Foto do casal">
+                  </div>
+                  <p class="lp-msg-body">Desde o dia em que você entrou na minha vida, tudo ficou mais colorido. Obrigado por ser meu maior presente.</p>
+                </div>
+
+                <!-- Nossa história (timeline) -->
+                <div class="lp-timeline-section">
+                  <div class="lp-section-label">🕊️ nossa história</div>
+                  <div class="lp-timeline">
+                    <div class="lp-tl-item">
+                      <div class="lp-tl-dot"></div>
+                      <div class="lp-tl-date">14/02/2022</div>
+                      <div class="lp-tl-text">primeiro encontro em São Paulo</div>
+                    </div>
+                    <div class="lp-tl-item">
+                      <div class="lp-tl-dot lp-tl-dot-heart">❤</div>
+                      <div class="lp-tl-date">hoje</div>
+                      <div class="lp-tl-text">e a história continua...</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Galeria de fotos -->
+                <div class="lp-gallery-section">
+                  <div class="lp-section-label">📸 nossa galeria</div>
+                  <div class="lp-gallery-strip">
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g1/120/120" alt=""></div>
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g2/120/120" alt=""></div>
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g3/120/120" alt=""></div>
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g4/120/120" alt=""></div>
+                  </div>
+                </div>
+
+                <!-- Share bar -->
+                <div class="lp-share-bar">
+                  <button class="lp-share-btn lp-share-wpp">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                    WhatsApp
+                  </button>
+                  <button class="lp-share-btn lp-share-copy">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Copiar link
+                  </button>
+                </div>
+
               </div>
+
+              <!-- Barra de endereço + navegação inferior estilo Safari iOS -->
+              <div class="hero-browser-bar">
+                <svg class="hero-browser-icon" viewBox="0 0 12 16" width="9" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                  <rect x="1" y="7" width="10" height="8" rx="1.5"/>
+                  <path d="M3.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
+                </svg>
+                <span class="hero-browser-url">soulmates.com.br</span>
+                <svg class="hero-browser-icon hero-browser-reload" viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12.5 2.5A6 6 0 1 0 13 8"/>
+                  <polyline points="10,0.5 12.5,2.5 10.5,5"/>
+                </svg>
+              </div>
+              <div class="hero-browser-nav">
+                <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8,2 2,8 8,14"/></svg>
+                <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><polyline points="2,2 8,8 2,14"/></svg>
+                <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,12 9,2"/><polyline points="5,6 9,2 13,6"/><rect x="2" y="10" width="14" height="7" rx="2"/></svg>
+                <svg viewBox="0 0 18 16" width="16" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 2h12a1.5 1.5 0 0 1 0 3H3a1.5 1.5 0 0 1 0-3z"/><line x1="3" y1="8" x2="15" y2="8"/><line x1="3" y1="13" x2="11" y2="13"/></svg>
+                <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="12" height="12" rx="2"/><path d="M5 5V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/></svg>
+              </div>
+
             </div>
           </div>
           </div><!-- /mockup-orbit -->
@@ -802,6 +928,18 @@
     </div>
   </div>
   <script src="./assets/js/cookies.js"></script>
+  <script>
+    (function () {
+      const el = document.getElementById('heroStatusTime');
+      if (!el) return;
+      function tick() {
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
 </body>
 
 </html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seed de teste | SoulMates</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #121820;
+      color: #f0f0f0;
+      font-family: 'Sora', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      padding: 24px;
+    }
+    h2 { color: #ff6dba; font-size: 18px; }
+    p  { font-size: 13px; color: #8892a4; text-align: center; max-width: 360px; line-height: 1.6; }
+    .btn {
+      background: #ff6dba;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 32px;
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-sec {
+      background: transparent;
+      border: 1px solid rgba(255,109,186,0.3);
+      color: #ff6dba;
+      border-radius: 12px;
+      padding: 10px 24px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .status { font-size: 12px; color: #8892a4; }
+  </style>
+</head>
+<body>
+  <h2>🧪 Página de teste</h2>
+  <p>Cria um presente fictício no localStorage e abre o <code>presente.html</code> direto, sem precisar passar pelo wizard.</p>
+  <button class="btn" id="btnSeed">Criar presente de teste →</button>
+  <button class="btn-sec" id="btnClear">Limpar dados de teste</button>
+  <p class="status" id="status"></p>
+
+  <script>
+  /* ── Fotos placeholder (picsum.photos — ferramenta padrão de dev) ── */
+  const PHOTOS = [
+    'https://picsum.photos/seed/casal1/600/800',
+    'https://picsum.photos/seed/casal2/600/800',
+    'https://picsum.photos/seed/casal3/600/800',
+    'https://picsum.photos/seed/casal4/600/800',
+    'https://picsum.photos/seed/casal5/600/800',
+  ];
+
+  const TEST_ID = 'soulmates-test-001';
+
+  document.getElementById('btnSeed').addEventListener('click', () => {
+    const gift = {
+      id:         TEST_ID,
+      name1:      'Ana',
+      name2:      'Pedro',
+      startDate:  '2022-03-14',
+      city:       'São Paulo, SP',
+      title:      'Nossa história de amor 💘',
+      youtubeId:  'kXYiU_JCYtU',   // Perfect - Ed Sheeran
+      songName:   'Perfect',
+      artistName: 'Ed Sheeran',
+      photos:     PHOTOS,
+      extraPhoto: PHOTOS[0],
+      message:    'Desde o dia em que você entrou na minha vida, tudo ficou mais colorido.\n\nObrigado por ser meu maior presente — hoje, amanhã e sempre.',
+      giftType:   'amoroso',
+      createdAt:  new Date().toISOString(),
+    };
+
+    try {
+      const gifts = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]')
+        .filter(g => g.id !== TEST_ID); // remove versão anterior se existir
+      gifts.push(gift);
+      localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
+      document.getElementById('status').textContent = '✓ Dados salvos. Redirecionando...';
+      setTimeout(() => {
+        window.location.href = `./presente.html?id=${TEST_ID}`;
+      }, 600);
+    } catch (e) {
+      document.getElementById('status').textContent = '✗ Erro ao salvar: ' + e.message;
+    }
+  });
+
+  document.getElementById('btnClear').addEventListener('click', () => {
+    const gifts = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]')
+      .filter(g => g.id !== TEST_ID);
+    localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
+    document.getElementById('status').textContent = '✓ Dados de teste removidos.';
+  });
+  </script>
+</body>
+</html>

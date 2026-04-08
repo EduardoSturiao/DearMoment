@@ -37,10 +37,14 @@
     <button class="yt-close-btn" id="btnYtClose">✕ Fechar player</button>
   </div>
 
-  <!-- Lightbox de fotos -->
-  <div class="lightbox" id="lightbox">
-    <button class="lightbox-close" id="btnLightboxClose">✕</button>
-    <img id="lightboxImg" src="" alt="Foto">
+  <!-- Stories de fotos -->
+  <div class="stories-overlay" id="storiesOverlay">
+    <div class="stories-bars" id="storiesBars"></div>
+    <button class="stories-close" id="storiesClose">✕</button>
+    <img class="stories-img" id="storiesImg" src="" alt="Foto">
+    <div class="stories-tap-left"  id="storiesTapLeft"></div>
+    <div class="stories-tap-right" id="storiesTapRight"></div>
+    <div class="stories-counter"   id="storiesCounter"></div>
   </div>
 
   <script>
@@ -89,7 +93,7 @@
     const galleryPhotos = g.photos || [];
     const galleryHTML = galleryPhotos.length
       ? `<section class="gift-gallery-section">
-           <p class="gift-section-title">Nossas Fotos 📸</p>
+           <p class="gift-section-title">Nossas Fotos 📸 <span class="gift-section-hint">toque para ver</span></p>
            <div class="gift-gallery" id="giftGallery">
              ${galleryPhotos.map((src, i) => `
                <div class="gift-gallery-thumb" data-src="${src}" data-index="${i}">
@@ -261,23 +265,88 @@
     });
   }
 
-  /* ── 5. Galeria com lightbox ─────────────────────────── */
+  /* ── 5. Galeria — Stories viewer ────────────────────── */
   function setupGallery() {
-    const lightbox    = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const closeBtn    = document.getElementById('btnLightboxClose');
+    const thumbs   = [...document.querySelectorAll('.gift-gallery-thumb')];
+    if (!thumbs.length) return;
 
-    document.querySelectorAll('.gift-gallery-thumb').forEach(thumb => {
-      thumb.addEventListener('click', () => {
-        lightboxImg.src = thumb.dataset.src;
-        lightbox.classList.add('open');
-      });
+    const photos   = thumbs.map(t => t.dataset.src);
+    const overlay  = document.getElementById('storiesOverlay');
+    const barsEl   = document.getElementById('storiesBars');
+    const closeBtn = document.getElementById('storiesClose');
+    const imgEl    = document.getElementById('storiesImg');
+    const tapLeft  = document.getElementById('storiesTapLeft');
+    const tapRight = document.getElementById('storiesTapRight');
+    const counter  = document.getElementById('storiesCounter');
+
+    const DURATION = 4000;
+    let current = 0;
+    let timer   = null;
+
+    /* Abre o stories no índice clicado */
+    function openStories(index) {
+      current = index;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      showStory(current);
+    }
+
+    /* Fecha e limpa tudo */
+    function closeStories() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      clearTimeout(timer);
+      imgEl.src = '';
+    }
+
+    /* Exibe uma foto e reinicia o progresso */
+    function showStory(index) {
+      clearTimeout(timer);
+      imgEl.style.opacity = '0';
+      imgEl.src = photos[index];
+      imgEl.onload = () => { imgEl.style.opacity = '1'; };
+      counter.textContent = `${index + 1} / ${photos.length}`;
+      buildBars(index);
+      timer = setTimeout(() => advance(1), DURATION);
+    }
+
+    /* Constrói as barras de progresso */
+    function buildBars(active) {
+      barsEl.innerHTML = photos.map((_, i) => {
+        const cls = i < active ? 'done' : i === active ? 'active' : '';
+        return `<div class="stories-bar"><div class="stories-bar-fill ${cls}"></div></div>`;
+      }).join('');
+    }
+
+    /* Avança ou recua; fecha ao sair dos extremos */
+    function advance(dir) {
+      const next = current + dir;
+      if (next < 0 || next >= photos.length) { closeStories(); return; }
+      current = next;
+      showStory(current);
+    }
+
+    /* Abre ao clicar num thumbnail */
+    thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => openStories(i)));
+
+    closeBtn.addEventListener('click', closeStories);
+    tapLeft.addEventListener('click',  () => advance(-1));
+    tapRight.addEventListener('click', () => advance(1));
+
+    /* Swipe mobile */
+    let touchStartX = 0;
+    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    overlay.addEventListener('touchend',   e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) advance(dx < 0 ? 1 : -1);
     });
 
-    closeBtn.addEventListener('click', () => lightbox.classList.remove('open'));
-
-    lightbox.addEventListener('click', e => {
-      if (e.target === lightbox) lightbox.classList.remove('open');
+    /* Fechar com Escape no desktop */
+    document.addEventListener('keydown', e => {
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'Escape')      closeStories();
+      if (e.key === 'ArrowRight')  advance(1);
+      if (e.key === 'ArrowLeft')   advance(-1);
     });
   }
 
