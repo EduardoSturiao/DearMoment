@@ -287,6 +287,55 @@ body {
   color: var(--pink-light);
 }
 
+/* ── Sugestões de música (etapa 5) ──────────────────────────── */
+.music-list li { padding: 0; }
+
+.music-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.music-suggestion-item:hover,
+.music-list li.highlighted .music-suggestion-item {
+  background: var(--dark-3);
+}
+
+.suggestion-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--dark-3);
+}
+
+.suggestion-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.suggestion-track {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-artist {
+  font-size: 12px;
+  color: var(--text-muted, #8892a4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Contador em tempo real ─────────────────────────────────── */
 .counter-box {
   background: var(--dark-3);

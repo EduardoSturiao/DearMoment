@@ -20,9 +20,11 @@ const state = {
   startDate:   '',
   city:        '',
   title:       '',
-  youtubeId:   '',
-  songName:    '',
-  artistName:  '',
+  youtubeId:    '',
+  youtubeQuery: '',
+  previewUrl:   '',
+  songName:     '',
+  artistName:   '',
   photos:      [],     // array de base64 strings (máx 6)
   message:     '',
   extraPhoto:  null,   // base64 string
@@ -112,19 +114,18 @@ function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/** Extrai o ID de vídeo de uma URL do YouTube */
-function extractYouTubeId(url) {
-  const patterns = [
-    /youtu\.be\/([^#?&]+)/,
-    /[?&]v=([^#?&]+)/,
-    /youtube\.com\/embed\/([^#?&]+)/,
-    /youtube\.com\/shorts\/([^#?&]+)/,
-  ];
-  for (const re of patterns) {
-    const match = url.match(re);
-    if (match) return match[1];
-  }
-  return null;
+/** Escapa caracteres HTML para uso seguro em innerHTML */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Normaliza string removendo acentos e colocando em minúsculas */
+function normalizeStr(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 /** Converte arquivo em base64 */
@@ -432,7 +433,8 @@ function setupAutocomplete() {
 
     if (q.length < 2) { list.classList.add('hidden'); return; }
 
-    const matches = CIDADES.filter(c => c.toLowerCase().includes(q)).slice(0, 8);
+    const qNorm   = normalizeStr(q);
+    const matches = CIDADES.filter(c => normalizeStr(c).includes(qNorm)).slice(0, 8);
     if (!matches.length) { list.classList.add('hidden'); return; }
 
     matches.forEach((city, i) => {
@@ -618,56 +620,155 @@ function setupExtraPhotoUpload() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   10. YOUTUBE (Etapa 5)
+   10. BUSCA DE MÚSICA (Etapa 5) — iTunes Search API + áudio nativo
 ═══════════════════════════════════════════════════════════════ */
-function setupYoutube() {
-  const urlInput   = document.getElementById('youtubeUrl');
-  const btnLoad    = document.getElementById('btnLoadYt');
-  const embedWrap  = document.getElementById('ytEmbedWrap');
-  const frame      = document.getElementById('ytFrame');
-  const btnPlay    = document.getElementById('btnPlay');
-  const overlay    = document.getElementById('ytOverlay');
-  const oFrame     = document.getElementById('ytOverlayFrame');
-  const btnClose   = document.getElementById('btnYtClose');
+function setupMusicSearch() {
+  const searchInput     = document.getElementById('musicSearch');
+  const suggestionsList = document.getElementById('musicSuggestions');
+  const btnPlay         = document.getElementById('btnPlay');
+  const audioEl         = document.getElementById('audioPreview');
 
-  /* Preenche o campo se já tiver URL salva */
-  if (state.youtubeId) {
-    renderYtEmbed(state.youtubeId);
+  let debounceTimer = null;
+  let highlighted   = -1;
+
+  // Restaura campo de busca e áudio se já há música salva
+  if (state.youtubeQuery) searchInput.value = state.youtubeQuery;
+  if (state.previewUrl)   audioEl.src        = state.previewUrl;
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim();
+    clearTimeout(debounceTimer);
+    suggestionsList.innerHTML = '';
+    highlighted = -1;
+
+    if (q.length < 2) { suggestionsList.classList.add('hidden'); return; }
+    debounceTimer = setTimeout(() => fetchSuggestions(q), 400);
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    const items = suggestionsList.querySelectorAll('li');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlighted = Math.min(highlighted + 1, items.length - 1);
+      updateHighlight(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlighted = Math.max(highlighted - 1, 0);
+      updateHighlight(items);
+    } else if (e.key === 'Enter' && highlighted >= 0) {
+      e.preventDefault();
+      items[highlighted].dispatchEvent(new MouseEvent('mousedown'));
+    } else if (e.key === 'Escape') {
+      suggestionsList.classList.add('hidden');
+    }
+  });
+
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => suggestionsList.classList.add('hidden'), 200);
+  });
+
+  async function fetchSuggestions(query) {
+    try {
+      const res  = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=8&country=BR`
+      );
+      const data = await res.json();
+      renderSuggestions(data.results || []);
+    } catch (_) {
+      suggestionsList.classList.add('hidden');
+    }
   }
 
-  /* Botão "Carregar" */
-  btnLoad.addEventListener('click', () => {
-    const id = extractYouTubeId(urlInput.value.trim());
-    if (!id) { showToast('URL do YouTube inválida'); return; }
-    state.youtubeId = id;
+  function renderSuggestions(tracks) {
+    suggestionsList.innerHTML = '';
+    highlighted = -1;
+    if (!tracks.length) { suggestionsList.classList.add('hidden'); return; }
+
+    tracks.forEach(track => {
+      const li = document.createElement('li');
+      li.className = 'music-suggestion-item';
+
+      const img = document.createElement('img');
+      img.src       = track.artworkUrl60 || '';
+      img.alt       = '';
+      img.className = 'suggestion-art';
+      img.loading   = 'lazy';
+
+      const info       = document.createElement('div');
+      info.className   = 'suggestion-info';
+      const trackSpan  = document.createElement('span');
+      trackSpan.className   = 'suggestion-track';
+      trackSpan.textContent = track.trackName;
+      const artistSpan = document.createElement('span');
+      artistSpan.className   = 'suggestion-artist';
+      artistSpan.textContent = track.artistName;
+
+      info.appendChild(trackSpan);
+      info.appendChild(artistSpan);
+      li.appendChild(img);
+      li.appendChild(info);
+
+      li.addEventListener('mousedown', e => {
+        e.preventDefault();
+        selectTrack(track);
+      });
+
+      suggestionsList.appendChild(li);
+    });
+
+    suggestionsList.classList.remove('hidden');
+  }
+
+  function selectTrack(track) {
+    suggestionsList.classList.add('hidden');
+    searchInput.value = `${track.trackName} — ${track.artistName}`;
+
+    // Para áudio atual antes de trocar
+    if (!audioEl.paused) {
+      audioEl.pause();
+      btnPlay.textContent = '▶';
+    }
+
+    // Sempre atualiza nome e artista ao selecionar uma música
+    const songEl   = document.getElementById('songName');
+    const artistEl = document.getElementById('artistName');
+    songEl.value     = track.trackName;
+    state.songName   = track.trackName;
+    artistEl.value   = track.artistName;
+    state.artistName = track.artistName;
+
+    state.youtubeQuery = `${track.trackName} ${track.artistName}`;
+    state.previewUrl   = track.previewUrl || '';
+    audioEl.src        = state.previewUrl;
+
     saveState();
-    renderYtEmbed(id);
     updatePreview();
-  });
-
-  /* Carrega ao colar e pressionar Enter */
-  urlInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') btnLoad.click();
-  });
-
-  function renderYtEmbed(id) {
-    frame.src = `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
-    embedWrap.classList.remove('hidden');
-    if (state.youtubeId) urlInput.value = `https://www.youtube.com/watch?v=${id}`;
   }
 
-  /* Botão play no preview — abre o YouTube embedded */
+  // Play / pause do preview de áudio no mockup
   btnPlay.addEventListener('click', () => {
-    if (!state.youtubeId) { showToast('Adicione uma música na etapa 5 🎵'); return; }
-    oFrame.src = `https://www.youtube-nocookie.com/embed/${state.youtubeId}?autoplay=1&rel=0`;
-    overlay.classList.remove('hidden');
+    if (!state.previewUrl) {
+      showToast('Adicione uma música na etapa 5 🎵');
+      return;
+    }
+    if (audioEl.paused) {
+      audioEl.play().catch(() => showToast('Não foi possível reproduzir o áudio'));
+      btnPlay.textContent = '⏸';
+    } else {
+      audioEl.pause();
+      btnPlay.textContent = '▶';
+    }
   });
 
-  /* Fechar overlay */
-  btnClose.addEventListener('click', () => {
-    overlay.classList.add('hidden');
-    oFrame.src = '';
+  // Volta o ícone para ▶ quando o preview terminar (30s)
+  audioEl.addEventListener('ended', () => {
+    btnPlay.textContent = '▶';
   });
+
+  function updateHighlight(items) {
+    items.forEach((li, i) => li.classList.toggle('highlighted', i === highlighted));
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -848,17 +949,12 @@ function restoreInputValues() {
     songName:   'songName',
     artistName: 'artistName',
     msgText:    'message',
-    youtubeUrl: state.youtubeId ? `https://www.youtube.com/watch?v=${state.youtubeId}` : '',
   };
 
-  for (const [id, stateKeyOrValue] of Object.entries(fields)) {
+  for (const [id, stateKey] of Object.entries(fields)) {
     const el = document.getElementById(id);
     if (!el) continue;
-    if (id === 'youtubeUrl') {
-      el.value = stateKeyOrValue; // já é a string direta
-    } else {
-      el.value = state[stateKeyOrValue] || '';
-    }
+    el.value = state[stateKey] || '';
   }
 
   // Char counts
@@ -971,7 +1067,7 @@ function init() {
   setupAutocomplete();
   setupPhotoUpload();
   setupExtraPhotoUpload();
-  setupYoutube();
+  setupMusicSearch();
   setupFaq();
   setupNavigation();
   setupMobilePreview();

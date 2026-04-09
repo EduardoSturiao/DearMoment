@@ -122,28 +122,20 @@
           <div class="step-header">
             <div class="step-num">05</div>
             <h2 class="step-title">Escolha a música de vocês 🎵</h2>
-            <p class="step-sub">Cole o link de um vídeo do YouTube</p>
+            <p class="step-sub">Digite o nome da música e selecione da lista</p>
           </div>
-          <div class="form-group yt-input-group">
-            <label for="youtubeUrl">Link do YouTube</label>
-            <div class="input-row">
-              <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
-              <button class="btn-load" id="btnLoadYt">Carregar</button>
-            </div>
-          </div>
-          <!-- Preview embed do YouTube -->
-          <div class="yt-embed-wrap hidden" id="ytEmbedWrap">
-            <iframe id="ytFrame" width="100%" height="160" frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen></iframe>
+          <div class="form-group autocomplete-wrap">
+            <label for="musicSearch">Pesquisar música</label>
+            <input type="text" id="musicSearch" placeholder="Ex: Perfect, Evidências, Shallow..." autocomplete="off" />
+            <ul class="autocomplete-list music-list hidden" id="musicSuggestions"></ul>
           </div>
           <div class="form-group">
             <label for="songName">Nome da música (editável)</label>
-            <input type="text" id="songName" placeholder="Ex: Perfect" />
+            <input type="text" id="songName" placeholder="Preenchido automaticamente ao selecionar" />
           </div>
           <div class="form-group">
             <label for="artistName">Nome do artista (editável)</label>
-            <input type="text" id="artistName" placeholder="Ex: Ed Sheeran" />
+            <input type="text" id="artistName" placeholder="Preenchido automaticamente ao selecionar" />
           </div>
         </div>
 
@@ -480,6 +472,9 @@
   <!-- Toast de notificação -->
   <div class="toast" id="toast"></div>
 
+  <!-- Áudio oculto para preview da música (iTunes 30s) -->
+  <audio id="audioPreview" preload="none" style="display:none"></audio>
+
   <script src="script.js"></script>
 
   <!-- Cookie Consent Banner -->
@@ -495,5 +490,72 @@
     </div>
   </div>
   <script src="../assets/js/cookies.js"></script>
+
+  <!-- DESCONTO DIA DOS NAMORADOS — ativo de 7 a 13 jun -->
+  <style>
+    .promo-badge-criar {
+      display: block;
+      background: #ff6dba;
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin: 0 auto 4px auto;
+      width: fit-content;
+      letter-spacing: 0.4px;
+    }
+    .promo-old-criar {
+      display: block;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      text-decoration: line-through;
+      color: #6b7280;
+      line-height: 1.3;
+      margin-bottom: 1px;
+      text-align: center;
+    }
+    .promo-old-upgrade {
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      text-decoration: line-through;
+      color: #6b7280;
+      display: block;
+      line-height: 1.2;
+    }
+  </style>
+  <script>
+    (function () {
+      const now = new Date();
+      const start = new Date('2026-06-07T00:00:00');
+      const end   = new Date('2026-06-13T23:59:59');
+      if (now < start || now > end) return;
+
+      const map = {
+        '29': { old: 'R$ 29,90', novo: 'R$ 23<span>,92</span>' },
+        '19': { old: 'R$ 19,90', novo: 'R$ 15<span>,92</span>' }
+      };
+
+      document.querySelectorAll('.plan-price').forEach(el => {
+        const txt = el.textContent.replace(/\s/g, '');
+        const entry = txt.indexOf('29') !== -1 ? map['29']
+                    : txt.indexOf('19') !== -1 ? map['19'] : null;
+        if (!entry) return;
+        el.innerHTML =
+          '<span class="promo-badge-criar">20% OFF</span>' +
+          '<span class="promo-old-criar">' + entry.old + '</span>' +
+          entry.novo;
+      });
+
+      const upgrade = document.querySelector('.upgrade-price');
+      if (upgrade) {
+        upgrade.innerHTML =
+          '<span class="promo-old-upgrade">+ R$ 7,90</span>+ R$ 6<span style="font-size:0.85em">,32</span>';
+      }
+    })();
+  </script>
 </body>
 </html>

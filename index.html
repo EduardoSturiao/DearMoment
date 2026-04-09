@@ -39,9 +39,9 @@
 
   <script>
     (function () {
-      var now = new Date();
-      var start = new Date('2026-04-01T00:00:00');
-      var end   = new Date('2026-04-30T23:59:59');
+      const now = new Date();
+      const start = new Date('2026-06-07T00:00:00');
+      const end   = new Date('2026-06-13T23:59:59');
       if (now >= start && now <= end) {
         document.getElementById('promo-banner').style.display = 'block';
       }
@@ -988,6 +988,62 @@
       }
       tick();
       setInterval(tick, 1000);
+    })();
+  </script>
+
+  <!-- DESCONTO DIA DOS NAMORADOS — ativo de 7 a 13 jun -->
+  <style>
+    .promo-price-wrap {
+      text-align: center;
+      margin-bottom: -4px;
+    }
+    .promo-badge-pill {
+      display: inline-block;
+      background: #ff6dba;
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+    }
+    .promo-old-lp {
+      display: block;
+      font-family: 'Sora', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      text-decoration: line-through;
+      color: #8892a4;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+  </style>
+  <script>
+    (function () {
+      const now = new Date();
+      const start = new Date('2026-06-07T00:00:00');
+      const end   = new Date('2026-06-13T23:59:59');
+      if (now < start || now > end) return;
+
+      const map = { '19': { old: 'R$19,90', novo: 'R$15<span class="pricing-cents">,92</span>' },
+                    '29': { old: 'R$29,90', novo: 'R$23<span class="pricing-cents">,92</span>' } };
+
+      document.querySelectorAll('.pricing-price').forEach(el => {
+        const txt = el.textContent.replace(/\s/g, '');
+        const entry = txt.indexOf('19') !== -1 ? map['19']
+                    : txt.indexOf('29') !== -1 ? map['29'] : null;
+        if (!entry) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'promo-price-wrap';
+        wrap.innerHTML =
+          '<span class="promo-badge-pill">🏷 20% OFF · Dia dos Namorados</span>' +
+          '<span class="promo-old-lp">' + entry.old + '</span>';
+        el.parentNode.insertBefore(wrap, el);
+        el.innerHTML = entry.novo;
+      });
     })();
   </script>
 </body>
