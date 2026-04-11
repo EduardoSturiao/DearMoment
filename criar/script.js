@@ -12,6 +12,8 @@
 const STORAGE_KEY = 'soulmates_wizard_state';
 const TOTAL_STEPS = 8; // etapas numeradas (1–8), depois step-final
 
+const FINAL_GIFT_URL = '../presente/index.html';
+
 const state = {
   currentStep: 1,
   giftType:    null,   // 'amoroso' | 'amigo'
@@ -26,6 +28,8 @@ const state = {
   photos:      [],     // array de base64 strings (máx 6)
   message:     '',
   extraPhoto:  null,   // base64 string
+  selectedPlan: '',
+  wrappedSelected: false,
 };
 
 /* Carrega estado salvo do localStorage */
@@ -46,6 +50,12 @@ function saveState() {
 /* ═══════════════════════════════════════════════════════════════
    2. DADOS — Cidades (API IBGE) e frases aleatórias
 ═══════════════════════════════════════════════════════════════ */
+function openFinalGift(planId) {
+  state.selectedPlan = planId;
+  saveState();
+  window.location.href = `${FINAL_GIFT_URL}?preview=1`;
+}
+
 let CIDADES = []; // Populado via API do IBGE on load
 
 async function loadCidades() {
@@ -608,9 +618,20 @@ function setupMobilePreview() {
 /* ═══════════════════════════════════════════════════════════════
    13. UPGRADE BANNER
 ═══════════════════════════════════════════════════════════════ */
-function setupUpgrade() {
+function setupUpgradeLegacy() {
   const btn = document.getElementById('btnUpgrade');
+  if (!btn) return;
+
+  function renderUpgradeState() {
+    btn.classList.toggle('added', !!state.wrappedSelected);
+    btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
+  }
   btn.addEventListener('click', () => {
+    state.wrappedSelected = !state.wrappedSelected;
+    saveState();
+    renderUpgradeState();
+    showToast(state.wrappedSelected ? 'Wrapped adicionado ao presente!' : 'Wrapped removido');
+    return;
     if (btn.classList.contains('added')) {
       btn.classList.remove('added');
       btn.textContent = 'Adicionar';
@@ -627,6 +648,30 @@ function setupUpgrade() {
    14. BIND DOS CAMPOS DE ENTRADA
       Cada campo atualiza state + preview automaticamente
 ═══════════════════════════════════════════════════════════════ */
+function setupUpgrade() {
+  const btn = document.getElementById('btnUpgrade');
+  if (!btn) return;
+
+  btn.classList.toggle('added', !!state.wrappedSelected);
+  btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
+
+  btn.addEventListener('click', () => {
+    state.wrappedSelected = !state.wrappedSelected;
+    btn.classList.toggle('added', !!state.wrappedSelected);
+    btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
+    saveState();
+    showToast(state.wrappedSelected ? 'Wrapped adicionado ao presente!' : 'Wrapped removido');
+  });
+}
+
+function setupPlanSelection() {
+  document.querySelectorAll('.btn-plan[data-plan]').forEach(button => {
+    button.addEventListener('click', () => {
+      openFinalGift(button.dataset.plan);
+    });
+  });
+}
+
 function bindInputs() {
 
   /* Etapa 1 — cards de presente */
@@ -806,6 +851,7 @@ function init() {
   setupNavigation();
   setupMobilePreview();
   setupUpgrade();
+  setupPlanSelection();
   animatePlayerBar();
 
   /* Restaura a etapa onde o usuário parou */

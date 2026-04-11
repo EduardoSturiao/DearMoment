@@ -208,6 +208,7 @@
             <h2>Ficou incrível!</h2>
             <p>Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
           </div>
+          <p class="validation-hint">Modo de validacao: por enquanto, a escolha do plano abre direto o presente final gerado.</p>
 
           <!-- Planos -->
           <div class="plans-grid">
@@ -223,7 +224,7 @@
                 <li>✅ Player de música</li>
                 <li>✅ Edição ilimitada</li>
               </ul>
-              <button class="btn-plan primary">Finalizar com esse plano</button>
+              <button class="btn-plan primary" data-plan="vitalicio">Finalizar com esse plano</button>
             </div>
             <div class="plan-card">
               <h3>Plano 24h</h3>
@@ -235,7 +236,7 @@
                 <li>✅ Galeria com até 6 fotos</li>
                 <li>⬜ Edição ilimitada</li>
               </ul>
-              <button class="btn-plan">Escolher esse plano</button>
+              <button class="btn-plan" data-plan="24h">Escolher esse plano</button>
             </div>
           </div>
 
@@ -284,7 +285,6 @@
           <button class="btn-next-step" id="btnNext">Continuar →</button>
         </div>
       </footer>
-''
     </div><!-- /steps-panel -->
 
 
