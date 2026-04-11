@@ -997,6 +997,7 @@ function saveGift() {
       youtubeId:  state.youtubeId,
       songName:   state.songName,
       artistName: state.artistName,
+      previewUrl: state.previewUrl,
       photos:     state.photos,
       message:    state.message,
       extraPhoto: state.extraPhoto,

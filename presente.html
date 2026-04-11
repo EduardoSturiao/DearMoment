@@ -111,6 +111,7 @@
 
     const playerHTML = `
       <div class="gift-player">
+        <audio id="giftAudio" preload="none"${g.previewUrl ? ` src="${g.previewUrl}"` : ''}></audio>
         <div class="gift-player-inner">
           <div class="gift-player-thumb">
             ${firstPhoto ? `<img src="${firstPhoto}" alt="Capa">` : '🎵'}
@@ -121,12 +122,12 @@
           </div>
           <button class="gift-play-btn" id="btnGiftPlay" title="Ouvir música">▶</button>
         </div>
-        <div class="gift-player-bar">
-          <div class="gift-player-bar-fill"></div>
+        <div class="gift-player-bar" id="giftPlayerBar" style="cursor:pointer">
+          <div class="gift-player-bar-fill" id="giftBarFill"></div>
         </div>
         <div class="gift-player-times">
-          <span>0:00</span>
-          <span>—:——</span>
+          <span id="giftTimeNow">0:00</span>
+          <span id="giftTimeTotal">—:——</span>
         </div>
       </div>`;
 
@@ -214,7 +215,7 @@
 
     // Inicia as interações após renderizar
     if (g.startDate) startCounter(g.startDate);
-    if (g.youtubeId) setupPlayer(g.youtubeId);
+    setupPlayer(g);
     if (storyPhotos.length > 1) setupHeroStories(storyPhotos);
     if (galleryPhotos.length)   setupGallery();
   }
@@ -255,31 +256,69 @@
     return { years, months, days, hours, minutes, seconds };
   }
 
-  /* ── 4. Player de música (YouTube overlay) ──────────── */
-  function setupPlayer(youtubeId) {
-    const btn     = document.getElementById('btnGiftPlay');
-    const overlay = document.getElementById('ytOverlay');
-    const frame   = document.getElementById('ytFrame');
-    const closeBtn = document.getElementById('btnYtClose');
+  /* ── 4. Player de música ─────────────────────────────── */
+  function setupPlayer(g) {
+    const btn      = document.getElementById('btnGiftPlay');
+    const audioEl  = document.getElementById('giftAudio');
+    const barFill  = document.getElementById('giftBarFill');
+    const barTrack = document.getElementById('giftPlayerBar');
+    const timeNow  = document.getElementById('giftTimeNow');
+    const timeTotal = document.getElementById('giftTimeTotal');
 
-    if (!btn) return;
+    if (!btn || !audioEl) return;
 
-    btn.addEventListener('click', () => {
-      frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`;
-      overlay.classList.add('open');
-    });
+    /* ── Áudio real (previewUrl do iTunes) ── */
+    if (g.previewUrl) {
+      audioEl.addEventListener('loadedmetadata', () => {
+        timeTotal.textContent = fmtTime(audioEl.duration);
+      });
 
-    closeBtn.addEventListener('click', () => {
-      overlay.classList.remove('open');
-      frame.src = '';
-    });
+      audioEl.addEventListener('timeupdate', () => {
+        if (!audioEl.duration) return;
+        const pct = (audioEl.currentTime / audioEl.duration) * 100;
+        barFill.style.width = pct + '%';
+        timeNow.textContent = fmtTime(audioEl.currentTime);
+      });
 
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) {
-        overlay.classList.remove('open');
-        frame.src = '';
+      audioEl.addEventListener('ended', () => {
+        btn.textContent = '▶';
+        barFill.style.width = '0%';
+        timeNow.textContent  = '0:00';
+      });
+
+      btn.addEventListener('click', () => {
+        if (audioEl.paused) {
+          audioEl.play().catch(() => {});
+          btn.textContent = '⏸';
+        } else {
+          audioEl.pause();
+          btn.textContent = '▶';
+        }
+      });
+
+      /* Clique na barra para buscar posição */
+      if (barTrack) {
+        barTrack.addEventListener('click', e => {
+          if (!audioEl.duration) return;
+          const rect = barTrack.getBoundingClientRect();
+          const pct  = (e.clientX - rect.left) / rect.width;
+          audioEl.currentTime = pct * audioEl.duration;
+        });
       }
-    });
+      return;
+    }
+
+    /* ── Sem previewUrl: botão desativado visualmente ── */
+    btn.disabled = true;
+    btn.style.opacity = '0.35';
+    btn.title = 'Prévia não disponível';
+  }
+
+  function fmtTime(secs) {
+    if (!secs || isNaN(secs)) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   /* ── 5. Hero Stories — navegação de fotos ───────────── */
@@ -536,6 +575,8 @@
 
   function stopAll() {
     if (counterInterval) clearInterval(counterInterval);
+    const audio = document.getElementById('giftAudio');
+    if (audio) audio.pause();
   }
   </script>
 

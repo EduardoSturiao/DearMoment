@@ -338,12 +338,7 @@ body {
   width: 0%;
   background: var(--pink);
   border-radius: 99px;
-  animation: playerProgress 10s linear infinite;
-}
-
-@keyframes playerProgress {
-  from { width: 0%; }
-  to   { width: 100%; }
+  transition: width 0.25s linear;
 }
 
 .gift-player-times {

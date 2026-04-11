@@ -66,7 +66,28 @@
 
   const TEST_ID = 'soulmates-test-001';
 
-  document.getElementById('btnSeed').addEventListener('click', () => {
+  document.getElementById('btnSeed').addEventListener('click', async () => {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = 'Buscando prévia da música...';
+
+    // Busca previewUrl real no iTunes — tenta dois termos como fallback
+    let previewUrl = '';
+    const queries = ['Perfect Ed Sheeran', 'Shape of You Ed Sheeran', 'Thinking Out Loud Ed Sheeran'];
+    for (const q of queries) {
+      try {
+        const res  = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&limit=10&country=US`);
+        const data = await res.json();
+        const track = (data.results || []).find(t => t.previewUrl);
+        if (track?.previewUrl) {
+          previewUrl = track.previewUrl;
+          statusEl.textContent = `✓ Prévia: ${track.trackName} — ${track.artistName}`;
+          break;
+        }
+      } catch (_) {}
+    }
+    if (!previewUrl) statusEl.textContent = '⚠ iTunes indisponível — player ficará inativo no teste';
+    console.log('[teste] previewUrl:', previewUrl || '(vazio)');
+
     const gift = {
       id:         TEST_ID,
       name1:      'Ana',
@@ -77,6 +98,7 @@
       youtubeId:  'kXYiU_JCYtU',   // Perfect - Ed Sheeran
       songName:   'Perfect',
       artistName: 'Ed Sheeran',
+      previewUrl,
       photos:     PHOTOS,
       extraPhoto: PHOTOS[0],
       message:    'Desde o dia em que você entrou na minha vida, tudo ficou mais colorido.\n\nObrigado por ser meu maior presente — hoje, amanhã e sempre.',
@@ -86,15 +108,15 @@
 
     try {
       const gifts = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]')
-        .filter(g => g.id !== TEST_ID); // remove versão anterior se existir
+        .filter(g => g.id !== TEST_ID);
       gifts.push(gift);
       localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
-      document.getElementById('status').textContent = '✓ Dados salvos. Redirecionando...';
+      statusEl.textContent += ' · Redirecionando...';
       setTimeout(() => {
         window.location.href = `./presente.html?id=${TEST_ID}`;
-      }, 600);
+      }, 1200);
     } catch (e) {
-      document.getElementById('status').textContent = '✗ Erro ao salvar: ' + e.message;
+      statusEl.textContent = '✗ Erro ao salvar: ' + e.message;
     }
   });
 
