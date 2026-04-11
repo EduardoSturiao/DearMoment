@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presente SoulMates</title>
+
+  <!-- Open Graph — link bonito ao compartilhar no WhatsApp/Instagram -->
+  <meta property="og:title"       content="Você recebeu um presente especial ❤️">
+  <meta property="og:description" content="Abra e descubra uma homenagem criada só para você.">
+  <meta property="og:image"       content="./assets/images/icons8-relationship-64.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/presente.css">
+  <link rel="stylesheet" href="./assets/css/cookies.css">
+</head>
+<body>
+
+  <!-- Partículas de coração -->
+  <div class="particles">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- Header fixo -->
+  <header class="gift-header">
+    <span class="gift-logo">❤ SoulMates</span>
+    <span class="gift-tag">Presente exclusivo</span>
+  </header>
+
+  <!-- Conteúdo principal — preenchido pelo JS -->
+  <div id="giftRoot"></div>
+
+  <!-- Overlay do YouTube -->
+  <div class="yt-overlay" id="ytOverlay">
+    <iframe id="ytFrame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <button class="yt-close-btn" id="btnYtClose">✕ Fechar player</button>
+  </div>
+
+  <!-- Stories de fotos -->
+  <div class="stories-overlay" id="storiesOverlay">
+    <div class="stories-bars" id="storiesBars"></div>
+    <button class="stories-close" id="storiesClose">✕</button>
+    <img class="stories-img" id="storiesImg" src="" alt="Foto">
+    <div class="stories-tap-left"  id="storiesTapLeft"></div>
+    <div class="stories-tap-right" id="storiesTapRight"></div>
+    <div class="stories-counter"   id="storiesCounter"></div>
+  </div>
+
+  <script>
+  /* ================================================================
+     PRESENTE.HTML — Renderização da página pública do presente
+  ================================================================ */
+
+  /* ── 1. Lê o ID da URL e encontra o presente ────────── */
+  const params  = new URLSearchParams(window.location.search);
+  const giftId  = params.get('id');
+  const gifts   = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
+  const gift    = gifts.find(g => g.id === giftId);
+
+  const root = document.getElementById('giftRoot');
+
+  if (!gift) {
+    root.innerHTML = `
+      <div class="gift-error">
+        <div class="gift-error-emoji">💔</div>
+        <h2>Presente não encontrado</h2>
+        <p>O link pode ter expirado ou não está disponível neste dispositivo.<br>
+           Peça ao remetente para compartilhar novamente.</p>
+        <a href="./index.html">Criar o meu presente →</a>
+      </div>`;
+    document.title = 'SoulMates';
+    stopAll();
+  } else {
+    renderGift(gift);
+  }
+
+  /* ── 2. Renderiza o presente completo ───────────────── */
+  function renderGift(g) {
+    // Atualiza título da aba e meta OG
+    const names = g.name1 && g.name2 ? `${g.name1} & ${g.name2}` : 'Presente especial';
+    document.title = names + ' | SoulMates';
+    document.querySelector('meta[property="og:title"]').content =
+      `${names} — Um presente feito com amor ❤️`;
+
+    // Foto de capa
+    const coverSrc = g.extraPhoto || (g.photos && g.photos[0]) || '';
+    const heroHTML = coverSrc
+      ? `<img src="${coverSrc}" alt="Foto de capa" />`
+      : `<div class="gift-cover-placeholder">❤️</div>`;
+
+    // Galeria (exclui foto de capa para não duplicar)
+    const galleryPhotos = g.photos || [];
+    const galleryHTML = galleryPhotos.length
+      ? `<section class="gift-gallery-section">
+           <p class="gift-section-title">Nossas Fotos 📸 <span class="gift-section-hint">toque para ver</span></p>
+           <div class="gift-gallery" id="giftGallery">
+             ${galleryPhotos.map((src, i) => `
+               <div class="gift-gallery-thumb" data-src="${src}" data-index="${i}">
+                 <img src="${src}" alt="Foto ${i + 1}" loading="lazy">
+               </div>`).join('')}
+           </div>
+         </section>`
+      : '';
+
+    // Player
+    const songName   = g.songName   || 'Nossa Música';
+    const artistName = g.artistName || 'Artista';
+    const thumbSrc   = coverSrc;
+
+    const playerHTML = `
+      <div class="gift-player">
+        <div class="gift-player-inner">
+          <div class="gift-player-thumb">
+            ${thumbSrc
+              ? `<img src="${thumbSrc}" alt="Capa">`
+              : '🎵'}
+          </div>
+          <div class="gift-player-meta">
+            <div class="gift-song-name">${escHtml(songName)}</div>
+            <div class="gift-artist-name">${escHtml(artistName)}</div>
+          </div>
+          <button class="gift-play-btn" id="btnGiftPlay" title="Ouvir música">▶</button>
+        </div>
+        <div class="gift-player-bar">
+          <div class="gift-player-bar-fill"></div>
+        </div>
+        <div class="gift-player-times">
+          <span>0:00</span>
+          <span>—:——</span>
+        </div>
+      </div>`;
+
+    // Mensagem
+    const messageHTML = g.message
+      ? `<section class="gift-message-section">
+           <div class="gift-message-card">
+             <span class="gift-message-quote">"</span>
+             <p class="gift-message-text">${escHtml(g.message)}</p>
+             ${g.name1 ? `<p class="gift-message-signature">Com amor, ${escHtml(g.name1)} ❤️</p>` : ''}
+           </div>
+         </section>`
+      : '';
+
+    // Monta o HTML completo
+    root.innerHTML = `
+      <div class="gift-wrap">
+
+        <!-- Hero -->
+        <section class="gift-hero">
+          <div class="gift-cover">
+            ${heroHTML}
+            <div class="gift-cover-overlay"></div>
+          </div>
+          <div class="gift-hero-content">
+            <h1 class="gift-names">${escHtml(names)}</h1>
+            ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
+          </div>
+        </section>
+
+        <!-- Player -->
+        ${playerHTML}
+
+        <!-- Contador + cidade -->
+        <section class="gift-info">
+          <p class="gift-info-label">Juntos há</p>
+          <div class="gift-counter-grid">
+            <div class="gift-counter-unit"><span id="gcYears">—</span><small>anos</small></div>
+            <div class="gift-counter-unit"><span id="gcMonths">—</span><small>meses</small></div>
+            <div class="gift-counter-unit"><span id="gcDays">—</span><small>dias</small></div>
+            <div class="gift-counter-unit"><span id="gcHours">—</span><small>horas</small></div>
+            <div class="gift-counter-unit"><span id="gcMinutes">—</span><small>min</small></div>
+            <div class="gift-counter-unit"><span id="gcSeconds">—</span><small>seg</small></div>
+          </div>
+          ${g.startDate
+            ? `<p class="gift-since">desde <strong>${formatDate(g.startDate)}</strong></p>`
+            : ''}
+          ${g.city
+            ? `<p class="gift-city">📍 ${escHtml(g.city)}</p>`
+            : ''}
+        </section>
+
+        <!-- Mensagem -->
+        ${messageHTML}
+
+        <!-- Galeria -->
+        ${galleryHTML}
+
+        <!-- Footer -->
+        <footer class="gift-footer">
+          <p>Criado com ❤ no SoulMates</p>
+          <a href="./index.html">Criar o meu presente →</a>
+        </footer>
+
+      </div>`;
+
+    // Inicia as interações após renderizar
+    if (g.startDate) startCounter(g.startDate);
+    if (g.youtubeId) setupPlayer(g.youtubeId);
+    setupGallery();
+  }
+
+  /* ── 3. Contador em tempo real ──────────────────────── */
+  let counterInterval = null;
+
+  function startCounter(dateStr) {
+    function tick() {
+      const t = calcTimeSince(dateStr);
+      if (!t) return;
+      setTxt('gcYears',   t.years);
+      setTxt('gcMonths',  t.months);
+      setTxt('gcDays',    t.days);
+      setTxt('gcHours',   t.hours);
+      setTxt('gcMinutes', t.minutes);
+      setTxt('gcSeconds', t.seconds);
+    }
+    tick();
+    counterInterval = setInterval(tick, 1000);
+  }
+
+  function calcTimeSince(dateStr) {
+    const start = new Date(dateStr + 'T00:00:00');
+    const now   = new Date();
+    if (isNaN(start) || start > now) return null;
+
+    let years  = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth()    - start.getMonth();
+    let days   = now.getDate()     - start.getDate();
+
+    if (days   < 0) { months--; days   += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+    if (months < 0) { years--;  months += 12; }
+
+    const totalMs  = now - start;
+    const hours    = Math.floor((totalMs / 3600000) % 24);
+    const minutes  = Math.floor((totalMs / 60000)   % 60);
+    const seconds  = Math.floor((totalMs / 1000)    % 60);
+
+    return { years, months, days, hours, minutes, seconds };
+  }
+
+  /* ── 4. Player de música (YouTube overlay) ──────────── */
+  function setupPlayer(youtubeId) {
+    const btn     = document.getElementById('btnGiftPlay');
+    const overlay = document.getElementById('ytOverlay');
+    const frame   = document.getElementById('ytFrame');
+    const closeBtn = document.getElementById('btnYtClose');
+
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`;
+      overlay.classList.add('open');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      overlay.classList.remove('open');
+      frame.src = '';
+    });
+
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        frame.src = '';
+      }
+    });
+  }
+
+  /* ── 5. Galeria — Stories viewer ────────────────────── */
+  function setupGallery() {
+    const thumbs   = [...document.querySelectorAll('.gift-gallery-thumb')];
+    if (!thumbs.length) return;
+
+    const photos   = thumbs.map(t => t.dataset.src);
+    const overlay  = document.getElementById('storiesOverlay');
+    const barsEl   = document.getElementById('storiesBars');
+    const closeBtn = document.getElementById('storiesClose');
+    const imgEl    = document.getElementById('storiesImg');
+    const tapLeft  = document.getElementById('storiesTapLeft');
+    const tapRight = document.getElementById('storiesTapRight');
+    const counter  = document.getElementById('storiesCounter');
+
+    const DURATION = 4000;
+    let current = 0;
+    let timer   = null;
+
+    /* Abre o stories no índice clicado */
+    function openStories(index) {
+      current = index;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      showStory(current);
+    }
+
+    /* Fecha e limpa tudo */
+    function closeStories() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      clearTimeout(timer);
+      imgEl.src = '';
+    }
+
+    /* Exibe uma foto e reinicia o progresso */
+    function showStory(index) {
+      clearTimeout(timer);
+      imgEl.style.opacity = '0';
+      imgEl.src = photos[index];
+      imgEl.onload = () => { imgEl.style.opacity = '1'; };
+      counter.textContent = `${index + 1} / ${photos.length}`;
+      buildBars(index);
+      timer = setTimeout(() => advance(1), DURATION);
+    }
+
+    /* Constrói as barras de progresso */
+    function buildBars(active) {
+      barsEl.innerHTML = photos.map((_, i) => {
+        const cls = i < active ? 'done' : i === active ? 'active' : '';
+        return `<div class="stories-bar"><div class="stories-bar-fill ${cls}"></div></div>`;
+      }).join('');
+    }
+
+    /* Avança ou recua; fecha ao sair dos extremos */
+    function advance(dir) {
+      const next = current + dir;
+      if (next < 0 || next >= photos.length) { closeStories(); return; }
+      current = next;
+      showStory(current);
+    }
+
+    /* Abre ao clicar num thumbnail */
+    thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => openStories(i)));
+
+    closeBtn.addEventListener('click', closeStories);
+    tapLeft.addEventListener('click',  () => advance(-1));
+    tapRight.addEventListener('click', () => advance(1));
+
+    /* Swipe mobile */
+    let touchStartX = 0;
+    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    overlay.addEventListener('touchend',   e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) advance(dx < 0 ? 1 : -1);
+    });
+
+    /* Fechar com Escape no desktop */
+    document.addEventListener('keydown', e => {
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'Escape')      closeStories();
+      if (e.key === 'ArrowRight')  advance(1);
+      if (e.key === 'ArrowLeft')   advance(-1);
+    });
+  }
+
+  /* ── Utilitários ─────────────────────────────────────── */
+  function setTxt(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatDate(dateStr) {
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function stopAll() {
+    if (counterInterval) clearInterval(counterInterval);
+  }
+  </script>
+
+  <!-- Cookie Consent Banner -->
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+  <script src="./assets/js/cookies.js"></script>
+</body>
+</html>

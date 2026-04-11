@@ -1,0 +1,117 @@
+/* ==============================
+   COOKIE CONSENT BANNER
+   Arquivo independente — funciona em todas as páginas.
+   ============================== */
+#sm-cookie-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  z-index: 9999;
+  width: calc(100% - 32px);
+  max-width: 680px;
+  background: #1a2230;
+  border: 1px solid rgba(255, 109, 186, 0.25);
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+#sm-cookie-banner.sm-cookie-show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+#sm-cookie-banner.sm-cookie-hide {
+  transform: translateX(-50%) translateY(120px);
+  opacity: 0;
+}
+
+.sm-cookie-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.sm-cookie-text {
+  flex: 1;
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  color: #999999;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sm-cookie-text strong {
+  display: block;
+  color: #f0f0f0;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.sm-cookie-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#sm-cookie-accept {
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: none;
+  background: #ff6dba;
+  color: #121820;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+#sm-cookie-accept:hover {
+  opacity: 0.85;
+}
+
+#sm-cookie-reject {
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: #999999;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+#sm-cookie-reject:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #f0f0f0;
+}
+
+@media (max-width: 540px) {
+  #sm-cookie-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    bottom: 16px;
+  }
+
+  .sm-cookie-actions {
+    width: 100%;
+  }
+
+  #sm-cookie-accept,
+  #sm-cookie-reject {
+    flex: 1;
+    text-align: center;
+  }
+}

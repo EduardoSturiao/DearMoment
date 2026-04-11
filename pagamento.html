@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento | SoulMates</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/pagamento.css">
+  <link rel="stylesheet" href="./assets/css/cookies.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="pay-header">
+    <div class="pay-header-inner">
+      <a href="./criar/index.html" class="pay-back-btn">← Voltar ao presente</a>
+      <a href="./index.html" class="pay-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="34" height="24" style="filter:drop-shadow(0 0 5px rgba(255,109,186,0.4));flex-shrink:0;">
+          <defs>
+            <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+        </svg>
+        <span>SoulMates</span>
+      </a>
+      <span class="pay-secure">🔒 Pagamento seguro</span>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="pay-main">
+
+    <!-- Coluna esquerda: resumo do pedido -->
+    <div class="pay-card">
+      <h2 class="pay-card-title">Resumo do Pedido</h2>
+
+      <div class="order-gift-preview">
+        <div class="order-gift-emoji">🎁</div>
+        <div class="order-gift-info">
+          <strong id="orderGiftNames">Seu presente</strong>
+          <span id="orderGiftTitle">Homenagem personalizada</span>
+        </div>
+      </div>
+
+      <div class="order-line">
+        <span class="label" id="orderPlanLabel">Plano Vitalício</span>
+        <span class="value">
+          <span id="orderPlanPrice">R$ 29,90</span>
+          <span class="order-plan-badge" id="orderPlanBadge">Mais popular</span>
+        </span>
+      </div>
+
+      <div class="order-line" id="orderWrappedLine" style="display:none">
+        <span class="label">Versão Wrapped</span>
+        <span class="value">+ R$ 7,90</span>
+      </div>
+
+      <div class="order-line total">
+        <span class="label">Total</span>
+        <span class="value" id="orderTotal">R$ 29,90</span>
+      </div>
+    </div>
+
+    <!-- Coluna direita: formulário de pagamento -->
+    <div class="pay-card">
+      <h2 class="pay-card-title">Pagamento com Cartão</h2>
+
+      <div class="pay-card-icons">
+        <span class="pay-card-icon">VISA</span>
+        <span class="pay-card-icon">MASTER</span>
+        <span class="pay-card-icon">ELO</span>
+        <span class="pay-card-icon">PIX</span>
+      </div>
+
+      <form id="payForm" novalidate>
+
+        <div class="pay-form-group">
+          <label for="cardName">Nome no cartão</label>
+          <input class="pay-input" type="text" id="cardName" placeholder="Como aparece no cartão" autocomplete="cc-name">
+        </div>
+
+        <div class="pay-form-group">
+          <label for="cardNumber">Número do cartão</label>
+          <input class="pay-input" type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number" inputmode="numeric">
+        </div>
+
+        <div class="pay-input-row">
+          <div class="pay-form-group">
+            <label for="cardExpiry">Validade</label>
+            <input class="pay-input" type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp" inputmode="numeric">
+          </div>
+          <div class="pay-form-group">
+            <label for="cardCvv">CVV</label>
+            <input class="pay-input" type="text" id="cardCvv" placeholder="···" maxlength="4" autocomplete="cc-csc" inputmode="numeric">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-pay" id="btnPay">
+          Pagar <span id="btnPayTotal">R$ 29,90</span>
+        </button>
+
+        <p class="pay-security-note">
+          🔒 Seus dados são protegidos com criptografia SSL
+        </p>
+
+      </form>
+
+      <!-- Estado de sucesso -->
+      <div class="pay-success" id="paySuccess">
+        <div class="pay-success-emoji">🎉</div>
+        <h2>Presente publicado!</h2>
+        <p>Seu QR Code está pronto.<br>Compartilhe e prepare-se para ver a reação.</p>
+
+        <div class="qr-wrap">
+          <div id="qrcodeContainer"></div>
+        </div>
+
+        <div class="pay-success-actions">
+          <a href="#" class="btn-success-primary" id="btnViewGift">Ver meu presente →</a>
+          <button class="btn-success-secondary" id="btnDownloadQR">⬇ Baixar QR Code</button>
+          <a href="./index.html" class="btn-success-secondary">Voltar para o início</a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    /* ── Dados dos planos ───────────────────────────────── */
+    const PLAN_DATA = {
+      vitalicio: { label: 'Plano Vitalício', price: 29.90, badge: '⭐ Mais popular' },
+      '24h':     { label: 'Plano 24 Horas',  price: 19.90, badge: '24h' },
+    };
+
+    const plan       = localStorage.getItem('soulmates_pending_plan') || 'vitalicio';
+    const hasWrapped = localStorage.getItem('soulmates_pending_wrapped') === '1';
+    // Lê metadados do presente (salvos antes da limpeza do wizard state)
+    const metaRaw = localStorage.getItem('soulmates_last_gift_meta');
+    const meta    = metaRaw ? JSON.parse(metaRaw) : {};
+
+    const planData = PLAN_DATA[plan] || PLAN_DATA.vitalicio;
+    const total    = planData.price + (hasWrapped ? 7.90 : 0);
+    const fmtBRL   = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+
+    /* ── Preenche resumo do pedido ──────────────────────── */
+    document.getElementById('orderPlanLabel').textContent = planData.label;
+    document.getElementById('orderPlanPrice').textContent = fmtBRL(planData.price);
+    document.getElementById('orderPlanBadge').textContent = planData.badge;
+    document.getElementById('orderTotal').textContent     = fmtBRL(total);
+    document.getElementById('btnPayTotal').textContent    = fmtBRL(total);
+
+    if (hasWrapped) document.getElementById('orderWrappedLine').style.display = '';
+
+    if (meta.name1 && meta.name2) {
+      document.getElementById('orderGiftNames').textContent = `${meta.name1} & ${meta.name2}`;
+    }
+    if (meta.title) {
+      document.getElementById('orderGiftTitle').textContent = meta.title;
+    }
+
+    /* ── Formatação dos campos do cartão ────────────────── */
+    const cardNumber = document.getElementById('cardNumber');
+    cardNumber.addEventListener('input', () => {
+      let v = cardNumber.value.replace(/\D/g, '').slice(0, 16);
+      cardNumber.value = v.replace(/(.{4})/g, '$1 ').trim();
+    });
+
+    const cardExpiry = document.getElementById('cardExpiry');
+    cardExpiry.addEventListener('input', () => {
+      let v = cardExpiry.value.replace(/\D/g, '').slice(0, 4);
+      if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+      cardExpiry.value = v;
+    });
+
+    const cardCvv = document.getElementById('cardCvv');
+    cardCvv.addEventListener('input', () => {
+      cardCvv.value = cardCvv.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    /* ── Submissão do formulário ─────────────────────────── */
+    document.getElementById('payForm').addEventListener('submit', e => {
+      e.preventDefault();
+
+      const name   = document.getElementById('cardName').value.trim();
+      const number = cardNumber.value.replace(/\s/g, '');
+      const expiry = cardExpiry.value;
+      const cvv    = cardCvv.value;
+
+      // Valida campos
+      let hasError = false;
+      [
+        ['cardName',   !!name],
+        ['cardNumber', number.length >= 16],
+        ['cardExpiry', expiry.length >= 5],
+        ['cardCvv',    cvv.length >= 3],
+      ].forEach(([id, valid]) => {
+        const el = document.getElementById(id);
+        el.style.borderColor = valid ? '' : 'rgba(255,80,80,0.6)';
+        if (!valid) hasError = true;
+      });
+
+      if (hasError) return;
+
+      const btn = document.getElementById('btnPay');
+      btn.textContent = 'Processando...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        showSuccess();
+      }, 1800);
+    });
+
+    /* ── Exibe tela de sucesso e gera QR Code ───────────── */
+    function showSuccess() {
+      // Limpa flags de pendência
+      localStorage.removeItem('soulmates_pending_plan');
+      localStorage.removeItem('soulmates_pending_wrapped');
+
+      // Esconde formulário, mostra sucesso
+      document.getElementById('payForm').style.display = 'none';
+      document.getElementById('paySuccess').classList.add('visible');
+
+      // Resolve o ID do presente — fallback em camadas para robustez
+      const lastGiftId  = localStorage.getItem('soulmates_last_gift_id');
+      const gifts       = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
+      const lastGift    = gifts.find(g => g.id === lastGiftId) || gifts[gifts.length - 1];
+      const id          = (lastGift && lastGift.id) || lastGiftId;
+
+      if (!id) return; // nenhum presente encontrado de forma alguma
+
+      const base    = window.location.href.replace(/pagamento\.html.*$/, '');
+      const giftUrl = base + 'presente.html?id=' + id;
+
+      // Botão "Ver presente"
+      const btnView = document.getElementById('btnViewGift');
+      btnView.href   = giftUrl;
+      btnView.target = '_blank';
+
+      // Botão de download — registra ANTES de gerar o QR (garante que o listener existe)
+      const qrContainer = document.getElementById('qrcodeContainer');
+      document.getElementById('btnDownloadQR').addEventListener('click', () => {
+        const canvas = qrContainer.querySelector('canvas');
+        if (!canvas) return;
+        const link    = document.createElement('a');
+        link.download = 'qrcode-soulmates.png';
+        link.href     = canvas.toDataURL('image/png');
+        link.click();
+      });
+
+      // Gera QR Code (isolado em try/catch — biblioteca CDN pode falhar)
+      try {
+        new QRCode(qrContainer, {
+          text:         giftUrl,
+          width:        192,
+          height:       192,
+          colorDark:    '#121820',
+          colorLight:   '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+      } catch (_) {
+        qrContainer.innerHTML =
+          `<p style="font-size:12px;color:#8892a4;text-align:center;padding:16px 0">
+             QR Code indisponível.<br>Use o link abaixo.
+           </p>`;
+      }
+    }
+  </script>
+
+  <!-- Cookie Consent Banner -->
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+  <script src="./assets/js/cookies.js"></script>
+</body>
+</html>

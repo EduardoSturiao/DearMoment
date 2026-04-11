@@ -8,11 +8,28 @@
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="./assets/css/cadastro.css">
-    <title>Cadastre-se</title>
+    <link rel="stylesheet" href="./assets/css/cookies.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&display=swap" rel="stylesheet">
+    <title>Cadastre-se | SoulMates</title>
 </head>
 
 <body>
     <main id="form_container">
+
+        <!-- Logo -->
+        <a href="./index.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:28px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="38" height="26" style="filter:drop-shadow(0 0 6px rgba(255,109,186,0.45));">
+            <defs>
+              <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+              <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+            </defs>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+            <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+          </svg>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:#ff6dba;letter-spacing:0.5px;">SoulMates</span>
+        </a>
+
         <div id="form_header">
             <h1 id="form_title">
                 Criar conta
@@ -132,6 +149,20 @@
     </main>
 
     <script src="./assets/js/main.js"></script>
+
+    <!-- Cookie Consent Banner -->
+    <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+      <span class="sm-cookie-icon">🍪</span>
+      <p class="sm-cookie-text">
+        <strong>Sua privacidade importa</strong>
+        Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+      </p>
+      <div class="sm-cookie-actions">
+        <button id="sm-cookie-accept">Aceitar</button>
+        <button id="sm-cookie-reject">Recusar</button>
+      </div>
+    </div>
+    <script src="./assets/js/cookies.js"></script>
 </body>
 
 </html>

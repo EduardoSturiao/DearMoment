@@ -9,8 +9,9 @@
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/cookies.css">
   <link
-    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <title>SoulMates — Presenteie sua Alma Gêmea</title>
 </head>
@@ -18,13 +19,68 @@
 
 
 
+  <!-- BANNER PROMOCIONAL — Dia dos Namorados (6–13 jun) -->
+  <div id="promo-banner" class="promo-banner" style="display:none;" aria-label="Oferta Dia dos Namorados">
+    <div class="promo-track">
+      <span class="promo-content">
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+      </span>
+      <span class="promo-content" aria-hidden="true">
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+        💕 &nbsp;&nbsp;&nbsp; Dia dos Namorados &nbsp;&nbsp;&nbsp; <strong>20% OFF</strong> &nbsp;&nbsp;&nbsp; Cupom: <strong>NAMORADOS</strong> &nbsp;&nbsp;&nbsp; Válido até 12/06 &nbsp;&nbsp;&nbsp;
+      </span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const now = new Date();
+      const start = new Date('2026-06-07T00:00:00');
+      const end   = new Date('2026-06-13T23:59:59');
+      if (now >= start && now <= end) {
+        document.getElementById('promo-banner').style.display = 'block';
+      }
+    })();
+  </script>
+
   <!-- NAVBAR -->
   <section>
     <header class="d2c_navbar sticky-top nav-section">
       <div class="container">
-        <nav class="navbar navbar-expand-lg px-0 py-0" id="d2c_main_nav"> <a class="navbar-brand"
-            href="./index.html"><img src="./assets/images/icons8-relationship-64.png" class="w-100" alt="Logo"
-              height="40"><span class="navbar-brand-name">SoulMates</span></a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        <nav class="navbar navbar-expand-lg px-0 py-0" id="d2c_main_nav"> <a class="navbar-brand" href="./index.html">
+              <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="40" height="28">
+                <defs>
+                  <!-- Clip: metade superior (anel direito na frente) -->
+                  <clipPath id="sm-clip-top">
+                    <rect x="0" y="3" width="34" height="11"/>
+                  </clipPath>
+                  <!-- Clip: metade inferior (anel direito por trás) -->
+                  <clipPath id="sm-clip-bot">
+                    <rect x="0" y="14" width="34" height="13"/>
+                  </clipPath>
+                </defs>
+
+                <!-- Anel direito — metade inferior (passa POR TRÁS do anel esquerdo) -->
+                <circle cx="22" cy="14" r="9"
+                        stroke="#ffb6d9" stroke-width="3.2" fill="none"
+                        clip-path="url(#sm-clip-bot)"/>
+
+                <!-- Anel esquerdo — completo -->
+                <circle cx="12" cy="14" r="9"
+                        stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+
+                <!-- Anel direito — metade superior (passa NA FRENTE do anel esquerdo) -->
+                <circle cx="22" cy="14" r="9"
+                        stroke="#ffb6d9" stroke-width="3.2" fill="none"
+                        clip-path="url(#sm-clip-top)"/>
+              </svg>
+              <span class="navbar-brand-name">SoulMates</span>
+            </a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
             aria-label="Toggle navigation"> <span><i class="fas fa-bars"></i></span> </button>
           <div class="collapse navbar-collapse js-clone-nav justify-content-end">
@@ -32,7 +88,7 @@
               <li class="nav-item"> <a class="nav-link active" href="#home">home</li>
               <li class="nav-item"> <a class="nav-link" href="#about">Como funciona</a> </li>
               <li class="nav-item"> <a class="nav-link" href="#service">Planos</a> </li>
-              <li class="nav-item"> <a class="nav-link" href="#service">Meus Presentes</a> </li>
+              <li class="nav-item"> <a class="nav-link" href="./meus-presentes.html">Meus Presentes</a> </li>
               <li class="nav-item"> <a class="nav-link" href="#team">FAQ</a> </li>
 
               <li class="nav-item"> <a href="#contact" class="btn d-block d-lg-none"></a></li>
@@ -98,11 +154,7 @@
             </div>
 
             <div class="mockup-badge badge-qr">
-              <div class="badge-qr-grid">
-                <div></div><div></div><div></div>
-                <div></div><div></div><div></div>
-                <div></div><div></div><div></div>
-              </div>
+              <svg class="badge-qr-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#ff6dba" d="M3 9h6V3H3zm1-5h4v4H4zm1 1h2v2H5zm10 4h6V3h-6zm1-5h4v4h-4zm1 1h2v2h-2zM3 21h6v-6H3zm1-5h4v4H4zm1 1h2v2H5zm15 2h1v2h-2v-3h1zm0-3h1v1h-1zm0-1v1h-1v-1zm-10 2h1v4h-1v-4zm-4-7v2H4v-1H3v-1h3zm4-3h1v1h-1zm3-3v2h-1V3h2v1zm-3 0h1v1h-1zm10 8h1v2h-2v-1h1zm-1-2v1h-2v2h-2v-1h1v-2h3zm-7 4h-1v-1h-1v-1h2v2zm6 2h1v1h-1zm2-5v1h-1v-1zm-9 3v1h-1v-1zm6 5h1v2h-2v-2zm-3 0h1v1h-1v1h-2v-1h1v-1zm0-1v-1h2v1zm0-5h1v3h-1v1h-1v1h-1v-2h-1v-1h3v-1h-1v-1zm-9 0v1H4v-1zm12 4h-1v-1h1zm1-2h-2v-1h2zM8 10h1v1H8v1h1v2H8v-1H7v1H6v-2h1v-2zm3 0V8h3v3h-2v-1h1V9h-1v1zm0-4h1v1h-1zm-1 4h1v1h-1zm3-3V6h1v1z"/><path fill="none" d="M0 0h24v24H0z"/></svg>
               <span class="badge-qr-label">QR Code</span>
             </div>
 
@@ -116,11 +168,38 @@
 
           <div class="hero-phone-mockup">
             <div class="hero-phone-frame">
+              <!-- Barra de status simulada -->
+              <div class="hero-phone-status-bar">
+                <span class="hero-status-time" id="heroStatusTime">9:41</span>
+                <div class="hero-status-icons">
+                  <svg viewBox="0 0 17 11" width="13" height="9">
+                    <rect x="0"    y="8"   width="3" height="3"  rx="0.6" fill="currentColor"/>
+                    <rect x="4.5"  y="5.5" width="3" height="5.5" rx="0.6" fill="currentColor"/>
+                    <rect x="9"    y="3"   width="3" height="8"  rx="0.6" fill="currentColor"/>
+                    <rect x="13.5" y="0"   width="3" height="11" rx="0.6" fill="currentColor"/>
+                  </svg>
+                  <svg viewBox="0 0 16 11" width="13" height="9" fill="none" stroke="currentColor" stroke-linecap="round">
+                    <path d="M1 3.8C3.8 1 12.2 1 15 3.8" stroke-width="1.4"/>
+                    <path d="M3.4 6.3C5.2 4.4 10.8 4.4 12.6 6.3" stroke-width="1.4"/>
+                    <path d="M5.8 8.8C6.8 7.8 9.2 7.8 10.2 8.8" stroke-width="1.4"/>
+                    <circle cx="8" cy="11" r="0.9" fill="currentColor" stroke="none"/>
+                  </svg>
+                  <svg viewBox="0 0 26 12" width="21" height="10">
+                    <rect x="0.5" y="1" width="21" height="10" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                    <rect x="22.5" y="4" width="3" height="4" rx="1" fill="currentColor" opacity="0.4"/>
+                    <rect x="2" y="2.5" width="16" height="7" rx="1.5" fill="currentColor"/>
+                  </svg>
+                </div>
+              </div>
               <div class="hero-phone-notch"></div>
               <div class="hero-phone-screen">
 
                 <!-- Player estilo Spotify -->
                 <div class="lp-player-section">
+                  <div class="lp-player-particles" aria-hidden="true">
+                    <span>♡</span><span>♡</span><span>♡</span>
+                    <span>♡</span><span>♡</span><span>♡</span>
+                  </div>
                   <div class="lp-player-cover-wrap">
                     <img src="./assets/images/portrait-beautiful-couple-standing-embracing-one-another-while-dreamily-looking-camera-park.jpg" alt="Capa do casal">
                   </div>
@@ -145,15 +224,88 @@
                   <div class="lp-about-title">Para sempre o nosso momento ✨</div>
                   <div class="lp-about-since">
                     <span>juntos desde</span>
-                    <strong>14/02/2022</strong>
+                    <strong>2022</strong>
                   </div>
-                  <div class="lp-mini-counter">
-                    <span>3</span>a <span>1</span>m <span>18</span>d
+                  <div class="lp-about-counter">
+                    <div class="lp-mc-card"><div class="lp-mc-num">3</div><div class="lp-mc-unit">anos</div></div>
+                    <div class="lp-mc-card"><div class="lp-mc-num">1</div><div class="lp-mc-unit">meses</div></div>
+                    <div class="lp-mc-card"><div class="lp-mc-num">18</div><div class="lp-mc-unit">dias</div></div>
+                    <div class="lp-mc-card"><div class="lp-mc-num">07</div><div class="lp-mc-unit">horas</div></div>
                   </div>
                   <div class="lp-about-city">📍 São Paulo, SP</div>
                 </div>
 
+                <!-- Mensagem especial -->
+                <div class="lp-message-section">
+                  <div class="lp-section-label">💌 mensagem especial</div>
+                  <div class="lp-msg-cover-wrap">
+                    <img src="./assets/images/portrait-beautiful-couple-standing-embracing-one-another-while-dreamily-looking-camera-park.jpg" alt="Foto do casal">
+                  </div>
+                  <p class="lp-msg-body">Desde o dia em que você entrou na minha vida, tudo ficou mais colorido. Obrigado por ser meu maior presente.</p>
+                </div>
+
+                <!-- Nossa história (timeline) -->
+                <div class="lp-timeline-section">
+                  <div class="lp-section-label">🕊️ nossa história</div>
+                  <div class="lp-timeline">
+                    <div class="lp-tl-item">
+                      <div class="lp-tl-dot"></div>
+                      <div class="lp-tl-date">14/02/2022</div>
+                      <div class="lp-tl-text">primeiro encontro em São Paulo</div>
+                    </div>
+                    <div class="lp-tl-item">
+                      <div class="lp-tl-dot lp-tl-dot-heart">❤</div>
+                      <div class="lp-tl-date">hoje</div>
+                      <div class="lp-tl-text">e a história continua...</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Galeria de fotos -->
+                <div class="lp-gallery-section">
+                  <div class="lp-section-label">📸 nossa galeria</div>
+                  <div class="lp-gallery-strip">
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g1/120/120" alt=""></div>
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g2/120/120" alt=""></div>
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g3/120/120" alt=""></div>
+                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g4/120/120" alt=""></div>
+                  </div>
+                </div>
+
+                <!-- Share bar -->
+                <div class="lp-share-bar">
+                  <button class="lp-share-btn lp-share-wpp">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                    WhatsApp
+                  </button>
+                  <button class="lp-share-btn lp-share-copy">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Copiar link
+                  </button>
+                </div>
+
               </div>
+
+              <!-- Barra de endereço + navegação inferior estilo Safari iOS -->
+              <div class="hero-browser-bar">
+                <svg class="hero-browser-icon" viewBox="0 0 12 16" width="9" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                  <rect x="1" y="7" width="10" height="8" rx="1.5"/>
+                  <path d="M3.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
+                </svg>
+                <span class="hero-browser-url">soulmates.com.br</span>
+                <svg class="hero-browser-icon hero-browser-reload" viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12.5 2.5A6 6 0 1 0 13 8"/>
+                  <polyline points="10,0.5 12.5,2.5 10.5,5"/>
+                </svg>
+              </div>
+              <div class="hero-browser-nav">
+                <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8,2 2,8 8,14"/></svg>
+                <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><polyline points="2,2 8,8 2,14"/></svg>
+                <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,12 9,2"/><polyline points="5,6 9,2 13,6"/><rect x="2" y="10" width="14" height="7" rx="2"/></svg>
+                <svg viewBox="0 0 18 16" width="16" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 2h12a1.5 1.5 0 0 1 0 3H3a1.5 1.5 0 0 1 0-3z"/><line x1="3" y1="8" x2="15" y2="8"/><line x1="3" y1="13" x2="11" y2="13"/></svg>
+                <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="12" height="12" rx="2"/><path d="M5 5V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/></svg>
+              </div>
+
             </div>
           </div>
           </div><!-- /mockup-orbit -->
@@ -163,6 +315,10 @@
           <p class="lead fs-5 hero-text">Crie uma mensagem exclusiva personalizada com fotos, música e contagem de tempo
             exata de
             vocês. Entregue através de um QR Code misterioso que vai emocionar até a alma.</p>
+          <div class="hero-rating">
+            <span class="hero-rating-stars">⭐⭐⭐⭐⭐</span>
+            <span class="hero-rating-text">+1.000 casais e amigos emocionados</span>
+          </div>
           <div class="d-grid gap-2 d-md-flex justify-content-md-start">
             <a href="./criar/index.html" class="btn btn-primary btn-lg px-4 me-md-2 d2c_btn_hero">Criar Homenagem Agora</a>
             <button type="button" class="btn btn-outline-secondary btn-lg px-4 d2c_btn_hero">Ver Exemplos</button>
@@ -234,6 +390,71 @@
   </section>
 
 
+  <!-- COMO FUNCIONA -->
+  <section class="how-section" id="como-funciona">
+    <div class="container">
+
+      <div class="text-center mb-5">
+        <span class="features-pill">Passo a passo</span>
+        <h2 class="how-heading mt-4 mb-2">Como criar sua homenagem</h2>
+        <p class="features-subtitle">Em minutos, um presente que ela vai guardar para sempre.</p>
+      </div>
+
+      <div class="how-steps">
+
+        <div class="how-step">
+          <div class="how-step-number">1</div>
+          <div class="how-connector" aria-hidden="true"></div>
+          <div class="how-step-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/>
+            </svg>
+          </div>
+          <h3 class="how-step-title">Escolha o plano</h3>
+          <p class="how-step-desc">Selecione entre 24 horas ou Vitalício conforme a ocasião.</p>
+        </div>
+
+        <div class="how-step">
+          <div class="how-step-number">2</div>
+          <div class="how-connector" aria-hidden="true"></div>
+          <div class="how-step-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </div>
+          <h3 class="how-step-title">Personalize</h3>
+          <p class="how-step-desc">Adicione fotos, a música de vocês, uma mensagem e a data do começo.</p>
+        </div>
+
+        <div class="how-step">
+          <div class="how-step-number">3</div>
+          <div class="how-connector" aria-hidden="true"></div>
+          <div class="how-step-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>
+            </svg>
+          </div>
+          <h3 class="how-step-title">Finalize o pagamento</h3>
+          <p class="how-step-desc">Pagamento único via Pix ou cartão. Rápido e sem mensalidade.</p>
+        </div>
+
+        <div class="how-step">
+          <div class="how-step-number">4</div>
+          <div class="how-step-icon how-step-icon--last">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>
+            </svg>
+          </div>
+          <h3 class="how-step-title">Compartilhe</h3>
+          <p class="how-step-desc">Envie o link ou imprima o QR Code e surpreenda quem você ama.</p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
   <!-- PRICING -->
 
   <section id="service">
@@ -294,6 +515,321 @@
               <div class="text-center">
                 <a href="./criar/index.html" class="btn btn-primary btn-custom">Escolher este plano</a>
               </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CONTADOR DE COMBINAÇÕES -->
+  <section class="combinations-section">
+    <div class="container">
+      <div class="combinations-card">
+        <div class="combinations-left">
+          <p class="combinations-label">cada presente é único</p>
+          <div class="combinations-number">
+            <span id="combCounter">0</span>
+            <span class="combinations-plus">+</span>
+          </div>
+          <p class="combinations-desc">combinações possíveis</p>
+        </div>
+        <div class="combinations-divider"></div>
+        <div class="combinations-right">
+          <p>Tipo de presente, cidade, música, fotos, título e mensagem — tudo personalizado. Nenhum presente igual ao outro.</p>
+          <a href="./criar/index.html" class="combinations-cta">Criar o meu agora</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials-section" id="depoimentos">
+    <div class="container">
+      <div class="text-center mb-5">
+        <span class="features-pill">Depoimentos</span>
+        <h2 class="testimonials-heading mt-4 mb-2">O que nossos clientes <span class="unica">relatam</span></h2>
+        <p class="features-subtitle">Mais de 1.000 casais já emocionaram quem amam com o SoulMates.</p>
+      </div>
+    </div>
+
+    <!-- Faixa 1 — rolagem para a esquerda -->
+    <div class="tm-track-outer">
+      <div class="tm-track tm-track--left">
+
+        <!-- SET 1 -->
+        <div class="tm-card">
+          <p class="tm-text">"Quando ele abriu o QR Code no Dia dos Namorados, ele <span class="tm-highlight">não conseguiu segurar as lágrimas</span>. Foi o presente mais especial que já dei."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff6dba,#c0396e);">A</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Ana Lima</span>
+              <span class="tm-role">São Paulo, SP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Criei a página em menos de 10 minutos e ficou incrível. A minha <span class="tm-highlight">noiva ligou chorando de emoção</span> logo depois que enviou!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#7b3fa6,#a855f7);">F</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Felipe Mendes</span>
+              <span class="tm-role">Rio de Janeiro, RJ</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Nossa música tocando, nossas fotos, o contador de dias juntos… A personalização é absurda. <span class="tm-highlight">Parece mágica.</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#e84393,#ff6dba);">C</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Camila Rocha</span>
+              <span class="tm-role">Belo Horizonte, MG</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Usei no aniversário de 3 anos com minha namorada. Ela ficou sem acreditar que algo assim existia. <span class="tm-highlight">Nota 10!</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#4a9eff,#2563eb);">L</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Lucas Santos</span>
+              <span class="tm-role">Curitiba, PR</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Dei de presente pro meu marido com um QR Code dentro de um cartão escrito 'aponte aqui ❤️'. A <span class="tm-highlight">reação dele foi inesquecível.</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff8c42,#f97316);">J</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Juliana Pires</span>
+              <span class="tm-role">Fortaleza, CE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Simples, bonito e muito emocionante. Valeu cada centavo. O SoulMates é <span class="tm-highlight">diferente de tudo que já vi.</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#6c63ff,#7b3fa6);">R</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Rodrigo Alves</span>
+              <span class="tm-role">Salvador, BA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SET 2 — duplicado para loop contínuo -->
+        <div class="tm-card">
+          <p class="tm-text">"Quando ele abriu o QR Code no Dia dos Namorados, ele <span class="tm-highlight">não conseguiu segurar as lágrimas</span>. Foi o presente mais especial que já dei."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff6dba,#c0396e);">A</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Ana Lima</span>
+              <span class="tm-role">São Paulo, SP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Criei a página em menos de 10 minutos e ficou incrível. A minha <span class="tm-highlight">noiva ligou chorando de emoção</span> logo depois que enviou!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#7b3fa6,#a855f7);">F</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Felipe Mendes</span>
+              <span class="tm-role">Rio de Janeiro, RJ</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Nossa música tocando, nossas fotos, o contador de dias juntos… A personalização é absurda. <span class="tm-highlight">Parece mágica.</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#e84393,#ff6dba);">C</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Camila Rocha</span>
+              <span class="tm-role">Belo Horizonte, MG</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Usei no aniversário de 3 anos com minha namorada. Ela ficou sem acreditar que algo assim existia. <span class="tm-highlight">Nota 10!</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#4a9eff,#2563eb);">L</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Lucas Santos</span>
+              <span class="tm-role">Curitiba, PR</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Dei de presente pro meu marido com um QR Code dentro de um cartão escrito 'aponte aqui ❤️'. A <span class="tm-highlight">reação dele foi inesquecível.</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff8c42,#f97316);">J</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Juliana Pires</span>
+              <span class="tm-role">Fortaleza, CE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Simples, bonito e muito emocionante. Valeu cada centavo. O SoulMates é <span class="tm-highlight">diferente de tudo que já vi.</span>"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#6c63ff,#7b3fa6);">R</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Rodrigo Alves</span>
+              <span class="tm-role">Salvador, BA</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Faixa 2 — rolagem para a direita -->
+    <div class="tm-track-outer mt-4">
+      <div class="tm-track tm-track--right">
+
+        <!-- SET 1 -->
+        <div class="tm-card">
+          <p class="tm-text">"Minha namorada compartilhou a página com a família inteira. <span class="tm-highlight">Todo mundo achou lindo!</span> Já recomendei pra vários amigos."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff6dba,#7b3fa6);">M</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Marina Torres</span>
+              <span class="tm-role">Porto Alegre, RS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"A experiência de criar é muito intuitiva. Em minutos você tem algo <span class="tm-highlight">profissional e emocionante</span> nas mãos."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#4a9eff,#6c63ff);">G</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Gabriel Ferreira</span>
+              <span class="tm-role">Manaus, AM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Já usei duas vezes — no aniversário dele e no Natal. As duas vezes ele <span class="tm-highlight">ficou sem fala</span>. Produto incrível!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#e84393,#c0396e);">B</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Beatriz Neves</span>
+              <span class="tm-role">Recife, PE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"O melhor presente que já dei. Barato, fácil e com resultado que <span class="tm-highlight">parece feito por designer.</span> Simplesmente perfeito."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#4a9eff,#2563eb);">T</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Thiago Lima</span>
+              <span class="tm-role">Campinas, SP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"A ideia do QR Code misterioso é genial. Você mantém a <span class="tm-highlight">surpresa até o último segundo.</span> Que experiência incrível!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff8c42,#ff6dba);">F</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Fernanda Costa</span>
+              <span class="tm-role">Goiânia, GO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"O plano vitalício vale demais. Nossa homenagem vai <span class="tm-highlight">ficar online para sempre.</span> Que ideia incrível de presente!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#6c63ff,#a855f7);">A</div>
+            <div class="tm-author-info">
+              <span class="tm-name">André Barbosa</span>
+              <span class="tm-role">Brasília, DF</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SET 2 — duplicado para loop contínuo -->
+        <div class="tm-card">
+          <p class="tm-text">"Minha namorada compartilhou a página com a família inteira. <span class="tm-highlight">Todo mundo achou lindo!</span> Já recomendei pra vários amigos."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff6dba,#7b3fa6);">M</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Marina Torres</span>
+              <span class="tm-role">Porto Alegre, RS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"A experiência de criar é muito intuitiva. Em minutos você tem algo <span class="tm-highlight">profissional e emocionante</span> nas mãos."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#4a9eff,#6c63ff);">G</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Gabriel Ferreira</span>
+              <span class="tm-role">Manaus, AM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"Já usei duas vezes — no aniversário dele e no Natal. As duas vezes ele <span class="tm-highlight">ficou sem fala</span>. Produto incrível!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#e84393,#c0396e);">B</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Beatriz Neves</span>
+              <span class="tm-role">Recife, PE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"O melhor presente que já dei. Barato, fácil e com resultado que <span class="tm-highlight">parece feito por designer.</span> Simplesmente perfeito."</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#4a9eff,#2563eb);">T</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Thiago Lima</span>
+              <span class="tm-role">Campinas, SP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"A ideia do QR Code misterioso é genial. Você mantém a <span class="tm-highlight">surpresa até o último segundo.</span> Que experiência incrível!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#ff8c42,#ff6dba);">F</div>
+            <div class="tm-author-info">
+              <span class="tm-name">Fernanda Costa</span>
+              <span class="tm-role">Goiânia, GO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <p class="tm-text">"O plano vitalício vale demais. Nossa homenagem vai <span class="tm-highlight">ficar online para sempre.</span> Que ideia incrível de presente!"</p>
+          <div class="tm-author">
+            <div class="tm-avatar" style="background: linear-gradient(135deg,#6c63ff,#a855f7);">A</div>
+            <div class="tm-author-info">
+              <span class="tm-name">André Barbosa</span>
+              <span class="tm-role">Brasília, DF</span>
             </div>
           </div>
         </div>
@@ -369,6 +905,20 @@
     </div>
   </section>
 
+  <!-- CTA FINAL -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-inner">
+        <div class="cta-glow" aria-hidden="true"></div>
+        <span class="cta-hearts" aria-hidden="true">💖</span>
+        <h2 class="cta-heading">Pronto para emocionar<br>alguém especial?</h2>
+        <p class="cta-sub">Crie agora sua homenagem e entregue um presente que nenhuma loja vende.</p>
+        <a href="./criar/index.html" class="btn cta-btn">Criar meu presente agora</a>
+      </div>
+    </div>
+  </section>
+
+
   <!-- FOOTER -->
 
   <section>
@@ -414,6 +964,88 @@
     integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
     crossorigin="anonymous"></script>
     <script src="./assets/js/main.js"></script>
+
+  <!-- Cookie Consent Banner -->
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+  <script src="./assets/js/cookies.js"></script>
+  <script>
+    (function () {
+      const el = document.getElementById('heroStatusTime');
+      if (!el) return;
+      function tick() {
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+
+  <!-- DESCONTO DIA DOS NAMORADOS — ativo de 7 a 13 jun -->
+  <style>
+    .promo-price-wrap {
+      text-align: center;
+      margin-bottom: -4px;
+    }
+    .promo-badge-pill {
+      display: inline-block;
+      background: #ff6dba;
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+    }
+    .promo-old-lp {
+      display: block;
+      font-family: 'Sora', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      text-decoration: line-through;
+      color: #8892a4;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+  </style>
+  <script>
+    (function () {
+      const now = new Date();
+      const start = new Date('2026-06-07T00:00:00');
+      const end   = new Date('2026-06-13T23:59:59');
+      if (now < start || now > end) return;
+
+      const map = { '19': { old: 'R$19,90', novo: 'R$15<span class="pricing-cents">,92</span>' },
+                    '29': { old: 'R$29,90', novo: 'R$23<span class="pricing-cents">,92</span>' } };
+
+      document.querySelectorAll('.pricing-price').forEach(el => {
+        const txt = el.textContent.replace(/\s/g, '');
+        const entry = txt.indexOf('19') !== -1 ? map['19']
+                    : txt.indexOf('29') !== -1 ? map['29'] : null;
+        if (!entry) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'promo-price-wrap';
+        wrap.innerHTML =
+          '<span class="promo-badge-pill">🏷 20% OFF · Dia dos Namorados</span>' +
+          '<span class="promo-old-lp">' + entry.old + '</span>';
+        el.parentNode.insertBefore(wrap, el);
+        el.innerHTML = entry.novo;
+      });
+    })();
+  </script>
 </body>
 
 </html>

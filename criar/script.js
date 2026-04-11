@@ -22,9 +22,11 @@ const state = {
   startDate:   '',
   city:        '',
   title:       '',
-  youtubeId:   '',
-  songName:    '',
-  artistName:  '',
+  youtubeId:    '',
+  youtubeQuery: '',
+  previewUrl:   '',
+  songName:     '',
+  artistName:   '',
   photos:      [],     // array de base64 strings (máx 6)
   message:     '',
   extraPhoto:  null,   // base64 string
@@ -122,19 +124,18 @@ function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/** Extrai o ID de vídeo de uma URL do YouTube */
-function extractYouTubeId(url) {
-  const patterns = [
-    /youtu\.be\/([^#?&]+)/,
-    /[?&]v=([^#?&]+)/,
-    /youtube\.com\/embed\/([^#?&]+)/,
-    /youtube\.com\/shorts\/([^#?&]+)/,
-  ];
-  for (const re of patterns) {
-    const match = url.match(re);
-    if (match) return match[1];
-  }
-  return null;
+/** Escapa caracteres HTML para uso seguro em innerHTML */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Normaliza string removendo acentos e colocando em minúsculas */
+function normalizeStr(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 /** Converte arquivo em base64 */
@@ -148,7 +149,91 @@ function fileToBase64(file) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   4. CONTADOR EM TEMPO REAL
+   4. SLIDESHOW DE FOTOS NO MOCKUP
+═══════════════════════════════════════════════════════════════ */
+let slideshowInterval  = null;
+let slideIndex         = 0;
+let _slideshowPhotoLen = -1; // evita reiniciar o slideshow a cada updatePreview()
+
+function startPhotoSlideshow() {
+  const count = state.photos.length;
+
+  // Só reinicia se a quantidade de fotos mudou ou o intervalo morreu
+  if (count === _slideshowPhotoLen && (count <= 1 || slideshowInterval !== null)) return;
+  _slideshowPhotoLen = count;
+
+  stopPhotoSlideshow();
+  const coverImg         = document.getElementById('coverImg');
+  const coverPlaceholder = document.getElementById('coverPlaceholder');
+
+  if (!count) {
+    coverImg.classList.add('hidden');
+    coverPlaceholder.classList.remove('hidden');
+    return;
+  }
+
+  slideIndex = 0;
+  coverImg.src = state.photos[0];
+  coverImg.style.opacity = '1';
+  coverImg.classList.remove('hidden');
+  coverPlaceholder.classList.add('hidden');
+
+  if (count > 1) {
+    slideshowInterval = setInterval(() => {
+      slideIndex = (slideIndex + 1) % state.photos.length;
+      coverImg.style.opacity = '0';
+      setTimeout(() => {
+        coverImg.src = state.photos[slideIndex];
+        coverImg.style.opacity = '1';
+      }, 800);
+    }, 3000);
+  }
+}
+
+function stopPhotoSlideshow() {
+  if (slideshowInterval) {
+    clearInterval(slideshowInterval);
+    slideshowInterval = null;
+  }
+}
+
+/* ── Hora real na status bar ─────────────────────────────────── */
+function updateStatusTime() {
+  const el = document.getElementById('statusTime');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+/* ── Galeria de fotos no mockup ─────────────────────────────── */
+function updateGalleryPreview() {
+  const strip = document.getElementById('galleryStrip');
+  if (!strip) return;
+
+  strip.innerHTML = '';
+
+  if (!state.photos.length) {
+    const empty = document.createElement('div');
+    empty.className = 'gallery-empty';
+    empty.textContent = 'Suas fotos aparecerão aqui';
+    strip.appendChild(empty);
+    return;
+  }
+
+  state.photos.forEach((src, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'gallery-thumb';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Foto ${i + 1}`;
+    img.loading = 'lazy';
+    thumb.appendChild(img);
+    strip.appendChild(thumb);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. CONTADOR EM TEMPO REAL
 ═══════════════════════════════════════════════════════════════ */
 let counterInterval = null;
 
@@ -193,6 +278,7 @@ function startCounter(dateStr) {
     setTextSafe('mcYears',  t.years);
     setTextSafe('mcMonths', t.months);
     setTextSafe('mcDays',   t.days);
+    setTextSafe('mcHours',  t.hours);
 
     // Ano no preview
     setTextSafe('prevYear', new Date(dateStr + 'T00:00:00').getFullYear());
@@ -306,22 +392,37 @@ function updatePreview() {
   // Cidade
   setTextSafe('prevCity', state.city ? `📍 ${state.city}` : '📍 —');
 
-  // Foto de capa (etapa 8)
-  const coverImg          = document.getElementById('coverImg');
-  const coverPlaceholder  = document.getElementById('coverPlaceholder');
-  if (state.extraPhoto) {
-    coverImg.src = state.extraPhoto;
-    coverImg.classList.remove('hidden');
-    coverPlaceholder.classList.add('hidden');
-  } else if (state.photos.length > 0) {
-    // Usa primeira foto da galeria enquanto não houver foto de destaque
-    coverImg.src = state.photos[0];
-    coverImg.classList.remove('hidden');
-    coverPlaceholder.classList.add('hidden');
-  } else {
-    coverImg.classList.add('hidden');
-    coverPlaceholder.classList.remove('hidden');
+  // Slideshow das fotos da galeria (etapa 6) no player cover
+  startPhotoSlideshow();
+
+  // Foto de capa do casal (etapa 8) → seção de mensagem especial
+  const msgCoverImg         = document.getElementById('msgCoverImg');
+  const msgCoverPlaceholder = document.getElementById('msgCoverPlaceholder');
+  if (msgCoverImg) {
+    if (state.extraPhoto) {
+      msgCoverImg.src = state.extraPhoto;
+      msgCoverImg.classList.remove('hidden');
+      if (msgCoverPlaceholder) msgCoverPlaceholder.classList.add('hidden');
+    } else {
+      msgCoverImg.classList.add('hidden');
+      if (msgCoverPlaceholder) msgCoverPlaceholder.classList.remove('hidden');
+    }
   }
+
+  // Mensagem especial (etapa 7) → seção de mensagem
+  setTextSafe('prevMessage', state.message || 'Sua mensagem especial aparecerá aqui...');
+
+  // Galeria de fotos
+  updateGalleryPreview();
+
+  // Timeline — nossa história
+  if (state.startDate) {
+    const d = new Date(state.startDate + 'T00:00:00');
+    setTextSafe('prevTlDate', d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }));
+  } else {
+    setTextSafe('prevTlDate', '—');
+  }
+  setTextSafe('prevTlCity', state.city || '—');
 
   // Contador já é atualizado pelo intervalo (startCounter)
   if (state.startDate) startCounter(state.startDate);
@@ -342,7 +443,8 @@ function setupAutocomplete() {
 
     if (q.length < 2) { list.classList.add('hidden'); return; }
 
-    const matches = CIDADES.filter(c => c.toLowerCase().includes(q)).slice(0, 8);
+    const qNorm   = normalizeStr(q);
+    const matches = CIDADES.filter(c => normalizeStr(c).includes(qNorm)).slice(0, 8);
     if (!matches.length) { list.classList.add('hidden'); return; }
 
     matches.forEach((city, i) => {
@@ -528,56 +630,155 @@ function setupExtraPhotoUpload() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   10. YOUTUBE (Etapa 5)
+   10. BUSCA DE MÚSICA (Etapa 5) — iTunes Search API + áudio nativo
 ═══════════════════════════════════════════════════════════════ */
-function setupYoutube() {
-  const urlInput   = document.getElementById('youtubeUrl');
-  const btnLoad    = document.getElementById('btnLoadYt');
-  const embedWrap  = document.getElementById('ytEmbedWrap');
-  const frame      = document.getElementById('ytFrame');
-  const btnPlay    = document.getElementById('btnPlay');
-  const overlay    = document.getElementById('ytOverlay');
-  const oFrame     = document.getElementById('ytOverlayFrame');
-  const btnClose   = document.getElementById('btnYtClose');
+function setupMusicSearch() {
+  const searchInput     = document.getElementById('musicSearch');
+  const suggestionsList = document.getElementById('musicSuggestions');
+  const btnPlay         = document.getElementById('btnPlay');
+  const audioEl         = document.getElementById('audioPreview');
 
-  /* Preenche o campo se já tiver URL salva */
-  if (state.youtubeId) {
-    renderYtEmbed(state.youtubeId);
+  let debounceTimer = null;
+  let highlighted   = -1;
+
+  // Restaura campo de busca e áudio se já há música salva
+  if (state.youtubeQuery) searchInput.value = state.youtubeQuery;
+  if (state.previewUrl)   audioEl.src        = state.previewUrl;
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim();
+    clearTimeout(debounceTimer);
+    suggestionsList.innerHTML = '';
+    highlighted = -1;
+
+    if (q.length < 2) { suggestionsList.classList.add('hidden'); return; }
+    debounceTimer = setTimeout(() => fetchSuggestions(q), 400);
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    const items = suggestionsList.querySelectorAll('li');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlighted = Math.min(highlighted + 1, items.length - 1);
+      updateHighlight(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlighted = Math.max(highlighted - 1, 0);
+      updateHighlight(items);
+    } else if (e.key === 'Enter' && highlighted >= 0) {
+      e.preventDefault();
+      items[highlighted].dispatchEvent(new MouseEvent('mousedown'));
+    } else if (e.key === 'Escape') {
+      suggestionsList.classList.add('hidden');
+    }
+  });
+
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => suggestionsList.classList.add('hidden'), 200);
+  });
+
+  async function fetchSuggestions(query) {
+    try {
+      const res  = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=8&country=BR`
+      );
+      const data = await res.json();
+      renderSuggestions(data.results || []);
+    } catch (_) {
+      suggestionsList.classList.add('hidden');
+    }
   }
 
-  /* Botão "Carregar" */
-  btnLoad.addEventListener('click', () => {
-    const id = extractYouTubeId(urlInput.value.trim());
-    if (!id) { showToast('URL do YouTube inválida'); return; }
-    state.youtubeId = id;
+  function renderSuggestions(tracks) {
+    suggestionsList.innerHTML = '';
+    highlighted = -1;
+    if (!tracks.length) { suggestionsList.classList.add('hidden'); return; }
+
+    tracks.forEach(track => {
+      const li = document.createElement('li');
+      li.className = 'music-suggestion-item';
+
+      const img = document.createElement('img');
+      img.src       = track.artworkUrl60 || '';
+      img.alt       = '';
+      img.className = 'suggestion-art';
+      img.loading   = 'lazy';
+
+      const info       = document.createElement('div');
+      info.className   = 'suggestion-info';
+      const trackSpan  = document.createElement('span');
+      trackSpan.className   = 'suggestion-track';
+      trackSpan.textContent = track.trackName;
+      const artistSpan = document.createElement('span');
+      artistSpan.className   = 'suggestion-artist';
+      artistSpan.textContent = track.artistName;
+
+      info.appendChild(trackSpan);
+      info.appendChild(artistSpan);
+      li.appendChild(img);
+      li.appendChild(info);
+
+      li.addEventListener('mousedown', e => {
+        e.preventDefault();
+        selectTrack(track);
+      });
+
+      suggestionsList.appendChild(li);
+    });
+
+    suggestionsList.classList.remove('hidden');
+  }
+
+  function selectTrack(track) {
+    suggestionsList.classList.add('hidden');
+    searchInput.value = `${track.trackName} — ${track.artistName}`;
+
+    // Para áudio atual antes de trocar
+    if (!audioEl.paused) {
+      audioEl.pause();
+      btnPlay.textContent = '▶';
+    }
+
+    // Sempre atualiza nome e artista ao selecionar uma música
+    const songEl   = document.getElementById('songName');
+    const artistEl = document.getElementById('artistName');
+    songEl.value     = track.trackName;
+    state.songName   = track.trackName;
+    artistEl.value   = track.artistName;
+    state.artistName = track.artistName;
+
+    state.youtubeQuery = `${track.trackName} ${track.artistName}`;
+    state.previewUrl   = track.previewUrl || '';
+    audioEl.src        = state.previewUrl;
+
     saveState();
-    renderYtEmbed(id);
     updatePreview();
-  });
-
-  /* Carrega ao colar e pressionar Enter */
-  urlInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') btnLoad.click();
-  });
-
-  function renderYtEmbed(id) {
-    frame.src = `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
-    embedWrap.classList.remove('hidden');
-    if (state.youtubeId) urlInput.value = `https://www.youtube.com/watch?v=${id}`;
   }
 
-  /* Botão play no preview — abre o YouTube embedded */
+  // Play / pause do preview de áudio no mockup
   btnPlay.addEventListener('click', () => {
-    if (!state.youtubeId) { showToast('Adicione uma música na etapa 5 🎵'); return; }
-    oFrame.src = `https://www.youtube-nocookie.com/embed/${state.youtubeId}?autoplay=1&rel=0`;
-    overlay.classList.remove('hidden');
+    if (!state.previewUrl) {
+      showToast('Adicione uma música na etapa 5 🎵');
+      return;
+    }
+    if (audioEl.paused) {
+      audioEl.play().catch(() => showToast('Não foi possível reproduzir o áudio'));
+      btnPlay.textContent = '⏸';
+    } else {
+      audioEl.pause();
+      btnPlay.textContent = '▶';
+    }
   });
 
-  /* Fechar overlay */
-  btnClose.addEventListener('click', () => {
-    overlay.classList.add('hidden');
-    oFrame.src = '';
+  // Volta o ícone para ▶ quando o preview terminar (30s)
+  audioEl.addEventListener('ended', () => {
+    btnPlay.textContent = '▶';
   });
+
+  function updateHighlight(items) {
+    items.forEach((li, i) => li.classList.toggle('highlighted', i === highlighted));
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -635,12 +836,33 @@ function setupUpgradeLegacy() {
     if (btn.classList.contains('added')) {
       btn.classList.remove('added');
       btn.textContent = 'Adicionar';
+      localStorage.removeItem('soulmates_pending_wrapped');
       showToast('Versão Wrapped removida');
     } else {
       btn.classList.add('added');
       btn.textContent = '✓ Adicionado';
+      localStorage.setItem('soulmates_pending_wrapped', '1');
       showToast('🎁 Wrapped adicionado ao pedido!');
     }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   13b. BOTÕES DE PLANO — redireciona para login/pagamento
+═══════════════════════════════════════════════════════════════ */
+function setupPlanButtons() {
+  document.querySelectorAll('.btn-plan').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const plan = btn.closest('.plan-card').classList.contains('featured') ? 'vitalicio' : '24h';
+      localStorage.setItem('soulmates_pending_plan', plan);
+
+      const loggedIn = localStorage.getItem('soulmates_session');
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity 0.4s ease';
+      setTimeout(() => {
+        window.location.href = loggedIn ? '../pagamento.html' : '../login.html';
+      }, 400);
+    });
   });
 }
 
@@ -736,6 +958,7 @@ function bindInputs() {
     state.message = msgText.value;
     msgCount.textContent = state.message.length;
     saveState();
+    updatePreview();
   });
 
   document.getElementById('btnRandomMsg').addEventListener('click', () => {
@@ -744,6 +967,7 @@ function bindInputs() {
     state.message = m;
     msgCount.textContent = m.length;
     saveState();
+    updatePreview();
   });
 
   /* Restaura valores dos campos de texto */
@@ -770,17 +994,12 @@ function restoreInputValues() {
     songName:   'songName',
     artistName: 'artistName',
     msgText:    'message',
-    youtubeUrl: state.youtubeId ? `https://www.youtube.com/watch?v=${state.youtubeId}` : '',
   };
 
-  for (const [id, stateKeyOrValue] of Object.entries(fields)) {
+  for (const [id, stateKey] of Object.entries(fields)) {
     const el = document.getElementById(id);
     if (!el) continue;
-    if (id === 'youtubeUrl') {
-      el.value = stateKeyOrValue; // já é a string direta
-    } else {
-      el.value = state[stateKeyOrValue] || '';
-    }
+    el.value = state[stateKey] || '';
   }
 
   // Char counts
@@ -791,11 +1010,58 @@ function restoreInputValues() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   15. NAVEGAÇÃO — Botões Avançar / Voltar
+   15. SALVAR PRESENTE CONCLUÍDO
+═══════════════════════════════════════════════════════════════ */
+const GIFTS_KEY = 'soulmates_gifts';
+
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+}
+
+function saveGift() {
+  const id = generateId();
+
+  // Salva o ID separadamente primeiro — é pequeno e nunca falha por quota
+  localStorage.setItem('soulmates_last_gift_id', id);
+
+  // Salva metadados mínimos para o pagamento.html exibir o resumo
+  localStorage.setItem('soulmates_last_gift_meta', JSON.stringify({
+    id, name1: state.name1, name2: state.name2, title: state.title,
+  }));
+
+  try {
+    const gifts = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
+    const gift = {
+      id,
+      name1:      state.name1,
+      name2:      state.name2,
+      startDate:  state.startDate,
+      city:       state.city,
+      title:      state.title,
+      youtubeId:  state.youtubeId,
+      songName:   state.songName,
+      artistName: state.artistName,
+      photos:     state.photos,
+      message:    state.message,
+      extraPhoto: state.extraPhoto,
+      giftType:   state.giftType,
+      createdAt:  new Date().toISOString(),
+    };
+    gifts.push(gift);
+    localStorage.setItem(GIFTS_KEY, JSON.stringify(gifts));
+    // Limpa o estado do wizard para um novo presente
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (_) { /* ignora erros de storage — ID já está salvo separadamente */ }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   16. NAVEGAÇÃO — Botões Avançar / Voltar
 ═══════════════════════════════════════════════════════════════ */
 function navigateNext() {
   if (!validateStep(state.currentStep)) return;
   if (state.currentStep <= TOTAL_STEPS) {
+    if (state.currentStep === TOTAL_STEPS) saveGift();
     state.currentStep++;
     showStep(state.currentStep);
   }
@@ -825,7 +1091,7 @@ function setupNavigation() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   16. ANIMAÇÃO BARRA DO PLAYER (fake)
+   17. ANIMAÇÃO BARRA DO PLAYER (fake)
 ═══════════════════════════════════════════════════════════════ */
 function animatePlayerBar() {
   const fill = document.getElementById('playerBarFill');
@@ -837,7 +1103,7 @@ function animatePlayerBar() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   17. INICIALIZAÇÃO
+   18. INICIALIZAÇÃO
 ═══════════════════════════════════════════════════════════════ */
 function init() {
   loadState();
@@ -846,13 +1112,18 @@ function init() {
   setupAutocomplete();
   setupPhotoUpload();
   setupExtraPhotoUpload();
-  setupYoutube();
+  setupMusicSearch();
   setupFaq();
   setupNavigation();
   setupMobilePreview();
   setupUpgrade();
   setupPlanSelection();
+  setupPlanButtons();
   animatePlayerBar();
+
+  /* Hora real na status bar — atualiza a cada minuto */
+  updateStatusTime();
+  setInterval(updateStatusTime, 60000);
 
   /* Restaura a etapa onde o usuário parou */
   showStep(state.currentStep);
