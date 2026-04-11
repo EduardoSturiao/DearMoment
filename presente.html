@@ -22,6 +22,17 @@
     <span></span><span></span><span></span><span></span>
   </div>
 
+  <!-- Tela de revelação — aparece ao abrir o link/QR -->
+  <div id="revealScreen">
+    <div class="reveal-particles" id="revealParticles"></div>
+    <div class="reveal-content">
+      <div class="reveal-icon">💌</div>
+      <p class="reveal-from" id="revealFrom">Alguém preparou</p>
+      <h1 class="reveal-title">algo especial<br>para você ✨</h1>
+      <button class="reveal-btn" id="btnReveal">Abrir presente 🎁</button>
+    </div>
+  </div>
+
   <!-- Header fixo -->
   <header class="gift-header">
     <span class="gift-logo">❤ SoulMates</span>
@@ -37,7 +48,7 @@
     <button class="yt-close-btn" id="btnYtClose">✕ Fechar player</button>
   </div>
 
-  <!-- Stories de fotos -->
+  <!-- Stories fullscreen (galeria) -->
   <div class="stories-overlay" id="storiesOverlay">
     <div class="stories-bars" id="storiesBars"></div>
     <button class="stories-close" id="storiesClose">✕</button>
@@ -46,6 +57,7 @@
     <div class="stories-tap-right" id="storiesTapRight"></div>
     <div class="stories-counter"   id="storiesCounter"></div>
   </div>
+
 
   <script>
   /* ================================================================
@@ -59,8 +71,12 @@
   const gift    = gifts.find(g => g.id === giftId);
 
   const root = document.getElementById('giftRoot');
+  let counterInterval = null;
 
   if (!gift) {
+    // Erro: pula a tela de revelação direto
+    document.getElementById('revealScreen').style.display = 'none';
+    root.style.opacity = '1';
     root.innerHTML = `
       <div class="gift-error">
         <div class="gift-error-emoji">💔</div>
@@ -73,6 +89,7 @@
     stopAll();
   } else {
     renderGift(gift);
+    setupReveal(gift);
   }
 
   /* ── 2. Renderiza o presente completo ───────────────── */
@@ -83,38 +100,20 @@
     document.querySelector('meta[property="og:title"]').content =
       `${names} — Um presente feito com amor ❤️`;
 
-    // Foto de capa
-    const coverSrc = g.extraPhoto || (g.photos && g.photos[0]) || '';
-    const heroHTML = coverSrc
-      ? `<img src="${coverSrc}" alt="Foto de capa" />`
-      : `<div class="gift-cover-placeholder">❤️</div>`;
-
-    // Galeria (exclui foto de capa para não duplicar)
-    const galleryPhotos = g.photos || [];
-    const galleryHTML = galleryPhotos.length
-      ? `<section class="gift-gallery-section">
-           <p class="gift-section-title">Nossas Fotos 📸 <span class="gift-section-hint">toque para ver</span></p>
-           <div class="gift-gallery" id="giftGallery">
-             ${galleryPhotos.map((src, i) => `
-               <div class="gift-gallery-thumb" data-src="${src}" data-index="${i}">
-                 <img src="${src}" alt="Foto ${i + 1}" loading="lazy">
-               </div>`).join('')}
-           </div>
-         </section>`
-      : '';
+    // Fotos para o stories (usa g.photos; fallback para extraPhoto)
+    const storyPhotos = (g.photos && g.photos.length) ? g.photos
+                      : (g.extraPhoto ? [g.extraPhoto] : []);
+    const firstPhoto  = storyPhotos[0] || '';
 
     // Player
     const songName   = g.songName   || 'Nossa Música';
     const artistName = g.artistName || 'Artista';
-    const thumbSrc   = coverSrc;
 
     const playerHTML = `
       <div class="gift-player">
         <div class="gift-player-inner">
           <div class="gift-player-thumb">
-            ${thumbSrc
-              ? `<img src="${thumbSrc}" alt="Capa">`
-              : '🎵'}
+            ${firstPhoto ? `<img src="${firstPhoto}" alt="Capa">` : '🎵'}
           </div>
           <div class="gift-player-meta">
             <div class="gift-song-name">${escHtml(songName)}</div>
@@ -131,11 +130,24 @@
         </div>
       </div>`;
 
+    // Galeria de fotos
+    const galleryPhotos = g.photos || [];
+    const galleryHTML = galleryPhotos.length
+      ? `<section class="gift-gallery-section">
+           <p class="gift-section-title">Nossas Fotos 📸 <span class="gift-section-hint">toque para ver</span></p>
+           <div class="gift-gallery" id="giftGallery">
+             ${galleryPhotos.map((src, i) => `
+               <div class="gift-gallery-thumb" data-src="${src}" data-index="${i}">
+                 <img src="${src}" alt="Foto ${i + 1}" loading="lazy">
+               </div>`).join('')}
+           </div>
+         </section>`
+      : '';
+
     // Mensagem
     const messageHTML = g.message
       ? `<section class="gift-message-section">
            <div class="gift-message-card">
-             <span class="gift-message-quote">"</span>
              <p class="gift-message-text">${escHtml(g.message)}</p>
              ${g.name1 ? `<p class="gift-message-signature">Com amor, ${escHtml(g.name1)} ❤️</p>` : ''}
            </div>
@@ -146,12 +158,18 @@
     root.innerHTML = `
       <div class="gift-wrap">
 
-        <!-- Hero -->
-        <section class="gift-hero">
+        <!-- Hero — stories de fotos -->
+        <section class="gift-hero" id="giftHero">
+          <div class="gift-hero-bars" id="giftHeroBars"></div>
           <div class="gift-cover">
-            ${heroHTML}
+            ${firstPhoto
+              ? `<img src="${firstPhoto}" alt="Foto 1" id="giftHeroImg">`
+              : `<div class="gift-cover-placeholder">❤️</div>`}
             <div class="gift-cover-overlay"></div>
           </div>
+          ${storyPhotos.length > 1 ? `
+          <button class="gift-hero-arrow prev" id="giftHeroPrev">‹</button>
+          <button class="gift-hero-arrow next" id="giftHeroNext">›</button>` : ''}
           <div class="gift-hero-content">
             <h1 class="gift-names">${escHtml(names)}</h1>
             ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
@@ -197,12 +215,11 @@
     // Inicia as interações após renderizar
     if (g.startDate) startCounter(g.startDate);
     if (g.youtubeId) setupPlayer(g.youtubeId);
-    setupGallery();
+    if (storyPhotos.length > 1) setupHeroStories(storyPhotos);
+    if (galleryPhotos.length)   setupGallery();
   }
 
   /* ── 3. Contador em tempo real ──────────────────────── */
-  let counterInterval = null;
-
   function startCounter(dateStr) {
     function tick() {
       const t = calcTimeSince(dateStr);
@@ -265,7 +282,86 @@
     });
   }
 
-  /* ── 5. Galeria — Stories viewer ────────────────────── */
+  /* ── 5. Hero Stories — navegação de fotos ───────────── */
+  function setupHeroStories(photos) {
+    const hero    = document.getElementById('giftHero');
+    const imgEl   = document.getElementById('giftHeroImg');
+    const barsEl  = document.getElementById('giftHeroBars');
+    const prevBtn = document.getElementById('giftHeroPrev');
+    const nextBtn = document.getElementById('giftHeroNext');
+
+    if (!hero || !imgEl || !barsEl) return;
+
+    const DURATION = 5000;
+    let current    = 0;
+    let timer      = null;
+    let isPaused   = false;
+
+    /* Reconstrói as barras; a ativa recebe a animação de progresso */
+    function buildBars(active) {
+      barsEl.innerHTML = photos.map((_, i) => {
+        const cls = i < active ? 'done' : i === active ? 'active' : '';
+        const dur = cls === 'active' ? ` style="--dur:${DURATION}ms"` : '';
+        return `<div class="gift-hero-bar"><div class="gift-hero-bar-fill ${cls}"${dur}></div></div>`;
+      }).join('');
+    }
+
+    /* Troca a foto com fade */
+    function showPhoto(index) {
+      clearTimeout(timer);
+      current = index;
+      imgEl.style.opacity = '0';
+      setTimeout(() => {
+        imgEl.src = photos[current];
+        imgEl.style.opacity = '1';
+      }, 150);
+      buildBars(current);
+      if (!isPaused) timer = setTimeout(() => advance(1), DURATION);
+    }
+
+    /* Avança (loop) ou recua */
+    function advance(dir) {
+      let next = current + dir;
+      if (next < 0)             next = photos.length - 1;
+      if (next >= photos.length) next = 0;
+      showPhoto(next);
+    }
+
+    /* Inicia na primeira foto */
+    buildBars(0);
+    timer = setTimeout(() => advance(1), DURATION);
+
+    /* Desktop: setas */
+    if (prevBtn) prevBtn.addEventListener('click', e => { e.stopPropagation(); advance(-1); });
+    if (nextBtn) nextBtn.addEventListener('click', e => { e.stopPropagation(); advance(1);  });
+
+    /* Desktop: teclado (setas) */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') advance(1);
+      if (e.key === 'ArrowLeft')  advance(-1);
+    });
+
+    /* Mobile: swipe horizontal */
+    let touchStartX = 0;
+    let touchStartY = 0;
+    hero.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    hero.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) advance(dx < 0 ? 1 : -1);
+    });
+
+    /* Pausa ao segurar (press and hold) */
+    hero.addEventListener('mousedown',  () => { isPaused = true;  clearTimeout(timer); });
+    hero.addEventListener('mouseup',    () => { isPaused = false; timer = setTimeout(() => advance(1), 800); });
+    hero.addEventListener('touchstart', () => { isPaused = true;  clearTimeout(timer); }, { passive: true });
+    hero.addEventListener('touchend',   () => { isPaused = false; timer = setTimeout(() => advance(1), 800); });
+  }
+
+  /* ── 6. Galeria — Stories fullscreen ───────────────── */
   function setupGallery() {
     const thumbs   = [...document.querySelectorAll('.gift-gallery-thumb')];
     if (!thumbs.length) return;
@@ -283,7 +379,6 @@
     let current = 0;
     let timer   = null;
 
-    /* Abre o stories no índice clicado */
     function openStories(index) {
       current = index;
       overlay.classList.add('open');
@@ -291,7 +386,6 @@
       showStory(current);
     }
 
-    /* Fecha e limpa tudo */
     function closeStories() {
       overlay.classList.remove('open');
       document.body.style.overflow = '';
@@ -299,7 +393,6 @@
       imgEl.src = '';
     }
 
-    /* Exibe uma foto e reinicia o progresso */
     function showStory(index) {
       clearTimeout(timer);
       imgEl.style.opacity = '0';
@@ -310,7 +403,6 @@
       timer = setTimeout(() => advance(1), DURATION);
     }
 
-    /* Constrói as barras de progresso */
     function buildBars(active) {
       barsEl.innerHTML = photos.map((_, i) => {
         const cls = i < active ? 'done' : i === active ? 'active' : '';
@@ -318,7 +410,6 @@
       }).join('');
     }
 
-    /* Avança ou recua; fecha ao sair dos extremos */
     function advance(dir) {
       const next = current + dir;
       if (next < 0 || next >= photos.length) { closeStories(); return; }
@@ -326,14 +417,11 @@
       showStory(current);
     }
 
-    /* Abre ao clicar num thumbnail */
     thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => openStories(i)));
-
     closeBtn.addEventListener('click', closeStories);
     tapLeft.addEventListener('click',  () => advance(-1));
     tapRight.addEventListener('click', () => advance(1));
 
-    /* Swipe mobile */
     let touchStartX = 0;
     overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
     overlay.addEventListener('touchend',   e => {
@@ -341,13 +429,90 @@
       if (Math.abs(dx) > 40) advance(dx < 0 ? 1 : -1);
     });
 
-    /* Fechar com Escape no desktop */
     document.addEventListener('keydown', e => {
       if (!overlay.classList.contains('open')) return;
-      if (e.key === 'Escape')      closeStories();
-      if (e.key === 'ArrowRight')  advance(1);
-      if (e.key === 'ArrowLeft')   advance(-1);
+      if (e.key === 'Escape')     closeStories();
+      if (e.key === 'ArrowRight') advance(1);
+      if (e.key === 'ArrowLeft')  advance(-1);
     });
+  }
+
+  /* ── Reveal Screen ──────────────────────────────────── */
+  function setupReveal(g) {
+    const screen    = document.getElementById('revealScreen');
+    const fromEl    = document.getElementById('revealFrom');
+    const btn       = document.getElementById('btnReveal');
+    const container = document.getElementById('revealParticles');
+
+    // Atualiza mensagem com nome de quem criou o presente
+    if (g.name1) {
+      fromEl.textContent = g.name1 + ' preparou';
+    }
+
+    // Gera partículas flutuantes de fundo
+    const emojis = ['💕','💗','💖','💝','✨','🌸','💫','🥀','💞','🌹','💓','⭐'];
+    for (let i = 0; i < 20; i++) {
+      const el = document.createElement('span');
+      el.className = 'reveal-particle';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left               = (Math.random() * 100) + '%';
+      el.style.fontSize           = (13 + Math.random() * 18) + 'px';
+      el.style.animationDuration  = (6 + Math.random() * 10) + 's';
+      el.style.animationDelay     = (Math.random() * 9) + 's';
+      container.appendChild(el);
+    }
+
+    btn.addEventListener('click', () => {
+      // 1. Pulso no botão
+      btn.classList.add('reveal-btn-clicked');
+
+      // 2. Explosão radial de partículas
+      spawnBurst();
+
+      // 3. Exit animation na tela + flash de luz
+      setTimeout(() => {
+        screen.classList.add('reveal-exit');
+        const flash = document.createElement('div');
+        flash.className = 'reveal-flash';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 600);
+      }, 130);
+
+      // 4. Esconde a tela e exibe o presente com entrada suave
+      setTimeout(() => {
+        screen.style.display = 'none';
+        root.classList.add('gift-revealed');
+      }, 850);
+    });
+  }
+
+  function spawnBurst() {
+    const burstEmojis = ['💗','💖','💕','✨','💫','🌸','💝','⭐','💞','🥀','🌹','💓'];
+    const wrap = document.createElement('div');
+    wrap.className = 'reveal-burst';
+    document.body.appendChild(wrap);
+
+    const total = 22;
+    for (let i = 0; i < total; i++) {
+      const el   = document.createElement('span');
+      el.className = 'reveal-burst-particle';
+      el.textContent = burstEmojis[Math.floor(Math.random() * burstEmojis.length)];
+
+      const angle = (i / total) * 360 + (Math.random() * 16 - 8);
+      const dist  = 110 + Math.random() * 220;
+      const rad   = (angle * Math.PI) / 180;
+      const dx    = Math.round(Math.cos(rad) * dist);
+      const dy    = Math.round(Math.sin(rad) * dist);
+      const rot   = Math.round(Math.random() * 360 - 180);
+      const dur   = (0.45 + Math.random() * 0.35).toFixed(2);
+      const size  = Math.round(14 + Math.random() * 22);
+
+      el.style.cssText =
+        `--dx:${dx}px;--dy:${dy}px;--rot:${rot}deg;--dur:${dur}s;font-size:${size}px`;
+      wrap.appendChild(el);
+    }
+
+    setTimeout(() => wrap.remove(), 900);
   }
 
   /* ── Utilitários ─────────────────────────────────────── */

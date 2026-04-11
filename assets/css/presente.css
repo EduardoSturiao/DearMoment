@@ -69,6 +69,7 @@ body {
   z-index: 1;
   max-width: 480px;
   margin: 0 auto;
+  padding-top: 68px;
   padding-bottom: 60px;
 }
 
@@ -105,13 +106,86 @@ body {
   border-radius: 99px;
 }
 
-/* ── Hero — foto de capa + nomes ──────────────────────── */
+/* ── Hero — stories de fotos + nomes ─────────────────── */
 .gift-hero {
   position: relative;
-  width: 100%;
-  min-height: 52vh;
+  margin: 0 16px 16px;
+  border-radius: 20px;
+  overflow: hidden;
+  height: 420px;
   display: flex;
   align-items: flex-end;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Barras de progresso (stories) */
+.gift-hero-bars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: 14px 14px 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.gift-hero-bar {
+  flex: 1;
+  height: 2.5px;
+  background: rgba(255,255,255,0.28);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.gift-hero-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  border-radius: 99px;
+}
+
+.gift-hero-bar-fill.done   { width: 100%; }
+.gift-hero-bar-fill.active { animation: heroBarProgress var(--dur, 5s) linear forwards; }
+
+@keyframes heroBarProgress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* Setas de navegação — só aparecem no desktop */
+.gift-hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.38);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+  color: rgba(255,255,255,0.92);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.gift-hero:hover .gift-hero-arrow { opacity: 1; }
+.gift-hero-arrow:hover { background: rgba(0,0,0,0.6); }
+.gift-hero-arrow.prev { left: 12px; }
+.gift-hero-arrow.next { right: 12px; }
+
+/* Em telas touch oculta as setas */
+@media (pointer: coarse) {
+  .gift-hero-arrow { display: none; }
 }
 
 .gift-cover {
@@ -125,6 +199,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.25s ease;
 }
 
 .gift-cover-overlay {
@@ -132,10 +207,10 @@ body {
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(18,24,32,0.2) 0%,
-    rgba(18,24,32,0.0) 30%,
-    rgba(18,24,32,0.8) 75%,
-    rgba(18,24,32,1.0) 100%
+    rgba(18,24,32,0.15) 0%,
+    rgba(18,24,32,0.0)  30%,
+    rgba(18,24,32,0.75) 72%,
+    rgba(18,24,32,0.97) 100%
   );
 }
 
@@ -153,7 +228,7 @@ body {
   position: relative;
   z-index: 1;
   width: 100%;
-  padding: 32px 24px 28px;
+  padding: 28px 24px 24px;
   text-align: center;
 }
 
@@ -178,12 +253,11 @@ body {
 
 /* ── Player de música ─────────────────────────────────── */
 .gift-player {
-  margin: 0 16px;
+  margin: 0 16px 16px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 20px;
-  transform: translateY(-20px);
 }
 
 .gift-player-inner {
@@ -394,23 +468,28 @@ body {
   position: relative;
 }
 
-.gift-message-quote {
-  font-size: 48px;
-  line-height: 0.6;
-  color: rgba(255,109,186,0.25);
-  font-family: Georgia, serif;
-  position: absolute;
-  top: 20px;
-  left: 22px;
-}
-
 .gift-message-text {
   font-family: var(--font-b);
   font-size: 15px;
   line-height: 1.75;
   color: #c8d0dc;
-  padding-top: 18px;
   white-space: pre-wrap;
+}
+
+.gift-message-text::before {
+  content: '\201C';
+  font-family: Georgia, serif;
+  font-size: 1.15em;
+  color: rgba(255, 109, 186, 0.55);
+  margin-right: 2px;
+}
+
+.gift-message-text::after {
+  content: '\201D';
+  font-family: Georgia, serif;
+  font-size: 1.15em;
+  color: rgba(255, 109, 186, 0.55);
+  margin-left: 2px;
 }
 
 .gift-message-signature {
@@ -603,6 +682,202 @@ body {
 }
 
 .gift-footer a:hover { opacity: 0.75; }
+
+/* ── Reveal Screen (tela de entrada do presente) ─────── */
+#revealScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: radial-gradient(ellipse at 50% 60%, #1e1a2e 0%, #121820 65%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
+}
+
+#revealScreen.hiding {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.reveal-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.reveal-particle {
+  position: absolute;
+  bottom: -60px;
+  animation: revealFloat linear infinite;
+  opacity: 0;
+  user-select: none;
+  line-height: 1;
+}
+
+@keyframes revealFloat {
+  0%   { transform: translateY(0) rotate(-10deg) scale(0.8); opacity: 0; }
+  8%   { opacity: 0.85; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(-108vh) rotate(15deg) scale(1.2); opacity: 0; }
+}
+
+.reveal-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 360px;
+}
+
+.reveal-icon {
+  font-size: 68px;
+  animation: revealPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 24px rgba(255, 109, 186, 0.55));
+  margin-bottom: 4px;
+}
+
+@keyframes revealPulse {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50%       { transform: scale(1.12) rotate(3deg); }
+}
+
+.reveal-from {
+  font-family: var(--font-b);
+  font-size: clamp(24px, 7vw, 32px);
+  color: var(--pink);
+  font-weight: 700;
+  margin: 0 0 -8px;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  opacity: 0;
+  animation: revealFadeUp 0.65s ease 0.4s forwards;
+}
+
+.reveal-title {
+  font-family: var(--font-b);
+  font-size: clamp(24px, 7vw, 32px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+  margin: 0;
+  opacity: 0;
+  animation: revealFadeUp 0.65s ease 0.65s forwards;
+}
+
+@keyframes revealFadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.reveal-btn {
+  background: linear-gradient(135deg, #ff6dba 0%, #e0449a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  padding: 17px 44px;
+  font-family: var(--font-b);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 6px 28px rgba(255, 109, 186, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  opacity: 0;
+  animation: revealFadeUp 0.65s ease 0.95s forwards;
+  letter-spacing: 0.2px;
+}
+
+.reveal-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 36px rgba(255, 109, 186, 0.65);
+}
+
+.reveal-btn:active { transform: scale(0.96); }
+
+/* ── Botão: pulo ao clicar ───────────────────────────── */
+.reveal-btn-clicked {
+  animation: btnPop 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
+  pointer-events: none;
+}
+
+@keyframes btnPop {
+  0%   { transform: scale(1);    box-shadow: 0 6px 28px rgba(255,109,186,0.5); }
+  35%  { transform: scale(1.22); box-shadow: 0 0 60px rgba(255,109,186,1); }
+  65%  { transform: scale(0.9);  }
+  100% { transform: scale(1);    }
+}
+
+/* ── Saída da reveal screen ──────────────────────────── */
+.reveal-exit {
+  animation: revealScreenExit 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  pointer-events: none;
+}
+
+@keyframes revealScreenExit {
+  0%   { opacity: 1; transform: scale(1);    filter: blur(0px);  }
+  18%  { opacity: 1; transform: scale(1.06); filter: blur(0px);  }
+  100% { opacity: 0; transform: scale(1.2);  filter: blur(14px); }
+}
+
+/* ── Burst radial de partículas ──────────────────────── */
+.reveal-burst {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10003;
+  overflow: hidden;
+}
+
+.reveal-burst-particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  line-height: 1;
+  user-select: none;
+  animation: burstFly var(--dur, 0.7s) cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes burstFly {
+  0%   { transform: translate(-50%, -50%) scale(0.1) rotate(0deg); opacity: 1; }
+  55%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.5) rotate(var(--rot)); opacity: 0; }
+}
+
+/* ── Flash de luz ao revelar ─────────────────────────── */
+.reveal-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  background: radial-gradient(ellipse at center, rgba(255,109,186,0.6) 0%, transparent 70%);
+  pointer-events: none;
+  animation: flashOut 0.55s ease forwards;
+}
+
+@keyframes flashOut {
+  0%   { opacity: 1; transform: scale(0.6); }
+  40%  { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ── Presente: entrada após reveal ──────────────────── */
+#giftRoot { opacity: 0; }
+
+#giftRoot.gift-revealed {
+  animation: giftRevealIn 0.7s ease 0.08s both;
+}
+
+@keyframes giftRevealIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ── Tela de erro (gift não encontrado) ───────────────── */
 .gift-error {
