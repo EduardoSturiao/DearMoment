@@ -10,18 +10,11 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="preview-shell hidden" id="previewShell">
-    <span class="preview-pill">Modo validacao</span>
-    <a class="preview-link" href="../criar/index.html">Voltar para editar</a>
-  </div>
-
   <div class="device-stage">
     <div class="device-backdrop" aria-hidden="true"></div>
 
     <div class="phone-shell">
       <div class="phone-frame">
-        <div class="phone-notch" aria-hidden="true"></div>
-
         <div class="story-app" id="storyApp">
           <section class="story-cover" id="storyCover">
             <div class="story-cover-media" id="storyCoverMedia"></div>
@@ -29,15 +22,15 @@
 
             <div class="story-cover-content">
               <div class="story-cover-header">
-                <p class="cover-kicker" id="coverKicker">SoulMates</p>
-                <h1 class="cover-title" id="coverTitle">Um presente aguardando por voce.</h1>
+                <h1 class="cover-title" id="coverTitle">Um presente aguardando por você.</h1>
+                <p class="cover-copy" id="coverCopy">Clique abaixo para abrir</p>
               </div>
 
               <div class="story-cover-cta">
                 <button class="cover-start" id="startStoryButton" type="button" aria-label="Abrir presente">
                   <span class="cover-start-icon" aria-hidden="true"></span>
+                  <span class="cover-start-text">Abrir presente</span>
                 </button>
-                <p class="cover-start-label">Abrir presente</p>
               </div>
             </div>
           </section>
@@ -45,24 +38,24 @@
           <section class="story-player hidden" id="storyPlayer" aria-live="polite">
             <header class="story-topbar">
               <div class="story-progress" id="progressContainer"></div>
-              <button class="story-pause" id="pauseButton" type="button" aria-pressed="false">Pausar</button>
             </header>
 
-            <div class="pause-indicator" id="pauseIndicator">Pausado</div>
+            <div class="pause-indicator" id="pauseIndicator" aria-hidden="true"></div>
 
             <div class="story-slides" id="storySlides"></div>
 
             <button class="story-zone story-zone-left" id="prevZone" type="button" aria-label="Slide anterior"></button>
             <button class="story-zone story-zone-center" id="pauseZone" type="button" aria-label="Pausar ou retomar"></button>
-            <button class="story-zone story-zone-right" id="nextZone" type="button" aria-label="Proximo slide"></button>
+            <button class="story-zone story-zone-right" id="nextZone" type="button" aria-label="Próximo slide"></button>
 
             <footer class="story-footer">
               <div class="story-track" id="trackLabel">Sem trilha sonora</div>
-              <button class="story-replay hidden" id="replayButton" type="button">Rever do inicio</button>
+              <button class="story-replay hidden" id="replayButton" type="button">Rever do início</button>
             </footer>
           </section>
 
           <div class="youtube-audio-host" id="youtubeAudioHost" aria-hidden="true"></div>
+          <audio class="background-audio" id="backgroundAudio" preload="auto" loop></audio>
         </div>
       </div>
     </div>

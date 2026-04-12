@@ -4,23 +4,24 @@ const STORAGE_KEY = 'soulmates_wizard_state';
 const STORY_INTERVAL_MS = 60;
 const PHOTO_DURATION_MS = 1500;
 const BASE_SLIDE_DURATION_MS = 4200;
-const MESSAGE_CHUNK_LIMIT = 150;
+const MESSAGE_CHUNK_LIMIT = 110;
+const OPENING_MESSAGE_CHUNK_LIMIT = 60;
 
 const PLAN_META = {
   vitalicio: {
-    label: 'Plano vitalicio',
-    title: 'Uma lembranca pensada para durar muito mais do que um momento.',
+    label: 'Plano vitalício',
+    title: 'Uma lembrança pensada para durar muito mais do que um momento.',
     copy: 'Essa entrega foi desenhada para continuar emocionante sempre que for revisitada.'
   },
   '24h': {
     label: 'Plano 24h',
     title: 'Uma surpresa feita para marcar o instante certo.',
-    copy: 'Mesmo em uma entrega mais curta, a intencao continua grande e memoravel.'
+    copy: 'Mesmo em uma entrega mais curta, a intenção continua grande e memorável.'
   },
   default: {
     label: 'Presente SoulMates',
     title: 'Um presente para ser revisitado sempre que bater saudade.',
-    copy: 'Criado com cuidado para transformar musica, imagem e palavras em uma unica lembranca.'
+    copy: 'Criado com cuidado para transformar música, imagem e palavras em uma única lembrança.'
   }
 };
 
@@ -37,10 +38,10 @@ const storyState = {
   paused: false,
   started: false,
   finished: false,
-  pauseToastTimer: null,
   youtubeApiPromise: null,
   youtubePlayerPromise: null,
-  youtubePlayer: null
+  youtubePlayer: null,
+  nativeAudio: null
 };
 
 function loadState() {
@@ -83,15 +84,15 @@ function getDefaultTitle() {
 
 function getDefaultMessage() {
   return state.giftType === 'amigo'
-    ? 'Tem amizades que merecem um espaco so delas. Esta pagina foi criada para guardar os momentos, o carinho e a presenca que fazem essa historia ser tao especial.'
-    : 'Tem historias que merecem um espaco so delas. Esta pagina foi criada para guardar a musica, as imagens e tudo aquilo que faz esse amor continuar vivo todos os dias.';
+    ? 'Tem amizades que merecem um espaço só delas. Esta página foi criada para guardar os momentos, o carinho e a presença que fazem essa história ser tão especial.'
+    : 'Tem histórias que merecem um espaço só delas. Esta página foi criada para guardar a música, as imagens e tudo aquilo que faz esse amor continuar vivo todos os dias.';
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return 'um dia inesquecivel';
+  if (!dateStr) return 'um dia inesquecível';
 
   const date = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return 'um dia inesquecivel';
+  if (Number.isNaN(date.getTime())) return 'um dia inesquecível';
 
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
@@ -156,18 +157,21 @@ function buildPresentData() {
   const planMeta = getPlanMeta();
   const photos = getCarouselPhotos();
   const cover = getCoverImage() || '';
-  const name1 = state.name1?.trim() || 'Alguem especial';
-  const name2 = state.name2?.trim() || 'voce';
+  const name1 = state.name1?.trim() || 'Alguém especial';
+  const name2 = state.name2?.trim() || 'você';
   const city = state.city?.trim() || 'um lugar especial';
-  const song = state.songName?.trim() || 'Nossa musica';
+  const song = state.songName?.trim() || 'Nossa música';
   const artist = state.artistName?.trim() || 'Artista';
+  const audioSrc = state.previewUrl?.trim() || '';
+  const audioStartTime = Math.max(0, Number(state.musicMoment) || 0);
+  const hasMusic = Boolean(audioSrc || state.youtubeId);
   const message = state.message?.trim() || getDefaultMessage();
   const signaturePrefix = state.giftType === 'amigo' ? 'Com carinho' : 'Com amor';
 
   let closingCopy = planMeta.copy;
 
   if (state.wrappedSelected) {
-    closingCopy += ' A abertura Wrapped tambem faz parte desta entrega.';
+    closingCopy += ' A abertura Wrapped também faz parte desta entrega.';
   }
 
   return {
@@ -185,20 +189,23 @@ function buildPresentData() {
     closingImage: photos[photos.length - 1] || cover,
     song,
     artist,
-    hasMusic: Boolean(state.youtubeId),
-    trackLabel: Boolean(state.youtubeId) ? `${song} - ${artist}` : 'Sem trilha sonora',
+    audioSrc,
+    audioStartTime,
+    hasMusic,
+    trackLabel: hasMusic ? `${song} - ${artist}` : 'Sem trilha sonora',
     signature: `${signaturePrefix}, ${name1}.`,
-    coverKicker: `Para ${name2}`,
-    coverTitle: state.title?.trim() || getDefaultTitle(),
-    coverCopy: state.title?.trim() || (Boolean(state.youtubeId)
-      ? 'Toque para abrir esta historia com fotos, texto e musica ao fundo.'
-      : 'Toque para abrir esta historia com fotos, texto e lembrancas.'),
-    galleryCopy: state.title?.trim() || 'Nem toda lembranca cabe em palavras.',
+    coverTitle: `${name1} criou um presente para você ❤`,
+    coverCopy: 'Clique abaixo para abrir',
+    galleryCopy: state.title?.trim() || 'Nem toda lembrança cabe em palavras.',
     closingCopy
   };
 }
 
 function splitMessageIntoSlides(text) {
+  return splitTextIntoChunks(text, MESSAGE_CHUNK_LIMIT);
+}
+
+function splitTextIntoChunks(text, limit) {
   const paragraphs = text
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
@@ -207,7 +214,7 @@ function splitMessageIntoSlides(text) {
   const chunks = [];
 
   paragraphs.forEach((paragraph) => {
-    if (paragraph.length <= MESSAGE_CHUNK_LIMIT) {
+    if (paragraph.length <= limit) {
       chunks.push(paragraph);
       return;
     }
@@ -218,7 +225,7 @@ function splitMessageIntoSlides(text) {
     sentences.forEach((sentence) => {
       const next = buffer ? `${buffer} ${sentence.trim()}` : sentence.trim();
 
-      if (next.length > MESSAGE_CHUNK_LIMIT && buffer) {
+      if (next.length > limit && buffer) {
         chunks.push(buffer);
         buffer = sentence.trim();
       } else {
@@ -238,56 +245,48 @@ function getMessageDuration(text) {
 }
 
 function buildSlides() {
-  const slides = [
-    {
-      type: 'intro',
-      duration: 4600,
-      media: present.cover,
-      label: `Para ${present.name2}`,
-      headline: present.names,
-      copy: present.title,
-      meta: [`Desde ${present.formattedDate}`, `Em ${present.city}`],
-      chips: [present.planMeta.label, state.wrappedSelected ? 'Wrapped incluso' : '']
-    },
-    {
-      type: 'time',
-      duration: 5200,
-      label: 'Tempo vivido',
-      headline: 'Cada instante continua contando.',
-      copy: `Desde ${present.formattedDate}, essa historia segue acontecendo em tempo real.`
-    }
-  ];
+  const slides = [];
+  const [firstMessageChunk = getDefaultMessage(), ...otherMessageChunks] = present.messageSlides;
+  const [openingMessage, ...openingOverflowChunks] = splitTextIntoChunks(firstMessageChunk, OPENING_MESSAGE_CHUNK_LIMIT);
+  const remainingMessages = [...openingOverflowChunks, ...otherMessageChunks];
 
-  present.messageSlides.forEach((messageChunk, index) => {
+  slides.push({
+    type: 'message-opening',
+    duration: getMessageDuration(openingMessage) + 900,
+    frameMedia: present.cover,
+    headline: present.name2,
+    quote: openingMessage,
+    signature: present.signature
+  });
+
+  remainingMessages.forEach((messageChunk, index) => {
     slides.push({
       type: 'message',
       duration: getMessageDuration(messageChunk),
-      label: index === 0 ? 'Mensagem' : 'Mais um pedaço',
+      label: index === 0 ? 'Continua' : 'Mais um pedaço',
       headline: `Palavras de ${present.name1}.`,
       quote: messageChunk,
       signature: present.signature
     });
   });
 
+  slides.push({
+    type: 'time',
+    duration: 5200,
+    label: 'Tempo vivido',
+    headline: 'Cada instante continua contando.',
+    copy: `Desde ${present.formattedDate}, essa história segue acontecendo em tempo real.`
+  });
+
   if (present.photos.length) {
     slides.push({
       type: 'gallery',
       duration: Math.max(present.photos.length * PHOTO_DURATION_MS, 4500),
-      label: 'Memorias',
-      headline: 'Frames que ainda brilham.',
-      copy: present.galleryCopy,
+      label: 'Memórias',
+      headline: present.galleryCopy,
       photos: present.photos
     });
   }
-
-  slides.push({
-    type: 'closing',
-    duration: 5200,
-    media: present.closingImage,
-    label: 'Feito para emocionar',
-    headline: present.planMeta.title,
-    copy: present.closingCopy
-  });
 
   return slides;
 }
@@ -316,7 +315,7 @@ function createSlideElement(slide, index) {
   const slideElement = createElement('section', `story-slide story-slide-${slide.type}`);
   slideElement.dataset.index = String(index);
 
-  if (slide.media || slide.type === 'intro' || slide.type === 'closing') {
+  if (slide.media && slide.type !== 'message-opening') {
     const media = createElement('div', 'story-slide-media');
     const overlay = createElement('div', 'story-slide-overlay');
     applyMediaBackground(media, slide.media);
@@ -325,25 +324,41 @@ function createSlideElement(slide, index) {
 
   const content = createElement('div', 'story-slide-content');
 
-  if (slide.label) {
+  if (slide.label && slide.type !== 'message-opening') {
     content.appendChild(createElement('p', 'story-label', slide.label));
   }
 
-  if (slide.headline) {
+  if (slide.headline && slide.type !== 'message-opening') {
     content.appendChild(createElement('h2', 'story-headline', slide.headline));
   }
 
-  if (slide.type === 'intro') {
-    content.appendChild(createElement('p', 'story-copy', slide.copy));
+  if (slide.type === 'message-opening') {
+    const openingBlock = createElement('div', 'story-opening-block');
+    const copy = createElement('div', 'story-opening-copy');
+    const recipientBlock = createElement('div', 'story-opening-recipient-block');
+    const recipient = createElement('p', 'story-opening-recipient', `${slide.headline}...`);
+    const quote = createElement('p', 'story-opening-quote', slide.quote);
+    const footer = createElement('div', 'story-opening-footer');
+    const line = createElement('span', 'story-opening-line');
+    const signature = createElement('p', 'story-opening-signature', slide.signature);
 
-    const metaRow = createElement('div', 'story-meta-row');
-    slide.meta.forEach((item) => {
-      metaRow.appendChild(createElement('span', 'story-meta-pill', item));
-    });
-    slide.chips.filter(Boolean).forEach((item) => {
-      metaRow.appendChild(createElement('span', 'story-meta-pill', item));
-    });
-    content.appendChild(metaRow);
+    if (slide.frameMedia) {
+      const frame = createElement('div', 'story-opening-media-frame');
+      const image = createElement('img', 'story-opening-media');
+
+      image.src = slide.frameMedia;
+      image.alt = `Foto de capa do presente para ${slide.headline}`;
+      image.loading = 'eager';
+
+      frame.appendChild(image);
+      openingBlock.appendChild(frame);
+    }
+
+    footer.append(line, signature);
+    recipientBlock.append(recipient);
+    copy.append(recipientBlock, quote, footer);
+    openingBlock.appendChild(copy);
+    content.appendChild(openingBlock);
   }
 
   if (slide.type === 'time') {
@@ -416,27 +431,18 @@ function createSlideElement(slide, index) {
       indices.appendChild(dot);
     });
 
-    content.append(stack, indices, createElement('p', 'story-copy', slide.copy));
-  }
-
-  if (slide.type === 'closing') {
-    content.appendChild(createElement('p', 'story-copy', slide.copy));
+    content.append(stack, indices);
   }
 
   slideElement.appendChild(content);
   return slideElement;
 }
 
-function renderPreviewShell() {
-  const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
-  byId('previewShell').classList.toggle('hidden', !isPreview);
-}
-
 function renderCover() {
-  byId('coverKicker').textContent = present.coverKicker;
   byId('coverTitle').textContent = present.coverTitle;
+  byId('coverCopy').textContent = present.coverCopy;
   applyMediaBackground(byId('storyCoverMedia'), present.cover);
-  byId('trackLabel').textContent = present.trackLabel;
+  byId('trackLabel').textContent = present.hasMusic ? `${present.song} - ${present.artist}` : present.trackLabel;
 }
 
 function renderProgressBars() {
@@ -600,34 +606,21 @@ function stopTicker() {
   storyState.timerId = null;
 }
 
-function showPauseIndicator(text) {
+function updatePauseIndicator() {
   const indicator = byId('pauseIndicator');
-
-  indicator.textContent = text;
-  indicator.classList.add('visible');
-
-  if (storyState.pauseToastTimer) {
-    window.clearTimeout(storyState.pauseToastTimer);
-  }
-
-  storyState.pauseToastTimer = window.setTimeout(() => {
-    indicator.classList.remove('visible');
-  }, 1200);
+  indicator.classList.toggle('visible', storyState.paused);
 }
 
 function setPaused(nextValue) {
   if (!storyState.started || storyState.finished) return;
 
   storyState.paused = nextValue;
-  byId('pauseButton').textContent = nextValue ? 'Retomar' : 'Pausar';
-  byId('pauseButton').setAttribute('aria-pressed', String(nextValue));
+  updatePauseIndicator();
 
   if (nextValue) {
     pauseBackgroundAudio();
-    showPauseIndicator('Pausado');
   } else {
     resumeBackgroundAudio();
-    showPauseIndicator('Seguindo');
   }
 }
 
@@ -653,8 +646,7 @@ async function startStory() {
 
   byId('storyCover').classList.add('hidden');
   byId('storyPlayer').classList.remove('hidden');
-  byId('pauseButton').textContent = 'Pausar';
-  byId('pauseButton').setAttribute('aria-pressed', 'false');
+  updatePauseIndicator();
 
   setActiveSlide(0);
   startTicker();
@@ -666,8 +658,7 @@ async function restartStory() {
   storyState.paused = false;
   storyState.elapsed = 0;
 
-  byId('pauseButton').textContent = 'Pausar';
-  byId('pauseButton').setAttribute('aria-pressed', 'false');
+  updatePauseIndicator();
   byId('replayButton').classList.add('hidden');
 
   setActiveSlide(0);
@@ -681,6 +672,59 @@ function safePlayerCall(callback) {
     callback(storyState.youtubePlayer);
   } catch (_) {
     /* no-op */
+  }
+}
+
+function ensureNativeAudio() {
+  if (!present.audioSrc) return null;
+  if (storyState.nativeAudio) return storyState.nativeAudio;
+
+  const audio = byId('backgroundAudio');
+  if (!audio) return null;
+
+  audio.src = present.audioSrc;
+  audio.loop = false;
+  audio.volume = 1;
+  audio.preload = 'auto';
+
+  if (!audio.dataset.momentBound) {
+    audio.addEventListener('loadedmetadata', () => {
+      setNativeAudioMoment(audio);
+    });
+
+    audio.addEventListener('ended', () => {
+      setNativeAudioMoment(audio);
+
+      if (storyState.started && !storyState.finished && !storyState.paused) {
+        audio.play().catch(() => {});
+      }
+    });
+
+    audio.dataset.momentBound = '1';
+  }
+
+  storyState.nativeAudio = audio;
+  return audio;
+}
+
+function getNativeAudioMoment(audio) {
+  const desiredMoment = Math.max(0, Number(present.audioStartTime) || 0);
+  const duration = Number(audio?.duration);
+
+  if (Number.isFinite(duration) && duration > 0) {
+    return Math.min(desiredMoment, Math.max(0, duration - 0.35));
+  }
+
+  return desiredMoment;
+}
+
+function setNativeAudioMoment(audio) {
+  if (!audio) return;
+
+  try {
+    audio.currentTime = getNativeAudioMoment(audio);
+  } catch (_) {
+    /* metadata pendente */
   }
 }
 
@@ -752,33 +796,69 @@ function ensureBackgroundPlayer() {
 }
 
 async function startBackgroundAudio() {
-  const player = await ensureBackgroundPlayer();
-  if (!player) return;
+  const nativeAudio = ensureNativeAudio();
 
-  safePlayerCall((currentPlayer) => currentPlayer.playVideo());
-}
+  if (nativeAudio) {
+    try {
+      setNativeAudioMoment(nativeAudio);
+      await nativeAudio.play();
+    } catch (_) {
+      /* no-op */
+    }
+    return;
+  }
 
-function pauseBackgroundAudio() {
-  safePlayerCall((player) => player.pauseVideo());
-}
-
-function resumeBackgroundAudio() {
-  safePlayerCall((player) => player.playVideo());
-}
-
-async function restartBackgroundAudio() {
   const player = await ensureBackgroundPlayer();
   if (!player) return;
 
   safePlayerCall((currentPlayer) => {
-    currentPlayer.seekTo?.(0, true);
+    if (present.audioStartTime > 0) {
+      currentPlayer.seekTo?.(present.audioStartTime, true);
+    }
+
+    currentPlayer.playVideo();
+  });
+}
+
+function pauseBackgroundAudio() {
+  const nativeAudio = ensureNativeAudio();
+  if (nativeAudio) {
+    nativeAudio.pause();
+    return;
+  }
+
+  safePlayerCall((player) => player.pauseVideo());
+}
+
+function resumeBackgroundAudio() {
+  const nativeAudio = ensureNativeAudio();
+  if (nativeAudio) {
+    nativeAudio.play().catch(() => {});
+    return;
+  }
+
+  safePlayerCall((player) => player.playVideo());
+}
+
+async function restartBackgroundAudio() {
+  const nativeAudio = ensureNativeAudio();
+  if (nativeAudio) {
+    setNativeAudioMoment(nativeAudio);
+    nativeAudio.play().catch(() => {});
+    return;
+  }
+
+  const player = await ensureBackgroundPlayer();
+  if (!player) return;
+
+  safePlayerCall((currentPlayer) => {
+    currentPlayer.seekTo?.(present.audioStartTime || 0, true);
     currentPlayer.playVideo();
   });
 }
 
 function bindEvents() {
   byId('startStoryButton').addEventListener('click', startStory);
-  byId('pauseButton').addEventListener('click', togglePause);
   byId('pauseZone').addEventListener('click', togglePause);
   byId('prevZone').addEventListener('click', prevSlide);
   byId('nextZone').addEventListener('click', nextSlide);
@@ -797,10 +877,14 @@ function bindEvents() {
 }
 
 function init() {
-  renderPreviewShell();
   renderCover();
 
   storyState.slides = buildSlides();
+
+  ensureNativeAudio();
+  if (!present.audioSrc && present.hasMusic) {
+    ensureBackgroundPlayer().catch(() => null);
+  }
 
   renderProgressBars();
   renderSlides();
@@ -816,8 +900,8 @@ window.addEventListener('beforeunload', () => {
     window.clearInterval(storyState.liveCounterId);
   }
 
-  if (storyState.pauseToastTimer) {
-    window.clearTimeout(storyState.pauseToastTimer);
+  if (storyState.nativeAudio) {
+    storyState.nativeAudio.pause();
   }
 });
 

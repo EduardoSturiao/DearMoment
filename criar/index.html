@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="../assets/css/cookies.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -24,7 +24,7 @@
         <div class="progress-track">
           <div class="progress-fill" id="progressFill"></div>
         </div>
-        <span class="step-label" id="stepLabel">1 / 8</span>
+        <span class="step-label" id="stepLabel">1 / 9</span>
       </header>
 
       <!-- Container de etapas -->
@@ -48,6 +48,51 @@
               <span class="gift-emoji">🎁</span>
               <strong>Presente para amigo(a)</strong>
               <small>Amizade especial</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── ETAPA 9: Template ── -->
+        <div class="step" id="step-9">
+          <div class="step-header">
+            <div class="step-num">09</div>
+            <h2 class="step-title">Selecione o template do presente</h2>
+            <p class="step-sub">Escolha o estilo de entrega que melhor combina com esse momento</p>
+          </div>
+          <div class="template-options">
+            <button class="template-card" data-template="stories" type="button">
+              <div class="template-card-preview template-card-preview-stories" aria-hidden="true">
+                <div class="template-stories-bars">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="template-stories-shot">
+                  <div class="template-stories-photo"></div>
+                  <div class="template-stories-copy">
+                    <strong>Stories</strong>
+                    <small>Cenas animadas</small>
+                  </div>
+                </div>
+              </div>
+              <div class="template-card-copy">
+                <strong>Stories do Instagram</strong>
+                <small>Entrega em cenas, com ritmo, música e narrativa vertical.</small>
+              </div>
+            </button>
+            <button class="template-card" data-template="spotify" type="button">
+              <div class="template-card-preview template-card-preview-spotify" aria-hidden="true">
+                <div class="template-spotify-album"></div>
+                <div class="template-spotify-bars">
+                  <span></span>
+                </div>
+                <div class="template-spotify-copy">
+                  <strong>Spotify</strong>
+                  <small>Página musical</small>
+                </div>
+              </div>
+              <div class="template-card-copy">
+                <strong>Spotify</strong>
+                <small>Entrega em página musical com player, mensagem e galeria.</small>
+              </div>
             </button>
           </div>
         </div>
@@ -137,6 +182,25 @@
             <label for="artistName">Nome do artista (editável)</label>
             <input type="text" id="artistName" placeholder="Preenchido automaticamente ao selecionar" />
           </div>
+          <div class="music-moment-picker is-disabled" id="musicMomentPicker">
+            <div class="music-moment-head">
+              <div class="music-moment-copy">
+                <span class="music-moment-kicker">Momento da música</span>
+                <strong class="music-moment-title">Escolha o trecho que vai abrir o presente</strong>
+                <p class="music-moment-sub">Arraste a janela para definir de onde a trilha começa.</p>
+              </div>
+              <button class="music-moment-preview-btn" id="btnPreviewMoment" type="button" disabled>Ouvir trecho</button>
+            </div>
+            <div class="music-moment-track-shell">
+              <div class="music-moment-wave" aria-hidden="true"></div>
+              <div class="music-moment-window" id="musicMomentWindow"></div>
+              <input type="range" id="musicMomentRange" min="0" max="15" step="0.1" value="0" disabled aria-label="Escolher momento da música" />
+            </div>
+            <div class="music-moment-meta">
+              <span id="musicMomentValue">Selecione uma música para escolher o momento</span>
+              <span id="musicMomentSpan">A janela acompanha a duração estimada do presente</span>
+            </div>
+          </div>
         </div>
 
         <!-- ── ETAPA 6: Fotos ── -->
@@ -202,7 +266,6 @@
             <h2>Ficou incrível!</h2>
             <p>Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
           </div>
-          <p class="validation-hint">Modo de validacao: por enquanto, a escolha do plano abre direto o presente final gerado.</p>
 
           <!-- Planos -->
           <div class="plans-grid">
@@ -288,16 +351,19 @@
     ════════════════════════════════════════════ -->
     <aside class="preview-panel" id="previewPanel">
       <div class="preview-header">
-        <span class="preview-badge">👁 Preview ao vivo</span>
+        <div class="preview-header-copy">
+          <span class="preview-badge">👁 Preview ao vivo</span>
+          <strong class="preview-template-name" id="previewTemplateName">Spotify</strong>
+        </div>
         <!-- botão para abrir/fechar no mobile -->
         <button class="btn-toggle-preview" id="btnTogglePreview">Ver preview</button>
       </div>
 
       <!-- Mockup de celular -->
-      <div class="phone-mockup">
+      <div class="phone-mockup" id="phoneMockup" data-template="spotify">
         <div class="phone-frame">
           <!-- Barra de status simulada -->
-          <div class="phone-status-bar">
+          <div class="phone-status-bar preview-chrome-spotify">
             <span class="status-time" id="statusTime">00:00</span>
             <div class="status-icons">
               <svg class="status-icon" viewBox="0 0 17 11" width="13" height="9">
@@ -319,9 +385,9 @@
               </svg>
             </div>
           </div>
-          <div class="phone-notch"></div>
+          <div class="phone-notch preview-chrome-spotify"></div>
           <div class="phone-screen" id="phoneScreen">
-
+            <div class="preview-template-view preview-template-spotify" id="spotifyPreviewView">
             <!-- Player estilo Spotify -->
             <div class="player-section">
               <!-- Partículas decorativas -->
@@ -349,7 +415,7 @@
               <div class="player-bar">
                 <div class="player-bar-fill" id="playerBarFill"></div>
               </div>
-              <div class="player-times"><span>0:00</span><span id="fakeDuration">3:27</span></div>
+              <div class="player-times"><span id="fakeCurrent">0:00</span><span id="fakeDuration">0:30</span></div>
             </div>
 
             <!-- Seção "Sobre o casal" -->
@@ -432,18 +498,53 @@
                 Copiar link
               </button>
             </div>
-
-            <!-- YouTube embed oculto (aparece ao clicar play) -->
-            <div class="yt-overlay hidden" id="ytOverlay">
-              <iframe id="ytOverlayFrame" width="100%" height="90" frameborder="0"
-                allow="autoplay; encrypted-media" allowfullscreen></iframe>
-              <button class="yt-overlay-close" id="btnYtClose">✕ Fechar player</button>
             </div>
 
+            <div class="preview-template-view preview-template-stories hidden" id="storiesPreviewView">
+              <section class="stories-preview-cover" id="storiesPreviewCover">
+                <div class="stories-preview-cover-media" id="storiesPreviewCoverMedia">
+                  <div class="stories-preview-cover-placeholder" id="storiesPreviewCoverPlaceholder">❤</div>
+                  <img class="stories-preview-cover-image hidden" id="storiesPreviewCoverImage" src="" alt="Foto de capa do preview Stories" />
+                </div>
+                <div class="stories-preview-cover-overlay"></div>
+                <div class="stories-preview-cover-content">
+                  <div class="stories-preview-cover-header">
+                    <h3 class="stories-preview-cover-title" id="storiesPreviewCoverTitle">Um presente aguardando por você.</h3>
+                    <p class="stories-preview-cover-copy" id="storiesPreviewCoverCopy">Clique abaixo para abrir</p>
+                  </div>
+
+                  <div class="stories-preview-cover-cta">
+                    <button class="stories-preview-cover-button" id="storiesPreviewStartButton" type="button" aria-label="Abrir presente">
+                      <span class="stories-preview-cover-button-icon" aria-hidden="true"></span>
+                      <span class="stories-preview-cover-button-text">Abrir presente</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="stories-preview-player hidden" id="storiesPreviewPlayer" aria-live="polite">
+                <header class="stories-preview-topbar">
+                  <div class="stories-preview-progress" id="storiesPreviewProgress"></div>
+                </header>
+
+                <div class="stories-preview-pause-indicator" id="storiesPreviewPauseIndicator" aria-hidden="true"></div>
+
+                <div class="stories-preview-slides" id="storiesPreviewSlides"></div>
+
+                <button class="stories-preview-zone stories-preview-zone-left" id="storiesPreviewPrevZone" type="button" aria-label="Slide anterior"></button>
+                <button class="stories-preview-zone stories-preview-zone-center" id="storiesPreviewPauseZone" type="button" aria-label="Pausar ou retomar"></button>
+                <button class="stories-preview-zone stories-preview-zone-right" id="storiesPreviewNextZone" type="button" aria-label="Próximo slide"></button>
+
+                <footer class="stories-preview-footer">
+                  <div class="stories-preview-track" id="storiesPreviewTrack">Sem trilha sonora</div>
+                  <button class="stories-preview-replay hidden" id="storiesPreviewReplayButton" type="button">Rever</button>
+                </footer>
+              </section>
+            </div>
           </div><!-- /phone-screen -->
 
           <!-- Barra de endereço + navegação inferior estilo Safari iOS -->
-          <div class="phone-browser-bar">
+          <div class="phone-browser-bar preview-chrome-spotify">
             <svg class="browser-bar-icon" viewBox="0 0 12 16" width="9" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
               <rect x="1" y="7" width="10" height="8" rx="1.5"/>
               <path d="M3.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
@@ -454,7 +555,7 @@
               <polyline points="10,0.5 12.5,2.5 10.5,5"/>
             </svg>
           </div>
-          <div class="phone-browser-nav">
+          <div class="phone-browser-nav preview-chrome-spotify">
             <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8,2 2,8 8,14"/></svg>
             <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><polyline points="2,2 8,8 2,14"/></svg>
             <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,12 9,2"/><polyline points="5,6 9,2 13,6"/><rect x="2" y="10" width="14" height="7" rx="2"/></svg>
@@ -474,6 +575,7 @@
 
   <!-- Áudio oculto para preview da música (iTunes 30s) -->
   <audio id="audioPreview" preload="none" style="display:none"></audio>
+  <audio id="storiesPreviewAudio" preload="none" style="display:none"></audio>
 
   <script src="script.js"></script>
 

@@ -47,18 +47,26 @@
     <div class="stories-counter"   id="storiesCounter"></div>
   </div>
 
+  <audio id="giftAudio" preload="metadata"></audio>
+
   <script>
   /* ================================================================
      PRESENTE.HTML — Renderização da página pública do presente
   ================================================================ */
 
   /* ── 1. Lê o ID da URL e encontra o presente ────────── */
+  const WIZARD_STORAGE_KEY = 'soulmates_wizard_state';
   const params  = new URLSearchParams(window.location.search);
   const giftId  = params.get('id');
   const gifts   = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
-  const gift    = gifts.find(g => g.id === giftId);
+  const lastGiftId = localStorage.getItem('soulmates_last_gift_id');
+  let gift = gifts.find(g => g.id === giftId);
 
   const root = document.getElementById('giftRoot');
+
+  if (!gift) {
+    gift = getGiftFromWizardState(giftId, lastGiftId);
+  }
 
   if (!gift) {
     root.innerHTML = `
@@ -73,6 +81,43 @@
     stopAll();
   } else {
     renderGift(gift);
+  }
+
+  function getGiftFromWizardState(requestedId, savedLastGiftId) {
+    try {
+      const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+      if (!raw) return null;
+
+      const wizard = JSON.parse(raw);
+      if (!wizard) return null;
+
+      const matchesCurrentFlow = !requestedId || requestedId === savedLastGiftId;
+      const hasMinimumData = Boolean(wizard.name1 || wizard.name2 || wizard.title || wizard.message);
+
+      if (!matchesCurrentFlow || !hasMinimumData) return null;
+
+      return {
+        id: savedLastGiftId || requestedId || 'wizard-preview',
+        name1: wizard.name1 || '',
+        name2: wizard.name2 || '',
+        startDate: wizard.startDate || '',
+        city: wizard.city || '',
+        title: wizard.title || '',
+        youtubeId: wizard.youtubeId || '',
+        previewUrl: wizard.previewUrl || '',
+        musicMoment: Math.max(0, Number(wizard.musicMoment) || 0),
+        songName: wizard.songName || '',
+        artistName: wizard.artistName || '',
+        photos: Array.isArray(wizard.photos) ? wizard.photos.filter(Boolean) : [],
+        message: wizard.message || '',
+        extraPhoto: wizard.extraPhoto || '',
+        giftType: wizard.giftType || 'amoroso',
+        selectedTemplate: wizard.selectedTemplate || 'spotify',
+        createdAt: wizard.createdAt || new Date().toISOString(),
+      };
+    } catch (_) {
+      return null;
+    }
   }
 
   /* ── 2. Renderiza o presente completo ───────────────── */
@@ -123,11 +168,11 @@
           <button class="gift-play-btn" id="btnGiftPlay" title="Ouvir música">▶</button>
         </div>
         <div class="gift-player-bar">
-          <div class="gift-player-bar-fill"></div>
+          <div class="gift-player-bar-fill" id="giftPlayerBarFill"></div>
         </div>
         <div class="gift-player-times">
-          <span>0:00</span>
-          <span>—:——</span>
+          <span id="giftPlayerCurrent">0:00</span>
+          <span id="giftPlayerDuration">—:——</span>
         </div>
       </div>`;
 
@@ -196,7 +241,7 @@
 
     // Inicia as interações após renderizar
     if (g.startDate) startCounter(g.startDate);
-    if (g.youtubeId) setupPlayer(g.youtubeId);
+    setupPlayer(g);
     setupGallery();
   }
 
@@ -239,13 +284,97 @@
   }
 
   /* ── 4. Player de música (YouTube overlay) ──────────── */
-  function setupPlayer(youtubeId) {
+  function setupPlayer(gift) {
     const btn     = document.getElementById('btnGiftPlay');
     const overlay = document.getElementById('ytOverlay');
     const frame   = document.getElementById('ytFrame');
     const closeBtn = document.getElementById('btnYtClose');
+    const audio = document.getElementById('giftAudio');
+    const barFill = document.getElementById('giftPlayerBarFill');
+    const currentLabel = document.getElementById('giftPlayerCurrent');
+    const durationLabel = document.getElementById('giftPlayerDuration');
+    const previewUrl = gift.previewUrl || '';
+    const youtubeId = gift.youtubeId || '';
+    const desiredStart = Math.max(0, Number(gift.musicMoment) || 0);
 
     if (!btn) return;
+
+    function formatAudioTime(totalSeconds) {
+      const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+      const minutes = Math.floor(safeSeconds / 60);
+      const seconds = Math.floor(safeSeconds % 60).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    function getPreviewStart() {
+      const duration = Number(audio.duration);
+      if (Number.isFinite(duration) && duration > 0) {
+        if (desiredStart > duration) return 0;
+        return Math.min(desiredStart, Math.max(0, duration - 0.35));
+      }
+      return desiredStart;
+    }
+
+    function syncAudioUi() {
+      if (!audio || !barFill || !currentLabel || !durationLabel) return;
+
+      const current = Number(audio.currentTime) || 0;
+      const duration = Number(audio.duration) || 0;
+      currentLabel.textContent = formatAudioTime(current);
+      durationLabel.textContent = duration > 0 ? formatAudioTime(duration) : '—:——';
+      barFill.style.width = duration > 0 ? `${Math.min((current / duration) * 100, 100)}%` : '0%';
+      btn.textContent = audio.paused ? '▶' : '❚❚';
+    }
+
+    function closeYoutubeOverlay() {
+      overlay.classList.remove('open');
+      frame.src = '';
+    }
+
+    if (previewUrl && audio) {
+      audio.src = previewUrl;
+
+      audio.addEventListener('loadedmetadata', () => {
+        try {
+          audio.currentTime = getPreviewStart();
+        } catch (_) { /* no-op */ }
+        syncAudioUi();
+      });
+
+      audio.addEventListener('timeupdate', syncAudioUi);
+      audio.addEventListener('play', syncAudioUi);
+      audio.addEventListener('pause', syncAudioUi);
+      audio.addEventListener('ended', () => {
+        try {
+          audio.currentTime = getPreviewStart();
+        } catch (_) { /* no-op */ }
+        syncAudioUi();
+      });
+
+      btn.addEventListener('click', () => {
+        if (overlay.classList.contains('open')) closeYoutubeOverlay();
+
+        if (audio.paused) {
+          if (audio.currentTime <= 0.05) {
+            try {
+              audio.currentTime = getPreviewStart();
+            } catch (_) { /* no-op */ }
+          }
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
+      });
+
+      syncAudioUi();
+      return;
+    }
+
+    if (!youtubeId) {
+      btn.disabled = true;
+      btn.textContent = '—';
+      return;
+    }
 
     btn.addEventListener('click', () => {
       frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`;
@@ -253,14 +382,12 @@
     });
 
     closeBtn.addEventListener('click', () => {
-      overlay.classList.remove('open');
-      frame.src = '';
+      closeYoutubeOverlay();
     });
 
     overlay.addEventListener('click', e => {
       if (e.target === overlay) {
-        overlay.classList.remove('open');
-        frame.src = '';
+        closeYoutubeOverlay();
       }
     });
   }
@@ -371,6 +498,8 @@
 
   function stopAll() {
     if (counterInterval) clearInterval(counterInterval);
+    const audio = document.getElementById('giftAudio');
+    if (audio) audio.pause();
   }
   </script>
 
