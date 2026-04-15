@@ -48,6 +48,7 @@ body {
 .app-wrapper {
   display: flex;
   height: 100vh;
+  height: 100dvh;     /* adapta ao viewport real em iOS/Chrome mobile */
   overflow: hidden;   /* impede scroll na página inteira */
   background: var(--dark-2);
 }
@@ -515,18 +516,23 @@ body {
 }
 
 .music-moment-picker {
-  margin-top: 10px;
-  padding: 18px;
-  border: 1px solid var(--border);
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid rgba(255, 109, 186, 0.18);
   border-radius: var(--radius);
   background:
-    radial-gradient(circle at top right, rgba(255, 109, 186, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  transition: opacity var(--transition), border-color var(--transition), transform var(--transition);
+    radial-gradient(ellipse at top right, rgba(255, 109, 186, 0.14), transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008));
+  transition: opacity var(--transition), border-color var(--transition);
+}
+
+.music-moment-picker:not(.is-disabled) {
+  border-color: rgba(255, 109, 186, 0.28);
 }
 
 .music-moment-picker.is-disabled {
-  opacity: 0.6;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .music-moment-head {
@@ -606,86 +612,104 @@ body {
   overflow: hidden;
   background: var(--dark-3);
   border: 1px solid rgba(255,255,255,0.05);
+  touch-action: none; /* previne scroll iOS enquanto arrasta dentro da trilha */
 }
 
 .music-moment-wave {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.04)),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,0.08) 0 3px,
-      transparent 3px 9px,
-      rgba(255,255,255,0.14) 9px 12px,
-      transparent 12px 18px
-    );
-  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+  overflow: hidden;
 }
 
-.music-moment-window {
-  position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 0;
-  width: 50%;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(135deg, rgba(255, 109, 186, 0.24), rgba(255, 159, 212, 0.08));
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 12px 22px rgba(255, 109, 186, 0.14);
-  pointer-events: none;
-  transition: left 0.16s ease, width 0.16s ease;
-}
-
-.music-moment-window::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  width: 10px;
-  height: 22px;
+.music-moment-wave-bar {
+  flex: 1;
+  min-width: 2px;
   border-radius: 999px;
-  transform: translateY(-50%);
-  background:
-    linear-gradient(90deg, rgba(255,255,255,0.5) 0 2px, transparent 2px 4px, rgba(255,255,255,0.5) 4px 6px, transparent 6px 8px);
-  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.18);
 }
 
-#musicMomentRange {
+.music-moment-selection {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 109, 186, 0.4);
+  background: linear-gradient(135deg, rgba(255, 109, 186, 0.26), rgba(255, 159, 212, 0.09));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07), 0 6px 18px rgba(255, 109, 186, 0.16);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
 }
 
-#musicMomentRange::-webkit-slider-runnable-track {
-  height: 56px;
-  background: transparent;
+.music-moment-picker.is-dragging .music-moment-selection {
+  cursor: grabbing;
 }
 
-#musicMomentRange::-moz-range-track {
-  height: 56px;
-  background: transparent;
-  border: none;
+.music-moment-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  cursor: ew-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
 }
 
-#musicMomentRange::-webkit-slider-thumb {
-  appearance: none;
-  width: 22px;
-  height: 56px;
-  background: transparent;
-  border: none;
+.music-moment-handle--start {
+  left: -6px;
 }
 
-#musicMomentRange::-moz-range-thumb {
-  width: 22px;
-  height: 56px;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+.music-moment-handle--end {
+  right: -6px;
+}
+
+.music-moment-handle::before {
+  content: '';
+  width: 3px;
+  height: 46%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 6px rgba(255, 109, 186, 0.5);
+  flex-shrink: 0;
+}
+
+.music-moment-handle-label {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.02em;
+}
+
+.music-moment-handle--end .music-moment-handle-label {
+  left: auto;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.music-moment-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  padding: 0 2px;
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.65;
 }
 
 .music-moment-meta {
@@ -696,6 +720,11 @@ body {
   margin-top: 12px;
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.music-moment-meta #musicMomentValue {
+  font-weight: 600;
+  color: var(--pink-light);
 }
 
 /* ── Contador em tempo real ─────────────────────────────────── */
@@ -2392,68 +2421,89 @@ body {
    RESPONSIVO — Mobile
 ══════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
-  .app-wrapper { flex-direction: column; }
+  /* Grid garante que preview-panel sempre ocupa seu tamanho natural na linha 2,
+     e steps-panel preenche todo o restante — sem disputas de flex-basis. */
+  .app-wrapper {
+    display: grid;
+    grid-template-rows: 1fr auto;   /* linha 1: steps; linha 2: preview (tamanho real) */
+    flex-direction: column;         /* sem efeito no grid, mantido por segurança */
+  }
 
   .steps-panel {
+    min-height: 0;      /* ESSENCIAL no grid: permite encolher abaixo do tamanho do conteúdo */
     max-width: 100%;
-    min-height: auto;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    overflow: hidden;   /* contém o flex interno */
   }
 
-  /* Preview vira painel fixo na parte inferior no mobile */
+  /* Preview: fluxo normal na linha 2 do grid.
+     column-reverse → preview-header na base, preview-body expande para cima. */
   .preview-panel {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: static;
     width: 100%;
     height: auto;
+    overflow: visible;
+    padding: 0;
+    z-index: auto;
+    background: var(--dark-2);
+    border-top: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  /* Corpo do preview: escondido por padrão, expande para cima ao abrir */
+  .preview-body {
     max-height: 0;
     overflow: hidden;
-    padding: 0;
-    z-index: 200;
     background: var(--dark-2);
-    border-top: 1px solid var(--border);
-    transition: max-height 0.4s ease, padding 0.4s ease;
-    align-items: stretch;
     border-radius: 24px 24px 0 0;
+    transition: max-height 0.45s ease;
   }
 
-  .preview-panel.open {
-    max-height: 90vh;
-    padding: 20px 20px 80px; /* 80px no fundo: espaço para o preview-header fixo */
+  .preview-panel.open .preview-body {
+    max-height: 55vh;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* scroll momentum no iOS */
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    padding: 20px 20px 24px;
   }
 
+  /* Header: sempre visível na base do preview-panel */
   .preview-header {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: static;
+    width: 100%;
     background: var(--dark-2);
     border-top: 1px solid var(--border);
     padding: 12px 20px;
-    z-index: 201;
+    z-index: auto;
     margin-bottom: 0;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     border-radius: 0;
   }
 
   /* botão toggle visível no mobile */
   .btn-toggle-preview { display: block; }
 
-  /* quando preview está aberto, aumenta nav-footer para não cobrir botão */
-  .nav-footer { padding-bottom: 70px; padding-left: 0; padding-right: 0; }
+  /* nav-footer: fluxo normal dentro do steps-panel */
+  .nav-footer {
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--dark-2);
+    border-top: 1px solid var(--border);
+  }
   .nav-footer-inner { padding: 0 16px; }
+
+  /* steps-container: padding mínimo, nav-footer está no fluxo abaixo */
+  .steps-container {
+    padding-bottom: 8px;
+  }
 
   .phone-mockup { max-width: 220px; margin: 0 auto; }
 
-  /* dentro do painel mobile, o phone-screen não deve ultrapassar o painel */
+  /* phone-screen não deve ultrapassar a altura disponível no painel */
   .preview-panel .phone-screen {
     max-height: 55vh;
     overflow-y: auto;
@@ -2490,9 +2540,9 @@ body {
 }
 
 @media (max-width: 480px) {
-  .steps-container  { padding: 24px 16px 120px; }
+  .steps-container  { padding: 24px 16px 16px; }
   .progress-header  { padding: 12px 16px; }
-  .nav-footer       { padding: 12px 0 70px; }
+  .nav-footer       { padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
   .nav-footer-inner { padding: 0 16px; }
   .step-title       { font-size: 19px; }
   .plans-grid       { grid-template-columns: 1fr; }

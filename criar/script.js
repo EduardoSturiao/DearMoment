@@ -45,7 +45,8 @@ const state = {
   youtubeQuery: '',
   previewUrl:   '',
   musicDuration: 0,
-  musicMoment:  0,
+  musicMoment:    0,
+  musicMomentEnd: 30,
   songName:     '',
   artistName:   '',
   photos:      [],     // array de base64 strings (máx 6)
@@ -203,7 +204,7 @@ function getEstimatedPresentDurationSeconds() {
 }
 
 function getMusicMomentWindowSeconds() {
-  return getEstimatedPresentDurationSeconds();
+  return DEFAULT_PREVIEW_DURATION_SECONDS;
 }
 
 function getMusicMomentMax(duration = getSelectedTrackDuration()) {
@@ -668,7 +669,7 @@ function renderSpotifyPreview(previewData) {
   setTextSafe('prevCity', previewData.city !== '—' ? `📍 ${previewData.city}` : '📍 —');
   setTextSafe('prevMessage', state.message || 'Sua mensagem especial aparecerá aqui...');
 
-  syncMusicPreviewDisplay(state.musicMoment);
+  syncMusicPreviewDisplay(0, Math.max(1, state.musicMomentEnd - state.musicMoment));
   updateGalleryPreview();
 
   const msgCoverImg = document.getElementById('msgCoverImg');
@@ -814,7 +815,7 @@ function createStoriesPreviewSlideElement(slide, index) {
 
   if (slide.type === 'time') {
     const panel = createStoriesPreviewNode('div', 'stories-preview-time-panel');
-    const dateLine = createStoriesPreviewNode('p', 'stories-preview-time-date', `Desde ${state.startDate ? previewData.formattedDate : 'um dia inesquecível'}`);
+    const dateLine = createStoriesPreviewNode('p', 'stories-preview-time-date', `Desde ${getPreviewFormattedDate()}`);
     const primaryGrid = createStoriesPreviewNode('div', 'stories-preview-time-primary');
     const secondaryGrid = createStoriesPreviewNode('div', 'stories-preview-time-secondary');
     const copy = createStoriesPreviewNode('p', 'stories-preview-time-copy', slide.copy);
@@ -1427,6 +1428,25 @@ function setupExtraPhotoUpload() {
 /* ═══════════════════════════════════════════════════════════════
    10. BUSCA DE MÚSICA (Etapa 5) — iTunes Search API + áudio nativo
 ═══════════════════════════════════════════════════════════════ */
+function generateWaveBars() {
+  const wave = document.querySelector('.music-moment-wave');
+  if (!wave) return;
+  wave.innerHTML = '';
+  const BAR_COUNT = 52;
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const t = i / BAR_COUNT;
+    // Combina senoides em diferentes frequências para parecer um waveform real
+    const h = 22
+      + Math.abs(Math.sin(t * Math.PI * 6.3) * 34)
+      + Math.abs(Math.sin(t * Math.PI * 13.7 + 1.2) * 18)
+      + Math.abs(Math.sin(t * Math.PI * 3.1 + 0.5) * 14);
+    const bar = document.createElement('div');
+    bar.className = 'music-moment-wave-bar';
+    bar.style.height = `${Math.min(Math.round(h), 92)}%`;
+    wave.appendChild(bar);
+  }
+}
+
 function setupMusicSearch() {
   const searchInput     = document.getElementById('musicSearch');
   const suggestionsList = document.getElementById('musicSuggestions');
@@ -1434,10 +1454,15 @@ function setupMusicSearch() {
   const btnPreviewMoment = document.getElementById('btnPreviewMoment');
   const audioEl         = document.getElementById('audioPreview');
   const momentPicker    = document.getElementById('musicMomentPicker');
-  const momentRange     = document.getElementById('musicMomentRange');
-  const momentWindow    = document.getElementById('musicMomentWindow');
+  const momentTrack     = document.getElementById('musicMomentTrack');
+  const momentSelection = document.getElementById('musicMomentSelection');
+  const handleStart     = document.getElementById('momentHandleStart');
+  const handleEnd       = document.getElementById('momentHandleEnd');
   const momentValue     = document.getElementById('musicMomentValue');
   const momentSpan      = document.getElementById('musicMomentSpan');
+
+  const MAX_CLIP = DEFAULT_PREVIEW_DURATION_SECONDS;
+  const MIN_CLIP = 1;
 
   let debounceTimer = null;
   let highlighted   = -1;
@@ -1450,6 +1475,7 @@ function setupMusicSearch() {
   }
 
   syncPlaybackButtons(false);
+  generateWaveBars();
   updateMomentPicker();
 
   searchInput.addEventListener('input', () => {
@@ -1556,8 +1582,9 @@ function setupMusicSearch() {
     state.musicDuration = Number.isFinite(track.trackTimeMillis)
       ? Math.max(Math.round(track.trackTimeMillis / 1000), DEFAULT_PREVIEW_DURATION_SECONDS)
       : DEFAULT_PREVIEW_DURATION_SECONDS;
-    state.musicMoment  = 0;
-    audioEl.src        = state.previewUrl;
+    state.musicMoment    = 0;
+    state.musicMomentEnd = Math.min(DEFAULT_PREVIEW_DURATION_SECONDS, state.musicDuration);
+    audioEl.src          = state.previewUrl;
     audioEl.load();
 
     updateMomentPicker();
@@ -1573,7 +1600,8 @@ function setupMusicSearch() {
   function getPreviewTimelineCurrent() {
     const previewStart = getPlayablePreviewStart();
     const elapsed = Math.max(0, (audioEl.currentTime || previewStart) - previewStart);
-    return Math.min(state.musicMoment + elapsed, getSelectedTrackDuration(audioEl));
+    const clipDur = Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment);
+    return Math.min(elapsed, clipDur);
   }
 
   // Play / pause do preview da música
@@ -1592,7 +1620,7 @@ function setupMusicSearch() {
       audioEl.play()
         .then(() => {
           syncPlaybackButtons(true);
-          syncMusicPreviewDisplay(getPreviewTimelineCurrent(), getSelectedTrackDuration(audioEl));
+          syncMusicPreviewDisplay(getPreviewTimelineCurrent(), Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment));
         })
         .catch(() => showToast('Não foi possível reproduzir o áudio'));
     } else {
@@ -1603,32 +1631,121 @@ function setupMusicSearch() {
   btnPlay.addEventListener('click', togglePreviewPlayback);
   btnPreviewMoment.addEventListener('click', togglePreviewPlayback);
 
-  momentRange.addEventListener('input', () => {
-    state.musicMoment = clampMusicMoment(momentRange.value, getSelectedTrackDuration(audioEl));
-    saveState();
+  // ── Drag de dois handles ────────────────────────────────────
+  let dragType = null;
+  let dragStartX = 0;
+  let dragStartMoment = 0;
+  let dragStartEnd = 0;
 
-    if (!audioEl.paused) {
-      try {
-        audioEl.currentTime = getPlayablePreviewStart();
-      } catch (_) { /* no-op */ }
+  function onDragMove(e) {
+    const duration = getSelectedTrackDuration(audioEl);
+    if (!duration || !dragType) return;
+    const trackWidth = momentTrack.getBoundingClientRect().width;
+    const deltaSeconds = ((e.clientX - dragStartX) / trackWidth) * duration;
+
+    if (dragType === 'start') {
+      let s = dragStartMoment + deltaSeconds;
+      s = Math.max(0, Math.min(s, state.musicMomentEnd - MIN_CLIP));
+      if (state.musicMomentEnd - s > MAX_CLIP) s = state.musicMomentEnd - MAX_CLIP;
+      state.musicMoment = s;
+    } else if (dragType === 'end') {
+      let end = dragStartEnd + deltaSeconds;
+      end = Math.min(duration, Math.max(end, state.musicMoment + MIN_CLIP));
+      if (end - state.musicMoment > MAX_CLIP) end = state.musicMoment + MAX_CLIP;
+      state.musicMomentEnd = end;
+    } else {
+      const clipDur = dragStartEnd - dragStartMoment;
+      let s = dragStartMoment + deltaSeconds;
+      s = Math.max(0, Math.min(s, duration - clipDur));
+      state.musicMoment    = s;
+      state.musicMomentEnd = s + clipDur;
     }
-
     updateMomentPicker();
+  }
+
+  function onDragEnd(e) {
+    if (!dragType) return;
+    dragType = null;
+    momentPicker.classList.remove('is-dragging');
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup',     onDragEnd);
+    document.removeEventListener('pointercancel', onDragEnd); /* limpa se iOS cancelar o gesto */
+    if (!audioEl.paused) {
+      try { audioEl.currentTime = getPlayablePreviewStart(); } catch (_) {}
+    }
+    clearTimeout(debounceTimer);
+    saveState();
     updatePreview();
+  }
+
+  function startDrag(e, type) {
+    dragType        = type;
+    dragStartX      = e.clientX;
+    dragStartMoment = state.musicMoment;
+    dragStartEnd    = state.musicMomentEnd;
+    momentPicker.classList.add('is-dragging');
+    document.addEventListener('pointermove',   onDragMove);
+    document.addEventListener('pointerup',     onDragEnd);
+    document.addEventListener('pointercancel', onDragEnd); /* iOS pode cancelar com pointercancel */
+    e.preventDefault();
+  }
+
+  /* ATENÇÃO — NÃO voltar a bindar pointerdown nos elementos .music-moment-handle
+     ou em #musicMomentSelection. Aprendido na marra:
+
+     Os handles têm 28px de largura cada e ficam posicionados em left/right -6px
+     dentro da seleção. Quando o trecho selecionado é pequeno (ex.: 30s clip
+     dentro de uma música de 3min ≈ 16% do track ≈ 45px), os dois handles
+     somados cobrem 100% da seleção — não sobra UM pixel sequer pro usuário
+     tocar e arrastar o conjunto. Resultado: pan vira impossível no mobile.
+
+     Por isso o roteamento é POR POSIÇÃO (clientX vs. selLeftPx/selRightPx),
+     num único listener no pai (#musicMomentTrack), e não por target/element.
+     Tap dentro de HANDLE_HIT_INNER de uma das bordas → resize daquele handle.
+     Qualquer outro tap → pan (com salto se for fora da seleção).
+
+     Se for mexer aqui no futuro, rode o caso "trecho de 30s numa música de 3min"
+     no DevTools mobile antes de fazer commit. */
+  const HANDLE_HIT_INNER = 12; /* px de tolerância em torno de cada borda da seleção */
+  momentTrack.addEventListener('pointerdown', e => {
+    if (momentPicker.classList.contains('is-disabled')) return;
+    const duration = getSelectedTrackDuration(audioEl);
+    if (!duration) return;
+    const trackRect = momentTrack.getBoundingClientRect();
+    const x = e.clientX - trackRect.left;
+    const selLeftPx  = (state.musicMoment    / duration) * trackRect.width;
+    const selRightPx = (state.musicMomentEnd / duration) * trackRect.width;
+
+    if (Math.abs(x - selLeftPx) <= HANDLE_HIT_INNER)  { startDrag(e, 'start'); return; }
+    if (Math.abs(x - selRightPx) <= HANDLE_HIT_INNER) { startDrag(e, 'end');   return; }
+
+    const tapTime = (x / trackRect.width) * duration;
+    const clipDur = state.musicMomentEnd - state.musicMoment;
+    if (tapTime < state.musicMoment || tapTime > state.musicMomentEnd) {
+      let newStart = tapTime - clipDur / 2;
+      newStart = Math.max(0, Math.min(duration - clipDur, newStart));
+      state.musicMoment    = newStart;
+      state.musicMomentEnd = newStart + clipDur;
+      updateMomentPicker();
+    }
+    startDrag(e, 'pan');
   });
 
   audioEl.addEventListener('loadedmetadata', () => {
-    state.musicMoment = clampMusicMoment(state.musicMoment, getSelectedTrackDuration(audioEl));
+    const dur = getSelectedTrackDuration(audioEl);
+    state.musicMoment    = Math.max(0, Math.min(state.musicMoment, dur));
+    state.musicMomentEnd = Math.max(state.musicMoment + 1, Math.min(state.musicMomentEnd, dur));
     updateMomentPicker();
     updatePreview();
     saveState();
   });
 
   audioEl.addEventListener('timeupdate', () => {
-    const duration = getMusicPreviewDuration(audioEl);
-    const clipEnd = Math.min(getPlayablePreviewStart() + getMusicMomentWindowSeconds(), duration);
+    const clipEnd = Math.min(state.musicMomentEnd, getMusicPreviewDuration(audioEl));
 
-    syncMusicPreviewDisplay(getPreviewTimelineCurrent(), getSelectedTrackDuration(audioEl));
+    if (!momentPicker.classList.contains('is-dragging')) {
+      syncMusicPreviewDisplay(getPreviewTimelineCurrent(), Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment));
+    }
 
     if (!audioEl.paused && audioEl.currentTime >= clipEnd - 0.05) {
       stopPreviewPlayback();
@@ -1661,45 +1778,51 @@ function setupMusicSearch() {
       try {
         audioEl.currentTime = startMoment;
       } catch (_) { /* no-op */ }
-      syncMusicPreviewDisplay(state.musicMoment, getSelectedTrackDuration(audioEl));
+      syncMusicPreviewDisplay(0, Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment));
     }
 
     syncPlaybackButtons(false);
   }
 
   function updateMomentPicker() {
-    const duration = getSelectedTrackDuration(audioEl);
-    const safeMoment = clampMusicMoment(state.musicMoment, duration);
-    const momentMax = getMusicMomentMax(duration);
-    const windowDuration = Math.min(getMusicMomentWindowSeconds(), duration);
-    const clipEnd = Math.min(safeMoment + windowDuration, duration);
-    const selectionWidth = duration > 0
-      ? Math.min((windowDuration / duration) * 100, 100)
-      : 100;
-    const left = duration > 0 ? (safeMoment / duration) * 100 : 0;
-    const maxLeft = Math.max(0, 100 - selectionWidth);
+    const duration   = getSelectedTrackDuration(audioEl);
     const hasPreview = Boolean(state.previewUrl);
 
-    state.musicMoment = safeMoment;
+    // Clamp ambos os valores dentro da música
+    const safeStart = Math.max(0, Math.min(state.musicMoment, duration || 0));
+    const safeEnd   = Math.max(safeStart + MIN_CLIP, Math.min(state.musicMomentEnd, duration || MIN_CLIP));
+    state.musicMoment    = safeStart;
+    state.musicMomentEnd = safeEnd;
 
     momentPicker.classList.toggle('is-disabled', !hasPreview);
-    momentRange.disabled = !hasPreview;
     btnPreviewMoment.disabled = !hasPreview;
-    momentRange.max = String(momentMax);
-    momentRange.value = String(safeMoment);
-    momentWindow.style.width = `${selectionWidth}%`;
-    momentWindow.style.left = `${Math.min(left, maxLeft)}%`;
 
+    if (duration > 0) {
+      momentSelection.style.left  = `${(safeStart / duration) * 100}%`;
+      momentSelection.style.right = `${((duration - safeEnd) / duration) * 100}%`;
+    } else {
+      momentSelection.style.left  = '0%';
+      momentSelection.style.right = '0%';
+    }
+
+    const labelStart  = document.getElementById('momentLabelStart');
+    const labelEnd    = document.getElementById('momentLabelEnd');
+    const totalDurEl  = document.getElementById('musicMomentTotalDuration');
+    if (labelStart)  labelStart.textContent  = hasPreview ? formatAudioTime(safeStart) : '';
+    if (labelEnd)    labelEnd.textContent    = hasPreview ? formatAudioTime(safeEnd)   : '';
+    if (totalDurEl)  totalDurEl.textContent  = hasPreview ? formatAudioTime(duration)  : '';
+
+    const clipDur = safeEnd - safeStart;
     if (hasPreview) {
-      momentValue.textContent = `Começa em ${formatAudioTime(safeMoment)}`;
-      momentSpan.textContent = `${formatAudioTime(safeMoment)}–${formatAudioTime(clipEnd)} de ${formatAudioTime(duration)}`;
+      momentValue.textContent = `${formatAudioTime(safeStart)} — ${formatAudioTime(safeEnd)}`;
+      momentSpan.textContent  = `${formatAudioTime(clipDur)} selecionados de ${formatAudioTime(duration)}`;
     } else {
       momentValue.textContent = 'Selecione uma música para escolher o momento';
-      momentSpan.textContent = 'A janela acompanha a duração estimada do presente';
+      momentSpan.textContent  = 'Máximo de 30 segundos';
     }
 
     if (audioEl.paused) {
-      syncMusicPreviewDisplay(safeMoment, duration);
+      syncMusicPreviewDisplay(0, Math.max(MIN_CLIP, safeEnd - safeStart));
     }
   }
 }
@@ -2022,7 +2145,8 @@ function saveGift() {
       youtubeId:  state.youtubeId,
       previewUrl: state.previewUrl,
       musicDuration: state.musicDuration,
-      musicMoment: state.musicMoment,
+      musicMoment:    state.musicMoment,
+      musicMomentEnd: state.musicMomentEnd,
       songName:   state.songName,
       artistName: state.artistName,
       photos:     state.photos,
@@ -2078,7 +2202,7 @@ function setupNavigation() {
    17. SINCRONIZA O PLAYER DO PREVIEW
 ═══════════════════════════════════════════════════════════════ */
 function animatePlayerBar() {
-  syncMusicPreviewDisplay(state.musicMoment);
+  syncMusicPreviewDisplay(0, Math.max(1, state.musicMomentEnd - state.musicMoment));
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Criar Presente | SoulMates</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="../assets/css/cookies.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
@@ -191,10 +190,20 @@
               </div>
               <button class="music-moment-preview-btn" id="btnPreviewMoment" type="button" disabled>Ouvir trecho</button>
             </div>
-            <div class="music-moment-track-shell">
+            <div class="music-moment-track-shell" id="musicMomentTrack">
               <div class="music-moment-wave" aria-hidden="true"></div>
-              <div class="music-moment-window" id="musicMomentWindow"></div>
-              <input type="range" id="musicMomentRange" min="0" max="15" step="0.1" value="0" disabled aria-label="Escolher momento da música" />
+              <div class="music-moment-selection" id="musicMomentSelection">
+                <div class="music-moment-handle music-moment-handle--start" id="momentHandleStart" aria-label="Mover início do trecho">
+                  <span class="music-moment-handle-label" id="momentLabelStart">0:00</span>
+                </div>
+                <div class="music-moment-handle music-moment-handle--end" id="momentHandleEnd" aria-label="Mover fim do trecho">
+                  <span class="music-moment-handle-label" id="momentLabelEnd">0:30</span>
+                </div>
+              </div>
+            </div>
+            <div class="music-moment-scale">
+              <span>0:00</span>
+              <span id="musicMomentTotalDuration"></span>
             </div>
             <div class="music-moment-meta">
               <span id="musicMomentValue">Selecione uma música para escolher o momento</span>
@@ -360,6 +369,7 @@
       </div>
 
       <!-- Mockup de celular -->
+      <div class="preview-body" id="previewBody">
       <div class="phone-mockup" id="phoneMockup" data-template="spotify">
         <div class="phone-frame">
           <!-- Barra de status simulada -->
@@ -565,6 +575,7 @@
 
         </div><!-- /phone-frame -->
       </div><!-- /phone-mockup -->
+      </div><!-- /preview-body -->
 
     </aside><!-- /preview-panel -->
 
@@ -579,19 +590,6 @@
 
   <script src="script.js"></script>
 
-  <!-- Cookie Consent Banner -->
-  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
-    <span class="sm-cookie-icon">🍪</span>
-    <p class="sm-cookie-text">
-      <strong>Sua privacidade importa</strong>
-      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
-    </p>
-    <div class="sm-cookie-actions">
-      <button id="sm-cookie-accept">Aceitar</button>
-      <button id="sm-cookie-reject">Recusar</button>
-    </div>
-  </div>
-  <script src="../assets/js/cookies.js"></script>
 
   <!-- DESCONTO DIA DOS NAMORADOS — ativo de 7 a 13 jun -->
   <style>
