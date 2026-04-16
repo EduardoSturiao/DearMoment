@@ -11,10 +11,31 @@
 ═══════════════════════════════════════════════════════════════ */
 const STORAGE_KEY = 'soulmates_wizard_state';
 const TOTAL_STEPS = 8; // etapas numeradas (1–8), depois step-final
+const FLOW_VERSION = 2;
+const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
+const STORY_PHOTO_DURATION_MS = 1500;
+const STORY_BASE_SLIDE_DURATION_MS = 4200;
+const STORY_TIME_SLIDE_DURATION_MS = 5200;
+const STORY_MESSAGE_CHUNK_LIMIT = 110;
+const STORY_OPENING_MESSAGE_CHUNK_LIMIT = 60;
+const STORY_PREVIEW_INTERVAL_MS = 100;
+
+const TEMPLATE_META = {
+  stories: {
+    label: 'Stories do Instagram',
+    finalUrl: '../presente/index.html'
+  },
+  spotify: {
+    label: 'Spotify',
+    finalUrl: '../presente.html'
+  }
+};
 
 const state = {
+  flowVersion: FLOW_VERSION,
   currentStep: 1,
   giftType:    null,   // 'amoroso' | 'amigo'
+  selectedTemplate: '',
   name1:       '',
   name2:       '',
   startDate:   '',
@@ -23,11 +44,29 @@ const state = {
   youtubeId:    '',
   youtubeQuery: '',
   previewUrl:   '',
+  musicDuration: 0,
+  musicMoment:    0,
+  musicMomentEnd: 30,
   songName:     '',
   artistName:   '',
   photos:      [],     // array de base64 strings (máx 6)
   message:     '',
   extraPhoto:  null,   // base64 string
+  selectedPlan: '',
+  wrappedSelected: false,
+};
+
+const previewStoryState = {
+  slides: [],
+  slideIndex: 0,
+  galleryIndex: 0,
+  timerId: null,
+  frameId: null,
+  liveCounterId: null,
+  elapsed: 0,
+  started: false,
+  paused: false,
+  finished: false
 };
 
 /* Carrega estado salvo do localStorage */
@@ -35,7 +74,37 @@ function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) Object.assign(state, JSON.parse(saved));
+    migrateLegacyWizardState();
   } catch (_) { /* ignora erro de parse */ }
+}
+
+function migrateLegacyWizardState() {
+  const savedVersion = Number(state.flowVersion) || 0;
+  const currentStep = Number(state.currentStep) || 1;
+
+  if (savedVersion < FLOW_VERSION) {
+    if (TEMPLATE_META[state.selectedTemplate]) {
+      const stepMap = {
+        1: 1,
+        2: 9,
+        3: 2,
+        4: 3,
+        5: 4,
+        6: 5,
+        7: 6,
+        8: 7,
+        9: 8,
+        10: 10
+      };
+      state.currentStep = stepMap[currentStep] || currentStep;
+    } else {
+      state.currentStep = currentStep;
+      state.selectedTemplate = '';
+    }
+  }
+
+  state.flowVersion = FLOW_VERSION;
+  state.currentStep = Math.min(Math.max(Number(state.currentStep) || 1, 1), TOTAL_STEPS + 1);
 }
 
 /* Persiste estado no localStorage */
@@ -45,9 +114,216 @@ function saveState() {
   } catch (_) { /* ignora limite de armazenamento */ }
 }
 
+function formatAudioTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = Math.floor(safeSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function getMusicPreviewDuration(audioEl = document.getElementById('audioPreview')) {
+  const duration = Number(audioEl?.duration);
+  return Number.isFinite(duration) && duration > 0
+    ? duration
+    : DEFAULT_PREVIEW_DURATION_SECONDS;
+}
+
+function getSelectedTrackDuration(audioEl = document.getElementById('audioPreview')) {
+  const savedDuration = Number(state.musicDuration);
+  if (Number.isFinite(savedDuration) && savedDuration > 0) {
+    return savedDuration;
+  }
+
+  return getMusicPreviewDuration(audioEl);
+}
+
+function getDefaultPresentMessage() {
+  return state.giftType === 'amigo'
+    ? 'Tem amizades que merecem um espaço só delas. Esta página foi criada para guardar os momentos, o carinho e a presença que fazem essa história ser tão especial.'
+    : 'Tem histórias que merecem um espaço só delas. Esta página foi criada para guardar a música, as imagens e tudo aquilo que faz esse amor continuar vivo todos os dias.';
+}
+
+function splitTextIntoChunks(text, limit) {
+  const paragraphs = String(text || '')
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  const chunks = [];
+
+  paragraphs.forEach((paragraph) => {
+    if (paragraph.length <= limit) {
+      chunks.push(paragraph);
+      return;
+    }
+
+    const sentences = paragraph.match(/[^.!?]+[.!?]?/g) || [paragraph];
+    let buffer = '';
+
+    sentences.forEach((sentence) => {
+      const next = buffer ? `${buffer} ${sentence.trim()}` : sentence.trim();
+
+      if (next.length > limit && buffer) {
+        chunks.push(buffer);
+        buffer = sentence.trim();
+      } else {
+        buffer = next;
+      }
+    });
+
+    if (buffer) chunks.push(buffer);
+  });
+
+  return chunks.length ? chunks : [getDefaultPresentMessage()];
+}
+
+function getStoryMessageDuration(text) {
+  return STORY_BASE_SLIDE_DURATION_MS + Math.min(String(text || '').length * 18, 2600);
+}
+
+function getEstimatedPresentDurationSeconds() {
+  const message = state.message?.trim() || getDefaultPresentMessage();
+  const messageSlides = splitTextIntoChunks(message, STORY_MESSAGE_CHUNK_LIMIT);
+  const [firstMessageChunk = getDefaultPresentMessage(), ...otherMessageChunks] = messageSlides;
+  const [openingMessage = getDefaultPresentMessage(), ...openingOverflowChunks] = splitTextIntoChunks(firstMessageChunk, STORY_OPENING_MESSAGE_CHUNK_LIMIT);
+  const remainingMessages = [...openingOverflowChunks, ...otherMessageChunks];
+
+  let totalMs = getStoryMessageDuration(openingMessage) + 900;
+
+  remainingMessages.forEach((messageChunk) => {
+    totalMs += getStoryMessageDuration(messageChunk);
+  });
+
+  totalMs += STORY_TIME_SLIDE_DURATION_MS;
+
+  if (state.photos.length) {
+    totalMs += Math.max(state.photos.length * STORY_PHOTO_DURATION_MS, 4500);
+  }
+
+  return Math.max(1, totalMs / 1000);
+}
+
+function getMusicMomentWindowSeconds() {
+  return DEFAULT_PREVIEW_DURATION_SECONDS;
+}
+
+function getMusicMomentMax(duration = getSelectedTrackDuration()) {
+  return Math.max(0, duration - getMusicMomentWindowSeconds());
+}
+
+function clampMusicMoment(value, duration = getSelectedTrackDuration()) {
+  const safeValue = Number(value);
+  const nextValue = Number.isFinite(safeValue) ? safeValue : 0;
+  return Math.min(Math.max(nextValue, 0), getMusicMomentMax(duration));
+}
+
+function syncMusicPreviewDisplay(currentTime = state.musicMoment, duration = getSelectedTrackDuration()) {
+  const currentLabel = document.getElementById('fakeCurrent');
+  const durationLabel = document.getElementById('fakeDuration');
+  const fill = document.getElementById('playerBarFill');
+  const numericDuration = Number(duration);
+  const safeDuration = Number.isFinite(numericDuration) && numericDuration > 0
+    ? numericDuration
+    : DEFAULT_PREVIEW_DURATION_SECONDS;
+  const safeCurrent = Math.min(Math.max(Number(currentTime) || 0, 0), safeDuration);
+
+  if (currentLabel) currentLabel.textContent = formatAudioTime(safeCurrent);
+  if (durationLabel) durationLabel.textContent = formatAudioTime(safeDuration);
+
+  if (fill) {
+    const progress = safeDuration > 0 ? (safeCurrent / safeDuration) * 100 : 0;
+    fill.style.width = `${Math.max(0, Math.min(progress, 100))}%`;
+  }
+}
+
+function getPreviewTemplate() {
+  return TEMPLATE_META[state.selectedTemplate] ? state.selectedTemplate : 'spotify';
+}
+
+function getFinalTemplate() {
+  return TEMPLATE_META[state.selectedTemplate] ? state.selectedTemplate : 'spotify';
+}
+
+function getTemplateMeta(templateId = getPreviewTemplate()) {
+  return TEMPLATE_META[templateId] || TEMPLATE_META.spotify;
+}
+
+function getPreviewSignaturePrefix() {
+  return state.giftType === 'amigo' ? 'Com carinho' : 'Com amor';
+}
+
+function getPreviewTitle() {
+  if (state.title?.trim()) return state.title.trim();
+  return state.giftType === 'amigo'
+    ? 'Uma surpresa para celebrar uma amizade especial.'
+    : 'Nosso presente especial';
+}
+
+function getPreviewMessageChunk() {
+  const message = state.message?.trim() || getDefaultPresentMessage();
+  return splitTextIntoChunks(message, STORY_OPENING_MESSAGE_CHUNK_LIMIT)[0];
+}
+
+function getPreviewFormattedDate() {
+  if (!state.startDate) return 'um dia inesquecível';
+
+  const date = new Date(`${state.startDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return 'um dia inesquecível';
+
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
+function buildPreviewData() {
+  const sender = state.name1?.trim() || 'Você';
+  const recipient = state.name2?.trim() || 'Pessoa especial';
+  const galleryPhotos = Array.isArray(state.photos) && state.photos.length
+    ? state.photos.filter(Boolean)
+    : [];
+  const cover = state.extraPhoto || galleryPhotos[0] || '';
+
+  return {
+    sender,
+    recipient,
+    names: `${sender} & ${recipient}`,
+    title: getPreviewTitle(),
+    message: state.message?.trim() || 'Sua mensagem especial aparecerá aqui...',
+    openingMessage: getPreviewMessageChunk(),
+    song: state.songName?.trim() || 'Nossa música',
+    artist: state.artistName?.trim() || 'Artista',
+    city: state.city?.trim() || '—',
+    formattedDate: getPreviewFormattedDate(),
+    cover,
+    galleryPhotos,
+    trackLabel: `${state.songName?.trim() || 'Nossa música'} - ${state.artistName?.trim() || 'Artista'}`,
+    signature: `${getPreviewSignaturePrefix()}, ${sender}.`
+  };
+}
+
 /* ═══════════════════════════════════════════════════════════════
    2. DADOS — Cidades (API IBGE) e frases aleatórias
 ═══════════════════════════════════════════════════════════════ */
+function openFinalGift(planId) {
+  state.selectedPlan = planId;
+  saveState();
+
+  const template = getFinalTemplate();
+  const templateMeta = getTemplateMeta(template);
+
+  if (template === 'spotify') {
+    const giftId = localStorage.getItem('soulmates_last_gift_id');
+    if (giftId) {
+      window.location.href = `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`;
+      return;
+    }
+  }
+
+  window.location.href = templateMeta.finalUrl;
+}
+
 let CIDADES = []; // Populado via API do IBGE on load
 
 async function loadCidades() {
@@ -310,6 +586,10 @@ function showStep(n) {
   const el = document.getElementById(stepId(n));
   if (el) el.classList.add('active');
 
+  if (n !== TOTAL_STEPS && getPreviewTemplate() === 'stories') {
+    resetStoriesPreviewState();
+  }
+
   updateProgress(n);
   updateNavButtons(n);
   saveState();
@@ -358,6 +638,9 @@ function validateStep(n) {
     case 4:
       if (!state.title.trim()) { showToast('Adicione um título'); return false; }
       break;
+    case 9:
+      if (!state.selectedTemplate) { showToast('Escolha o template do presente ✨'); return false; }
+      break;
     // etapas 5–8 são opcionais (pode pular)
   }
   return true;
@@ -366,28 +649,32 @@ function validateStep(n) {
 /* ═══════════════════════════════════════════════════════════════
    6. ATUALIZAÇÃO DO PREVIEW
 ═══════════════════════════════════════════════════════════════ */
-function updatePreview() {
-  // Nomes
-  const n1 = state.name1 || 'Nome1';
-  const n2 = state.name2 || 'Nome2';
-  setTextSafe('prevNames', `${n1} & ${n2}`);
+function updatePreviewTemplateUI(templateId) {
+  const phoneMockup = document.getElementById('phoneMockup');
+  const spotifyView = document.getElementById('spotifyPreviewView');
+  const storiesView = document.getElementById('storiesPreviewView');
+  const templateName = document.getElementById('previewTemplateName');
 
-  // Título
-  setTextSafe('prevTitle', state.title || 'Nosso presente especial');
+  if (phoneMockup) phoneMockup.dataset.template = templateId;
+  if (spotifyView) spotifyView.classList.toggle('hidden', templateId !== 'spotify');
+  if (storiesView) storiesView.classList.toggle('hidden', templateId !== 'stories');
+  if (templateName) templateName.textContent = getTemplateMeta(templateId).label;
+}
 
-  // Música
-  setTextSafe('prevSong',   state.songName   || 'Nossa Música');
-  setTextSafe('prevArtist', state.artistName || 'Artista');
+function renderSpotifyPreview(previewData) {
+  setTextSafe('prevNames', previewData.names);
+  setTextSafe('prevTitle', previewData.title);
+  setTextSafe('prevSong', previewData.song);
+  setTextSafe('prevArtist', previewData.artist);
+  setTextSafe('prevCity', previewData.city !== '—' ? `📍 ${previewData.city}` : '📍 —');
+  setTextSafe('prevMessage', state.message || 'Sua mensagem especial aparecerá aqui...');
 
-  // Cidade
-  setTextSafe('prevCity', state.city ? `📍 ${state.city}` : '📍 —');
+  syncMusicPreviewDisplay(0, Math.max(1, state.musicMomentEnd - state.musicMoment));
+  updateGalleryPreview();
 
-  // Slideshow das fotos da galeria (etapa 6) no player cover
-  startPhotoSlideshow();
-
-  // Foto de capa do casal (etapa 8) → seção de mensagem especial
-  const msgCoverImg         = document.getElementById('msgCoverImg');
+  const msgCoverImg = document.getElementById('msgCoverImg');
   const msgCoverPlaceholder = document.getElementById('msgCoverPlaceholder');
+
   if (msgCoverImg) {
     if (state.extraPhoto) {
       msgCoverImg.src = state.extraPhoto;
@@ -399,22 +686,541 @@ function updatePreview() {
     }
   }
 
-  // Mensagem especial (etapa 7) → seção de mensagem
-  setTextSafe('prevMessage', state.message || 'Sua mensagem especial aparecerá aqui...');
-
-  // Galeria de fotos
-  updateGalleryPreview();
-
-  // Timeline — nossa história
   if (state.startDate) {
-    const d = new Date(state.startDate + 'T00:00:00');
-    setTextSafe('prevTlDate', d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }));
+    const date = new Date(`${state.startDate}T00:00:00`);
+    setTextSafe('prevTlDate', date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }));
   } else {
     setTextSafe('prevTlDate', '—');
   }
-  setTextSafe('prevTlCity', state.city || '—');
 
-  // Contador já é atualizado pelo intervalo (startCounter)
+  setTextSafe('prevTlCity', state.city || '—');
+}
+
+function createStoriesPreviewNode(tagName, className, text = '') {
+  const node = document.createElement(tagName);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function buildStoriesPreviewSlides(previewData) {
+  const message = previewData.message?.trim() || getDefaultPresentMessage();
+  const messageSlides = splitTextIntoChunks(message, STORY_MESSAGE_CHUNK_LIMIT);
+  const [firstMessageChunk = getDefaultPresentMessage(), ...otherMessageChunks] = messageSlides;
+  const [openingMessage = getDefaultPresentMessage(), ...openingOverflowChunks] = splitTextIntoChunks(firstMessageChunk, STORY_OPENING_MESSAGE_CHUNK_LIMIT);
+  const remainingMessages = [...openingOverflowChunks, ...otherMessageChunks];
+  const slides = [
+    {
+      type: 'message-opening',
+      duration: getStoryMessageDuration(openingMessage) + 900,
+      frameMedia: previewData.cover,
+      headline: previewData.recipient,
+      quote: openingMessage,
+      signature: previewData.signature
+    }
+  ];
+
+  remainingMessages.forEach((messageChunk, index) => {
+    slides.push({
+      type: 'message',
+      duration: getStoryMessageDuration(messageChunk),
+      label: index === 0 ? 'Continua' : 'Mais um pedaço',
+      headline: `Palavras de ${previewData.sender}.`,
+      quote: messageChunk,
+      signature: previewData.signature
+    });
+  });
+
+  slides.push({
+    type: 'time',
+    duration: STORY_TIME_SLIDE_DURATION_MS,
+    label: 'Tempo vivido',
+    headline: 'Cada instante continua contando.',
+    copy: `Desde ${previewData.formattedDate}, essa história segue acontecendo em tempo real.`
+  });
+
+  if (previewData.galleryPhotos.length) {
+    slides.push({
+      type: 'gallery',
+      duration: Math.max(previewData.galleryPhotos.length * STORY_PHOTO_DURATION_MS, 4500),
+      label: 'Memórias',
+      headline: previewData.title,
+      photos: previewData.galleryPhotos
+    });
+  }
+
+  return slides;
+}
+
+function renderStoriesPreviewProgress(slides) {
+  const progress = document.getElementById('storiesPreviewProgress');
+  if (!progress) return;
+
+  progress.innerHTML = slides.map(() => (
+    '<span class="stories-preview-progress-segment"><span class="stories-preview-progress-fill"></span></span>'
+  )).join('');
+}
+
+function createStoriesPreviewSlideElement(slide, index) {
+  const slideElement = createStoriesPreviewNode('section', `stories-preview-slide stories-preview-slide-${slide.type}`);
+  slideElement.dataset.index = String(index);
+  slideElement.dataset.type = slide.type;
+
+  const content = createStoriesPreviewNode('div', 'stories-preview-slide-content');
+
+  if (slide.label && slide.type !== 'message-opening') {
+    content.appendChild(createStoriesPreviewNode('p', 'stories-preview-label', slide.label));
+  }
+
+  if (slide.headline && slide.type !== 'message-opening') {
+    content.appendChild(createStoriesPreviewNode('h3', 'stories-preview-headline', slide.headline));
+  }
+
+  if (slide.type === 'message-opening') {
+    const openingBlock = createStoriesPreviewNode('div', 'stories-preview-opening-block');
+    const copy = createStoriesPreviewNode('div', 'stories-preview-opening-copy');
+    const recipient = createStoriesPreviewNode('p', 'stories-preview-opening-recipient', `${slide.headline}...`);
+    const quote = createStoriesPreviewNode('p', 'stories-preview-opening-quote', slide.quote);
+    const footer = createStoriesPreviewNode('div', 'stories-preview-opening-footer');
+    const line = createStoriesPreviewNode('span', 'stories-preview-opening-line');
+    const signature = createStoriesPreviewNode('p', 'stories-preview-opening-signature', slide.signature);
+
+    if (slide.frameMedia) {
+      const frame = createStoriesPreviewNode('div', 'stories-preview-opening-media-frame');
+      const image = createStoriesPreviewNode('img', 'stories-preview-opening-media');
+      image.src = slide.frameMedia;
+      image.alt = `Foto de capa do presente para ${slide.headline}`;
+      image.loading = 'eager';
+      frame.appendChild(image);
+      openingBlock.appendChild(frame);
+    } else {
+      const frame = createStoriesPreviewNode('div', 'stories-preview-opening-media-frame');
+      frame.appendChild(createStoriesPreviewNode('div', 'stories-preview-opening-media-placeholder', '🖼️'));
+      openingBlock.appendChild(frame);
+    }
+
+    footer.append(line, signature);
+    copy.append(recipient, quote, footer);
+    openingBlock.appendChild(copy);
+    content.appendChild(openingBlock);
+  }
+
+  if (slide.type === 'message') {
+    const card = createStoriesPreviewNode('article', 'stories-preview-card');
+    const quote = createStoriesPreviewNode('p', 'stories-preview-quote', slide.quote);
+    const signature = createStoriesPreviewNode('p', 'stories-preview-signature', slide.signature);
+    card.append(quote, signature);
+    content.appendChild(card);
+  }
+
+  if (slide.type === 'time') {
+    const panel = createStoriesPreviewNode('div', 'stories-preview-time-panel');
+    const dateLine = createStoriesPreviewNode('p', 'stories-preview-time-date', `Desde ${getPreviewFormattedDate()}`);
+    const primaryGrid = createStoriesPreviewNode('div', 'stories-preview-time-primary');
+    const secondaryGrid = createStoriesPreviewNode('div', 'stories-preview-time-secondary');
+    const copy = createStoriesPreviewNode('p', 'stories-preview-time-copy', slide.copy);
+    const primaryDefs = [['years', 'anos'], ['months', 'meses']];
+    const secondaryDefs = [['days', 'dias'], ['hours', 'horas'], ['minutes', 'min'], ['seconds', 'seg']];
+
+    primaryDefs.forEach(([key, label]) => {
+      const stat = createStoriesPreviewNode('article', 'stories-preview-stat stories-preview-stat-primary');
+      const value = createStoriesPreviewNode('span', 'stories-preview-stat-value', '--');
+      const caption = createStoriesPreviewNode('span', 'stories-preview-stat-label', label);
+      value.dataset.timeKey = key;
+      stat.append(value, caption);
+      primaryGrid.appendChild(stat);
+    });
+
+    secondaryDefs.forEach(([key, label]) => {
+      const stat = createStoriesPreviewNode('article', 'stories-preview-stat stories-preview-stat-secondary');
+      const value = createStoriesPreviewNode('span', 'stories-preview-stat-value', '--');
+      const caption = createStoriesPreviewNode('span', 'stories-preview-stat-label', label);
+      value.dataset.timeKey = key;
+      stat.append(value, caption);
+      secondaryGrid.appendChild(stat);
+    });
+
+    panel.append(dateLine, primaryGrid, secondaryGrid);
+    content.append(panel, copy);
+  }
+
+  if (slide.type === 'gallery') {
+    const stack = createStoriesPreviewNode('div', 'stories-preview-gallery-stack');
+    const dots = createStoriesPreviewNode('div', 'stories-preview-gallery-dots');
+
+    if (slide.photos?.length) {
+      slide.photos.forEach((photo, photoIndex) => {
+        const image = createStoriesPreviewNode('img', `stories-preview-gallery-image${photoIndex === 0 ? ' active' : ''}`);
+        image.src = photo;
+        image.alt = `Foto ${photoIndex + 1} do preview`;
+        image.loading = 'lazy';
+        stack.appendChild(image);
+
+        const dot = createStoriesPreviewNode('span', `stories-preview-gallery-dot${photoIndex === 0 ? ' active' : ''}`);
+        dots.appendChild(dot);
+      });
+    } else {
+      stack.appendChild(createStoriesPreviewNode('div', 'stories-preview-gallery-placeholder', '📸'));
+    }
+
+    content.append(stack, dots);
+  }
+
+  slideElement.appendChild(content);
+  return slideElement;
+}
+
+function renderStoriesPreviewSlides(slides) {
+  const slidesContainer = document.getElementById('storiesPreviewSlides');
+  if (!slidesContainer) return;
+
+  slidesContainer.innerHTML = '';
+  slides.forEach((slide, index) => {
+    slidesContainer.appendChild(createStoriesPreviewSlideElement(slide, index));
+  });
+}
+
+function updateStoriesPreviewLiveCounter() {
+  const counter = state.startDate ? calcTimeSince(state.startDate) : null;
+  const values = {
+    years: counter?.years ?? '—',
+    months: counter?.months ?? '—',
+    days: counter?.days ?? '—',
+    hours: counter?.hours ?? '—',
+    minutes: counter?.minutes ?? '—',
+    seconds: counter?.seconds ?? '—'
+  };
+
+  document.querySelectorAll('#storiesPreviewSlides [data-time-key]').forEach((node) => {
+    node.textContent = values[node.dataset.timeKey] ?? '—';
+  });
+}
+
+function startStoriesPreviewLiveCounter() {
+  stopStoriesPreviewLiveCounter();
+  updateStoriesPreviewLiveCounter();
+  previewStoryState.liveCounterId = window.setInterval(updateStoriesPreviewLiveCounter, 1000);
+}
+
+function stopStoriesPreviewLiveCounter() {
+  if (!previewStoryState.liveCounterId) return;
+  window.clearInterval(previewStoryState.liveCounterId);
+  previewStoryState.liveCounterId = null;
+}
+
+function updateStoriesPreviewGallerySlide() {
+  const currentSlide = previewStoryState.slides[previewStoryState.slideIndex];
+  if (!currentSlide || currentSlide.type !== 'gallery') return;
+
+  const currentElement = document.querySelector(`#storiesPreviewSlides .stories-preview-slide[data-index="${previewStoryState.slideIndex}"]`);
+  if (!currentElement) return;
+
+  const images = Array.from(currentElement.querySelectorAll('.stories-preview-gallery-image'));
+  const dots = Array.from(currentElement.querySelectorAll('.stories-preview-gallery-dot'));
+  if (!images.length) return;
+
+  const activeIndex = Math.floor(previewStoryState.elapsed / STORY_PHOTO_DURATION_MS) % images.length;
+  previewStoryState.galleryIndex = activeIndex;
+
+  images.forEach((image, index) => image.classList.toggle('active', index === activeIndex));
+  dots.forEach((dot, index) => dot.classList.toggle('active', index === activeIndex));
+}
+
+function updateStoriesPreviewProgress() {
+  const fills = Array.from(document.querySelectorAll('#storiesPreviewProgress .stories-preview-progress-fill'));
+  const currentSlide = previewStoryState.slides[previewStoryState.slideIndex];
+  const currentProgress = currentSlide
+    ? Math.min((previewStoryState.elapsed / currentSlide.duration) * 100, 100)
+    : 0;
+
+  fills.forEach((fill, index) => {
+    if (index < previewStoryState.slideIndex) {
+      fill.style.width = '100%';
+    } else if (index > previewStoryState.slideIndex) {
+      fill.style.width = '0%';
+    } else if (previewStoryState.finished) {
+      fill.style.width = '100%';
+    } else {
+      fill.style.width = `${currentProgress}%`;
+    }
+  });
+}
+
+function setActiveStoriesPreviewSlide(index, { resetElapsed = true } = {}) {
+  const slides = Array.from(document.querySelectorAll('#storiesPreviewSlides .stories-preview-slide'));
+  if (!slides.length) return;
+
+  const nextIndex = Math.min(Math.max(index, 0), slides.length - 1);
+  previewStoryState.slideIndex = nextIndex;
+  if (resetElapsed) previewStoryState.elapsed = 0;
+
+  slides.forEach((slideElement, slideIndex) => {
+    slideElement.classList.toggle('active', slideIndex === previewStoryState.slideIndex);
+  });
+
+  updateStoriesPreviewLiveCounter();
+  updateStoriesPreviewGallerySlide();
+  updateStoriesPreviewProgress();
+}
+
+function syncStoriesPreviewMode() {
+  const cover = document.getElementById('storiesPreviewCover');
+  const player = document.getElementById('storiesPreviewPlayer');
+  const replayButton = document.getElementById('storiesPreviewReplayButton');
+  const shouldShowPlayer = previewStoryState.started || previewStoryState.finished;
+
+  if (cover) cover.classList.toggle('hidden', shouldShowPlayer);
+  if (player) player.classList.toggle('hidden', !shouldShowPlayer);
+  if (replayButton) replayButton.classList.toggle('hidden', !previewStoryState.finished);
+}
+
+function updateStoriesPreviewPauseIndicator() {
+  const indicator = document.getElementById('storiesPreviewPauseIndicator');
+  if (!indicator) return;
+  indicator.classList.toggle('visible', previewStoryState.started && previewStoryState.paused && !previewStoryState.finished);
+}
+
+function getStoriesPreviewAudioMoment(audioEl) {
+  const desiredMoment = Math.max(0, Number(state.musicMoment) || 0);
+  const duration = Number(audioEl?.duration);
+
+  if (Number.isFinite(duration) && duration > 0) {
+    return Math.min(desiredMoment, Math.max(0, duration - 0.35));
+  }
+
+  return desiredMoment;
+}
+
+function resetStoriesPreviewAudio() {
+  const audioEl = document.getElementById('storiesPreviewAudio');
+  if (!audioEl) return;
+
+  audioEl.pause();
+
+  if (!state.previewUrl) {
+    audioEl.removeAttribute('src');
+    audioEl.removeAttribute('data-source');
+    audioEl.load();
+    return;
+  }
+
+  if (audioEl.dataset.source !== state.previewUrl) {
+    audioEl.src = state.previewUrl;
+    audioEl.dataset.source = state.previewUrl;
+    audioEl.load();
+  }
+
+  try {
+    audioEl.currentTime = getStoriesPreviewAudioMoment(audioEl);
+  } catch (_) { /* metadata pendente */ }
+}
+
+async function startStoriesPreviewAudio() {
+  const audioEl = document.getElementById('storiesPreviewAudio');
+  const wizardAudio = document.getElementById('audioPreview');
+
+  if (!audioEl || !state.previewUrl) return;
+  if (wizardAudio && !wizardAudio.paused) wizardAudio.pause();
+
+  if (audioEl.dataset.source !== state.previewUrl) {
+    audioEl.src = state.previewUrl;
+    audioEl.dataset.source = state.previewUrl;
+    audioEl.load();
+  }
+
+  try {
+    audioEl.currentTime = getStoriesPreviewAudioMoment(audioEl);
+  } catch (_) { /* metadata pendente */ }
+
+  try {
+    await audioEl.play();
+  } catch (_) { /* autoplay bloqueado ou fonte indisponível */ }
+}
+
+function pauseStoriesPreviewAudio() {
+  const audioEl = document.getElementById('storiesPreviewAudio');
+  if (audioEl) audioEl.pause();
+}
+
+function resumeStoriesPreviewAudio() {
+  const audioEl = document.getElementById('storiesPreviewAudio');
+  if (!audioEl || !state.previewUrl) return;
+  audioEl.play().catch(() => {});
+}
+
+function renderStoriesPreview(previewData) {
+  const coverPhoto = previewData.cover || previewData.galleryPhotos[0] || '';
+  const coverImage = document.getElementById('storiesPreviewCoverImage');
+  const coverPlaceholder = document.getElementById('storiesPreviewCoverPlaceholder');
+  setTextSafe('storiesPreviewCoverTitle', `${previewData.sender} criou um presente para você ❤`);
+  setTextSafe('storiesPreviewCoverCopy', 'Clique abaixo para abrir');
+  setTextSafe('storiesPreviewTrack', previewData.trackLabel);
+
+  if (coverImage) {
+    if (coverPhoto) {
+      coverImage.src = coverPhoto;
+      coverImage.classList.remove('hidden');
+      if (coverPlaceholder) coverPlaceholder.classList.add('hidden');
+    } else {
+      coverImage.classList.add('hidden');
+      if (coverPlaceholder) coverPlaceholder.classList.remove('hidden');
+    }
+  }
+
+  previewStoryState.slides = buildStoriesPreviewSlides(previewData);
+  renderStoriesPreviewProgress(previewStoryState.slides);
+  renderStoriesPreviewSlides(previewStoryState.slides);
+
+  if (previewStoryState.started || previewStoryState.finished) {
+    const nextIndex = Math.min(previewStoryState.slideIndex, Math.max(previewStoryState.slides.length - 1, 0));
+    setActiveStoriesPreviewSlide(nextIndex, { resetElapsed: false });
+  } else {
+    setActiveStoriesPreviewSlide(0);
+    updateStoriesPreviewProgress();
+  }
+
+  updateStoriesPreviewLiveCounter();
+  updateStoriesPreviewPauseIndicator();
+  syncStoriesPreviewMode();
+}
+
+function startStoriesPreviewTicker() {
+  if (previewStoryState.timerId) return;
+
+  previewStoryState.timerId = window.setInterval(() => {
+    if (!previewStoryState.started || previewStoryState.paused || previewStoryState.finished) return;
+
+    const currentSlide = previewStoryState.slides[previewStoryState.slideIndex];
+    if (!currentSlide) return;
+
+    previewStoryState.elapsed += STORY_PREVIEW_INTERVAL_MS;
+    updateStoriesPreviewProgress();
+
+    if (currentSlide.type === 'gallery') {
+      updateStoriesPreviewGallerySlide();
+    }
+
+    if (previewStoryState.elapsed >= currentSlide.duration) {
+      nextStoriesPreviewSlide();
+    }
+  }, STORY_PREVIEW_INTERVAL_MS);
+}
+
+function stopStoriesPreviewAnimation({ resetProgress = false } = {}) {
+  if (previewStoryState.timerId) {
+    window.clearInterval(previewStoryState.timerId);
+    previewStoryState.timerId = null;
+  }
+
+  stopStoriesPreviewLiveCounter();
+
+  if (resetProgress) {
+    document.querySelectorAll('#storiesPreviewProgress .stories-preview-progress-fill').forEach((fill) => {
+      fill.style.width = '0%';
+    });
+  }
+}
+
+function finishStoriesPreview() {
+  const currentSlide = previewStoryState.slides[previewStoryState.slideIndex];
+
+  previewStoryState.finished = true;
+  previewStoryState.paused = false;
+  previewStoryState.elapsed = currentSlide?.duration || 0;
+
+  pauseStoriesPreviewAudio();
+  stopStoriesPreviewAnimation();
+  updateStoriesPreviewPauseIndicator();
+  updateStoriesPreviewProgress();
+  syncStoriesPreviewMode();
+}
+
+async function startStoriesPreview() {
+  if (previewStoryState.started && !previewStoryState.finished) return;
+  if (!previewStoryState.slides.length) return;
+
+  previewStoryState.started = true;
+  previewStoryState.paused = false;
+  previewStoryState.finished = false;
+  previewStoryState.slideIndex = 0;
+  previewStoryState.galleryIndex = 0;
+  previewStoryState.elapsed = 0;
+
+  syncStoriesPreviewMode();
+  setActiveStoriesPreviewSlide(0);
+  updateStoriesPreviewPauseIndicator();
+  startStoriesPreviewLiveCounter();
+  startStoriesPreviewTicker();
+  await startStoriesPreviewAudio();
+}
+
+function toggleStoriesPreviewPause() {
+  if (!previewStoryState.started || previewStoryState.finished) return;
+
+  previewStoryState.paused = !previewStoryState.paused;
+  updateStoriesPreviewPauseIndicator();
+
+  if (previewStoryState.paused) pauseStoriesPreviewAudio();
+  else resumeStoriesPreviewAudio();
+}
+
+function nextStoriesPreviewSlide() {
+  if (!previewStoryState.slides.length) return;
+
+  if (previewStoryState.slideIndex >= previewStoryState.slides.length - 1) {
+    finishStoriesPreview();
+    return;
+  }
+
+  previewStoryState.finished = false;
+  setActiveStoriesPreviewSlide(previewStoryState.slideIndex + 1);
+  syncStoriesPreviewMode();
+}
+
+function prevStoriesPreviewSlide() {
+  if (!previewStoryState.slides.length || !previewStoryState.started) return;
+
+  previewStoryState.finished = false;
+
+  if (previewStoryState.slideIndex === 0) {
+    setActiveStoriesPreviewSlide(0);
+    syncStoriesPreviewMode();
+    return;
+  }
+
+  setActiveStoriesPreviewSlide(previewStoryState.slideIndex - 1);
+  syncStoriesPreviewMode();
+}
+
+function resetStoriesPreviewState() {
+  stopStoriesPreviewAnimation({ resetProgress: true });
+  pauseStoriesPreviewAudio();
+  resetStoriesPreviewAudio();
+
+  previewStoryState.slideIndex = 0;
+  previewStoryState.galleryIndex = 0;
+  previewStoryState.elapsed = 0;
+  previewStoryState.started = false;
+  previewStoryState.paused = false;
+  previewStoryState.finished = false;
+
+  updateStoriesPreviewPauseIndicator();
+  syncStoriesPreviewMode();
+}
+
+function updatePreview() {
+  const previewData = buildPreviewData();
+  const template = getPreviewTemplate();
+
+  updatePreviewTemplateUI(template);
+  renderSpotifyPreview(previewData);
+  renderStoriesPreview(previewData);
+
+  if (template === 'spotify') startPhotoSlideshow();
+  else stopPhotoSlideshow();
+
+  if (template !== 'stories') resetStoriesPreviewState();
+
   if (state.startDate) startCounter(state.startDate);
 }
 
@@ -622,18 +1428,55 @@ function setupExtraPhotoUpload() {
 /* ═══════════════════════════════════════════════════════════════
    10. BUSCA DE MÚSICA (Etapa 5) — iTunes Search API + áudio nativo
 ═══════════════════════════════════════════════════════════════ */
+function generateWaveBars() {
+  const wave = document.querySelector('.music-moment-wave');
+  if (!wave) return;
+  wave.innerHTML = '';
+  const BAR_COUNT = 52;
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const t = i / BAR_COUNT;
+    // Combina senoides em diferentes frequências para parecer um waveform real
+    const h = 22
+      + Math.abs(Math.sin(t * Math.PI * 6.3) * 34)
+      + Math.abs(Math.sin(t * Math.PI * 13.7 + 1.2) * 18)
+      + Math.abs(Math.sin(t * Math.PI * 3.1 + 0.5) * 14);
+    const bar = document.createElement('div');
+    bar.className = 'music-moment-wave-bar';
+    bar.style.height = `${Math.min(Math.round(h), 92)}%`;
+    wave.appendChild(bar);
+  }
+}
+
 function setupMusicSearch() {
   const searchInput     = document.getElementById('musicSearch');
   const suggestionsList = document.getElementById('musicSuggestions');
   const btnPlay         = document.getElementById('btnPlay');
+  const btnPreviewMoment = document.getElementById('btnPreviewMoment');
   const audioEl         = document.getElementById('audioPreview');
+  const momentPicker    = document.getElementById('musicMomentPicker');
+  const momentTrack     = document.getElementById('musicMomentTrack');
+  const momentSelection = document.getElementById('musicMomentSelection');
+  const handleStart     = document.getElementById('momentHandleStart');
+  const handleEnd       = document.getElementById('momentHandleEnd');
+  const momentValue     = document.getElementById('musicMomentValue');
+  const momentSpan      = document.getElementById('musicMomentSpan');
+
+  const MAX_CLIP = DEFAULT_PREVIEW_DURATION_SECONDS;
+  const MIN_CLIP = 1;
 
   let debounceTimer = null;
   let highlighted   = -1;
 
   // Restaura campo de busca e áudio se já há música salva
   if (state.youtubeQuery) searchInput.value = state.youtubeQuery;
-  if (state.previewUrl)   audioEl.src        = state.previewUrl;
+  if (state.previewUrl) {
+    audioEl.src = state.previewUrl;
+    audioEl.load();
+  }
+
+  syncPlaybackButtons(false);
+  generateWaveBars();
+  updateMomentPicker();
 
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
@@ -724,11 +1567,7 @@ function setupMusicSearch() {
     suggestionsList.classList.add('hidden');
     searchInput.value = `${track.trackName} — ${track.artistName}`;
 
-    // Para áudio atual antes de trocar
-    if (!audioEl.paused) {
-      audioEl.pause();
-      btnPlay.textContent = '▶';
-    }
+    stopPreviewPlayback(false);
 
     // Sempre atualiza nome e artista ao selecionar uma música
     const songEl   = document.getElementById('songName');
@@ -740,34 +1579,251 @@ function setupMusicSearch() {
 
     state.youtubeQuery = `${track.trackName} ${track.artistName}`;
     state.previewUrl   = track.previewUrl || '';
-    audioEl.src        = state.previewUrl;
+    state.musicDuration = Number.isFinite(track.trackTimeMillis)
+      ? Math.max(Math.round(track.trackTimeMillis / 1000), DEFAULT_PREVIEW_DURATION_SECONDS)
+      : DEFAULT_PREVIEW_DURATION_SECONDS;
+    state.musicMoment    = 0;
+    state.musicMomentEnd = Math.min(DEFAULT_PREVIEW_DURATION_SECONDS, state.musicDuration);
+    audioEl.src          = state.previewUrl;
+    audioEl.load();
 
+    updateMomentPicker();
     saveState();
     updatePreview();
   }
 
-  // Play / pause do preview de áudio no mockup
-  btnPlay.addEventListener('click', () => {
+  function getPlayablePreviewStart() {
+    const previewDuration = getMusicPreviewDuration(audioEl);
+    return state.musicMoment <= previewDuration ? state.musicMoment : 0;
+  }
+
+  function getPreviewTimelineCurrent() {
+    const previewStart = getPlayablePreviewStart();
+    const elapsed = Math.max(0, (audioEl.currentTime || previewStart) - previewStart);
+    const clipDur = Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment);
+    return Math.min(elapsed, clipDur);
+  }
+
+  // Play / pause do preview da música
+  function togglePreviewPlayback() {
     if (!state.previewUrl) {
       showToast('Adicione uma música na etapa 5 🎵');
       return;
     }
+
     if (audioEl.paused) {
-      audioEl.play().catch(() => showToast('Não foi possível reproduzir o áudio'));
-      btnPlay.textContent = '⏸';
+      const startMoment = getPlayablePreviewStart();
+      try {
+        audioEl.currentTime = startMoment;
+      } catch (_) { /* metadata pendente */ }
+
+      audioEl.play()
+        .then(() => {
+          syncPlaybackButtons(true);
+          syncMusicPreviewDisplay(getPreviewTimelineCurrent(), Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment));
+        })
+        .catch(() => showToast('Não foi possível reproduzir o áudio'));
     } else {
-      audioEl.pause();
-      btnPlay.textContent = '▶';
+      stopPreviewPlayback();
+    }
+  }
+
+  btnPlay.addEventListener('click', togglePreviewPlayback);
+  btnPreviewMoment.addEventListener('click', togglePreviewPlayback);
+
+  // ── Drag de dois handles ────────────────────────────────────
+  let dragType = null;
+  let dragStartX = 0;
+  let dragStartMoment = 0;
+  let dragStartEnd = 0;
+
+  function onDragMove(e) {
+    const duration = getSelectedTrackDuration(audioEl);
+    if (!duration || !dragType) return;
+    const trackWidth = momentTrack.getBoundingClientRect().width;
+    const deltaSeconds = ((e.clientX - dragStartX) / trackWidth) * duration;
+
+    if (dragType === 'start') {
+      let s = dragStartMoment + deltaSeconds;
+      s = Math.max(0, Math.min(s, state.musicMomentEnd - MIN_CLIP));
+      if (state.musicMomentEnd - s > MAX_CLIP) s = state.musicMomentEnd - MAX_CLIP;
+      state.musicMoment = s;
+    } else if (dragType === 'end') {
+      let end = dragStartEnd + deltaSeconds;
+      end = Math.min(duration, Math.max(end, state.musicMoment + MIN_CLIP));
+      if (end - state.musicMoment > MAX_CLIP) end = state.musicMoment + MAX_CLIP;
+      state.musicMomentEnd = end;
+    } else {
+      const clipDur = dragStartEnd - dragStartMoment;
+      let s = dragStartMoment + deltaSeconds;
+      s = Math.max(0, Math.min(s, duration - clipDur));
+      state.musicMoment    = s;
+      state.musicMomentEnd = s + clipDur;
+    }
+    updateMomentPicker();
+  }
+
+  function onDragEnd(e) {
+    if (!dragType) return;
+    dragType = null;
+    momentPicker.classList.remove('is-dragging');
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup',     onDragEnd);
+    document.removeEventListener('pointercancel', onDragEnd); /* limpa se iOS cancelar o gesto */
+    if (!audioEl.paused) {
+      try { audioEl.currentTime = getPlayablePreviewStart(); } catch (_) {}
+    }
+    clearTimeout(debounceTimer);
+    saveState();
+    updatePreview();
+  }
+
+  function startDrag(e, type) {
+    dragType        = type;
+    dragStartX      = e.clientX;
+    dragStartMoment = state.musicMoment;
+    dragStartEnd    = state.musicMomentEnd;
+    momentPicker.classList.add('is-dragging');
+    document.addEventListener('pointermove',   onDragMove);
+    document.addEventListener('pointerup',     onDragEnd);
+    document.addEventListener('pointercancel', onDragEnd); /* iOS pode cancelar com pointercancel */
+    e.preventDefault();
+  }
+
+  /* ATENÇÃO — NÃO voltar a bindar pointerdown nos elementos .music-moment-handle
+     ou em #musicMomentSelection. Aprendido na marra:
+
+     Os handles têm 28px de largura cada e ficam posicionados em left/right -6px
+     dentro da seleção. Quando o trecho selecionado é pequeno (ex.: 30s clip
+     dentro de uma música de 3min ≈ 16% do track ≈ 45px), os dois handles
+     somados cobrem 100% da seleção — não sobra UM pixel sequer pro usuário
+     tocar e arrastar o conjunto. Resultado: pan vira impossível no mobile.
+
+     Por isso o roteamento é POR POSIÇÃO (clientX vs. selLeftPx/selRightPx),
+     num único listener no pai (#musicMomentTrack), e não por target/element.
+     Tap dentro de HANDLE_HIT_INNER de uma das bordas → resize daquele handle.
+     Qualquer outro tap → pan (com salto se for fora da seleção).
+
+     Se for mexer aqui no futuro, rode o caso "trecho de 30s numa música de 3min"
+     no DevTools mobile antes de fazer commit. */
+  const HANDLE_HIT_INNER = 12; /* px de tolerância em torno de cada borda da seleção */
+  momentTrack.addEventListener('pointerdown', e => {
+    if (momentPicker.classList.contains('is-disabled')) return;
+    const duration = getSelectedTrackDuration(audioEl);
+    if (!duration) return;
+    const trackRect = momentTrack.getBoundingClientRect();
+    const x = e.clientX - trackRect.left;
+    const selLeftPx  = (state.musicMoment    / duration) * trackRect.width;
+    const selRightPx = (state.musicMomentEnd / duration) * trackRect.width;
+
+    if (Math.abs(x - selLeftPx) <= HANDLE_HIT_INNER)  { startDrag(e, 'start'); return; }
+    if (Math.abs(x - selRightPx) <= HANDLE_HIT_INNER) { startDrag(e, 'end');   return; }
+
+    const tapTime = (x / trackRect.width) * duration;
+    const clipDur = state.musicMomentEnd - state.musicMoment;
+    if (tapTime < state.musicMoment || tapTime > state.musicMomentEnd) {
+      let newStart = tapTime - clipDur / 2;
+      newStart = Math.max(0, Math.min(duration - clipDur, newStart));
+      state.musicMoment    = newStart;
+      state.musicMomentEnd = newStart + clipDur;
+      updateMomentPicker();
+    }
+    startDrag(e, 'pan');
+  });
+
+  audioEl.addEventListener('loadedmetadata', () => {
+    const dur = getSelectedTrackDuration(audioEl);
+    state.musicMoment    = Math.max(0, Math.min(state.musicMoment, dur));
+    state.musicMomentEnd = Math.max(state.musicMoment + 1, Math.min(state.musicMomentEnd, dur));
+    updateMomentPicker();
+    updatePreview();
+    saveState();
+  });
+
+  audioEl.addEventListener('timeupdate', () => {
+    const clipEnd = Math.min(state.musicMomentEnd, getMusicPreviewDuration(audioEl));
+
+    if (!momentPicker.classList.contains('is-dragging')) {
+      syncMusicPreviewDisplay(getPreviewTimelineCurrent(), Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment));
+    }
+
+    if (!audioEl.paused && audioEl.currentTime >= clipEnd - 0.05) {
+      stopPreviewPlayback();
     }
   });
 
-  // Volta o ícone para ▶ quando o preview terminar (30s)
+  audioEl.addEventListener('pause', () => {
+    syncPlaybackButtons(false);
+  });
+
   audioEl.addEventListener('ended', () => {
-    btnPlay.textContent = '▶';
+    stopPreviewPlayback();
   });
 
   function updateHighlight(items) {
     items.forEach((li, i) => li.classList.toggle('highlighted', i === highlighted));
+  }
+
+  function syncPlaybackButtons(isPlaying) {
+    btnPlay.textContent = isPlaying ? '⏸' : '▶';
+    btnPreviewMoment.textContent = isPlaying ? 'Pausar trecho' : 'Ouvir trecho';
+    btnPreviewMoment.classList.toggle('playing', isPlaying);
+  }
+
+  function stopPreviewPlayback(resetToMoment = true) {
+    audioEl.pause();
+
+    if (resetToMoment && state.previewUrl) {
+      const startMoment = getPlayablePreviewStart();
+      try {
+        audioEl.currentTime = startMoment;
+      } catch (_) { /* no-op */ }
+      syncMusicPreviewDisplay(0, Math.max(MIN_CLIP, state.musicMomentEnd - state.musicMoment));
+    }
+
+    syncPlaybackButtons(false);
+  }
+
+  function updateMomentPicker() {
+    const duration   = getSelectedTrackDuration(audioEl);
+    const hasPreview = Boolean(state.previewUrl);
+
+    // Clamp ambos os valores dentro da música
+    const safeStart = Math.max(0, Math.min(state.musicMoment, duration || 0));
+    const safeEnd   = Math.max(safeStart + MIN_CLIP, Math.min(state.musicMomentEnd, duration || MIN_CLIP));
+    state.musicMoment    = safeStart;
+    state.musicMomentEnd = safeEnd;
+
+    momentPicker.classList.toggle('is-disabled', !hasPreview);
+    btnPreviewMoment.disabled = !hasPreview;
+
+    if (duration > 0) {
+      momentSelection.style.left  = `${(safeStart / duration) * 100}%`;
+      momentSelection.style.right = `${((duration - safeEnd) / duration) * 100}%`;
+    } else {
+      momentSelection.style.left  = '0%';
+      momentSelection.style.right = '0%';
+    }
+
+    const labelStart  = document.getElementById('momentLabelStart');
+    const labelEnd    = document.getElementById('momentLabelEnd');
+    const totalDurEl  = document.getElementById('musicMomentTotalDuration');
+    if (labelStart)  labelStart.textContent  = hasPreview ? formatAudioTime(safeStart) : '';
+    if (labelEnd)    labelEnd.textContent    = hasPreview ? formatAudioTime(safeEnd)   : '';
+    if (totalDurEl)  totalDurEl.textContent  = hasPreview ? formatAudioTime(duration)  : '';
+
+    const clipDur = safeEnd - safeStart;
+    if (hasPreview) {
+      momentValue.textContent = `${formatAudioTime(safeStart)} — ${formatAudioTime(safeEnd)}`;
+      momentSpan.textContent  = `${formatAudioTime(clipDur)} selecionados de ${formatAudioTime(duration)}`;
+    } else {
+      momentValue.textContent = 'Selecione uma música para escolher o momento';
+      momentSpan.textContent  = 'Máximo de 30 segundos';
+    }
+
+    if (audioEl.paused) {
+      syncMusicPreviewDisplay(0, Math.max(MIN_CLIP, safeEnd - safeStart));
+    }
   }
 }
 
@@ -806,12 +1862,65 @@ function setupMobilePreview() {
   });
 }
 
+function setupStoriesPreviewControls() {
+  const startButton = document.getElementById('storiesPreviewStartButton');
+  const prevZone = document.getElementById('storiesPreviewPrevZone');
+  const pauseZone = document.getElementById('storiesPreviewPauseZone');
+  const nextZone = document.getElementById('storiesPreviewNextZone');
+  const replayButton = document.getElementById('storiesPreviewReplayButton');
+  const audioEl = document.getElementById('storiesPreviewAudio');
+
+  if (startButton) startButton.addEventListener('click', startStoriesPreview);
+  if (prevZone) prevZone.addEventListener('click', prevStoriesPreviewSlide);
+  if (pauseZone) pauseZone.addEventListener('click', toggleStoriesPreviewPause);
+  if (nextZone) nextZone.addEventListener('click', nextStoriesPreviewSlide);
+  if (replayButton) {
+    replayButton.addEventListener('click', async () => {
+      resetStoriesPreviewState();
+      await startStoriesPreview();
+    });
+  }
+
+  if (audioEl && !audioEl.dataset.bound) {
+    audioEl.addEventListener('loadedmetadata', () => {
+      if (!previewStoryState.started) return;
+
+      try {
+        audioEl.currentTime = getStoriesPreviewAudioMoment(audioEl);
+      } catch (_) { /* metadata pendente */ }
+    });
+
+    audioEl.addEventListener('ended', () => {
+      if (!previewStoryState.started || previewStoryState.finished || previewStoryState.paused || !state.previewUrl) return;
+
+      try {
+        audioEl.currentTime = getStoriesPreviewAudioMoment(audioEl);
+      } catch (_) { /* metadata pendente */ }
+
+      audioEl.play().catch(() => {});
+    });
+
+    audioEl.dataset.bound = '1';
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    13. UPGRADE BANNER
 ═══════════════════════════════════════════════════════════════ */
-function setupUpgrade() {
+function setupUpgradeLegacy() {
   const btn = document.getElementById('btnUpgrade');
+  if (!btn) return;
+
+  function renderUpgradeState() {
+    btn.classList.toggle('added', !!state.wrappedSelected);
+    btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
+  }
   btn.addEventListener('click', () => {
+    state.wrappedSelected = !state.wrappedSelected;
+    saveState();
+    renderUpgradeState();
+    showToast(state.wrappedSelected ? 'Wrapped adicionado ao presente!' : 'Wrapped removido');
+    return;
     if (btn.classList.contains('added')) {
       btn.classList.remove('added');
       btn.textContent = 'Adicionar';
@@ -830,7 +1939,7 @@ function setupUpgrade() {
    13b. BOTÕES DE PLANO — redireciona para login/pagamento
 ═══════════════════════════════════════════════════════════════ */
 function setupPlanButtons() {
-  document.querySelectorAll('.btn-plan').forEach(btn => {
+  document.querySelectorAll('.btn-plan:not([data-plan])').forEach(btn => {
     btn.addEventListener('click', () => {
       const plan = btn.closest('.plan-card').classList.contains('featured') ? 'vitalicio' : '24h';
       localStorage.setItem('soulmates_pending_plan', plan);
@@ -849,6 +1958,30 @@ function setupPlanButtons() {
    14. BIND DOS CAMPOS DE ENTRADA
       Cada campo atualiza state + preview automaticamente
 ═══════════════════════════════════════════════════════════════ */
+function setupUpgrade() {
+  const btn = document.getElementById('btnUpgrade');
+  if (!btn) return;
+
+  btn.classList.toggle('added', !!state.wrappedSelected);
+  btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
+
+  btn.addEventListener('click', () => {
+    state.wrappedSelected = !state.wrappedSelected;
+    btn.classList.toggle('added', !!state.wrappedSelected);
+    btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
+    saveState();
+    showToast(state.wrappedSelected ? 'Wrapped adicionado ao presente!' : 'Wrapped removido');
+  });
+}
+
+function setupPlanSelection() {
+  document.querySelectorAll('.btn-plan[data-plan]').forEach(button => {
+    button.addEventListener('click', () => {
+      openFinalGift(button.dataset.plan);
+    });
+  });
+}
+
 function bindInputs() {
 
   /* Etapa 1 — cards de presente */
@@ -863,6 +1996,20 @@ function bindInputs() {
     });
     // Restaura seleção visual
     if (card.dataset.value === state.giftType) card.classList.add('selected');
+  });
+
+  /* Etapa 9 — template */
+  document.querySelectorAll('.template-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      resetStoriesPreviewState();
+      state.selectedTemplate = card.dataset.template;
+      saveState();
+      updatePreview();
+    });
+
+    if (card.dataset.template === state.selectedTemplate) card.classList.add('selected');
   });
 
   /* Etapa 2 — nomes */
@@ -982,7 +2129,7 @@ function saveGift() {
 
   // Salva metadados mínimos para o pagamento.html exibir o resumo
   localStorage.setItem('soulmates_last_gift_meta', JSON.stringify({
-    id, name1: state.name1, name2: state.name2, title: state.title,
+    id, name1: state.name1, name2: state.name2, title: state.title, template: getFinalTemplate(),
   }));
 
   try {
@@ -994,7 +2141,12 @@ function saveGift() {
       startDate:  state.startDate,
       city:       state.city,
       title:      state.title,
+      selectedTemplate: getFinalTemplate(),
       youtubeId:  state.youtubeId,
+      previewUrl: state.previewUrl,
+      musicDuration: state.musicDuration,
+      musicMoment:    state.musicMoment,
+      musicMomentEnd: state.musicMomentEnd,
       songName:   state.songName,
       artistName: state.artistName,
       previewUrl: state.previewUrl,
@@ -1002,6 +2154,7 @@ function saveGift() {
       message:    state.message,
       extraPhoto: state.extraPhoto,
       giftType:   state.giftType,
+      wrappedSelected: state.wrappedSelected,
       createdAt:  new Date().toISOString(),
     };
     gifts.push(gift);
@@ -1047,15 +2200,10 @@ function setupNavigation() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   17. ANIMAÇÃO BARRA DO PLAYER (fake)
+   17. SINCRONIZA O PLAYER DO PREVIEW
 ═══════════════════════════════════════════════════════════════ */
 function animatePlayerBar() {
-  const fill = document.getElementById('playerBarFill');
-  let pct = 35;
-  setInterval(() => {
-    pct = pct >= 100 ? 0 : pct + 0.05;
-    if (fill) fill.style.width = pct + '%';
-  }, 50);
+  syncMusicPreviewDisplay(0, Math.max(1, state.musicMomentEnd - state.musicMoment));
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1072,7 +2220,9 @@ function init() {
   setupFaq();
   setupNavigation();
   setupMobilePreview();
+  setupStoriesPreviewControls();
   setupUpgrade();
+  setupPlanSelection();
   setupPlanButtons();
   animatePlayerBar();
 

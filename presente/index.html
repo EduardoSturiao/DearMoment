@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presente Final | SoulMates</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="device-stage">
+    <div class="device-backdrop" aria-hidden="true"></div>
+
+    <div class="phone-shell">
+      <div class="phone-frame">
+        <div class="story-app" id="storyApp">
+          <section class="story-cover" id="storyCover">
+            <div class="story-cover-media" id="storyCoverMedia"></div>
+            <div class="story-cover-overlay"></div>
+
+            <div class="story-cover-content">
+              <div class="story-cover-header">
+                <h1 class="cover-title" id="coverTitle">Um presente aguardando por você.</h1>
+                <p class="cover-copy" id="coverCopy">Clique abaixo para abrir</p>
+              </div>
+
+              <div class="story-cover-cta">
+                <button class="cover-start" id="startStoryButton" type="button" aria-label="Abrir presente">
+                  <span class="cover-start-icon" aria-hidden="true"></span>
+                  <span class="cover-start-text">Abrir presente</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="story-player hidden" id="storyPlayer" aria-live="polite">
+            <header class="story-topbar">
+              <div class="story-progress" id="progressContainer"></div>
+            </header>
+
+            <div class="pause-indicator" id="pauseIndicator" aria-hidden="true"></div>
+
+            <div class="story-slides" id="storySlides"></div>
+
+            <button class="story-zone story-zone-left" id="prevZone" type="button" aria-label="Slide anterior"></button>
+            <button class="story-zone story-zone-center" id="pauseZone" type="button" aria-label="Pausar ou retomar"></button>
+            <button class="story-zone story-zone-right" id="nextZone" type="button" aria-label="Próximo slide"></button>
+
+            <footer class="story-footer">
+              <div class="story-track" id="trackLabel">Sem trilha sonora</div>
+              <button class="story-replay hidden" id="replayButton" type="button">Rever do início</button>
+            </footer>
+          </section>
+
+          <div class="youtube-audio-host" id="youtubeAudioHost" aria-hidden="true"></div>
+          <audio class="background-audio" id="backgroundAudio" preload="auto" loop></audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
