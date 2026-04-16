@@ -10,7 +10,7 @@
    1. ESTADO GLOBAL
 ═══════════════════════════════════════════════════════════════ */
 const STORAGE_KEY = 'soulmates_wizard_state';
-const TOTAL_STEPS = 9; // etapas numeradas (1–9), depois step-final
+const TOTAL_STEPS = 8; // etapas numeradas (1–8), depois step-final
 const FLOW_VERSION = 2;
 const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
 const STORY_PHOTO_DURATION_MS = 1500;
