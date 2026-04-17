@@ -10,7 +10,7 @@
   <meta property="og:description" content="Abra e descubra uma homenagem criada só para você.">
   <meta property="og:image"       content="./assets/images/icons8-relationship-64.png">
 
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/presente.css">
   <link rel="stylesheet" href="./assets/css/cookies.css">
 </head>
@@ -55,6 +55,7 @@
   ================================================================ */
 
   /* ── 1. Lê o ID da URL e encontra o presente ────────── */
+  let counterInterval = null;
   const WIZARD_STORAGE_KEY = 'soulmates_wizard_state';
   const params  = new URLSearchParams(window.location.search);
   const giftId  = params.get('id');
@@ -110,6 +111,7 @@
         artistName: wizard.artistName || '',
         photos: Array.isArray(wizard.photos) ? wizard.photos.filter(Boolean) : [],
         message: wizard.message || '',
+        capsulas: Array.isArray(wizard.capsulas) ? wizard.capsulas : ['', '', '', ''],
         extraPhoto: wizard.extraPhoto || '',
         giftType: wizard.giftType || 'amoroso',
         selectedTemplate: wizard.selectedTemplate || 'spotify',
@@ -176,78 +178,159 @@
         </div>
       </div>`;
 
-    // Mensagem
-    const messageHTML = g.message
-      ? `<section class="gift-message-section">
-           <div class="gift-message-card">
-             <span class="gift-message-quote">"</span>
-             <p class="gift-message-text">${escHtml(g.message)}</p>
-             ${g.name1 ? `<p class="gift-message-signature">Com amor, ${escHtml(g.name1)} ❤️</p>` : ''}
-           </div>
-         </section>`
-      : '';
+    // Cápsulas + Carta
+    const capsulaEmojis  = ['💌', '🎵', '📍', '🔮'];
+    const capsulaTextos  = (g.capsulas && g.capsulas.length)
+      ? g.capsulas
+      : ['', '', '', ''];
+    const capsulasTitles = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'O que vem aí'];
 
-    // Monta o HTML completo
+    const capsulaItems = capsulaEmojis.map((emoji, i) => `
+      <div class="gc-capsula" data-index="${i}">
+        <div class="gc-capsula-inner">
+          <div class="gc-capsula-frente">
+            <div class="gc-capsula-flap"></div>
+            <div class="gc-capsula-seal">${emoji}</div>
+            <div class="gc-capsula-num">Cápsula 0${i + 1}</div>
+            <div class="gc-capsula-hint">Toque para abrir</div>
+          </div>
+          <div class="gc-capsula-verso">
+            <div class="gc-verso-emoji">${emoji}</div>
+            <div class="gc-verso-titulo">${escHtml(capsulasTitles[i])}</div>
+            <div class="gc-verso-texto">${escHtml(capsulaTextos[i] || capsulasTitles[i])}</div>
+          </div>
+        </div>
+      </div>`).join('');
+
+    const capsulaHTML = `
+      <div class="gc-hero">
+        <div class="gc-hero-glow"></div>
+        <div class="gc-hero-badge">✦ SoulMates · Presente Especial</div>
+        <h1 class="gc-hero-title">Guardei<br>tudo isso<br>para você</h1>
+        <p class="gc-hero-sub">Abra cada cápsula com calma.<br>Cada uma guarda um pedaço do que sinto.</p>
+        <div class="gc-hero-divider"><span></span><em>💌</em><span></span></div>
+      </div>
+      <div class="gc-progress-wrap">
+        <div class="gc-progress-label">
+          <span>Cápsulas abertas</span>
+          <span id="gcProgressText">0 / 4</span>
+        </div>
+        <div class="gc-progress-track"><div class="gc-progress-fill" id="gcProgressFill"></div></div>
+      </div>
+      <div class="gc-capsulas-grid" id="gcCapsulaGrid">
+        ${capsulaItems}
+      </div>
+      <div class="gc-btn-carta-wrap" id="gcBtnCartaWrap">
+        <p class="gc-btn-carta-hint">Você abriu tudo. Tem uma última coisa...</p>
+        <button class="gc-btn-carta" id="gcBtnCarta">
+          <span class="gc-btn-icon">✉️</span>
+          Ler a carta completa
+        </button>
+      </div>`;
+
+    const cartaHTML = g.message ? `
+      <section class="gc-carta-section" id="gcCartaSection">
+        <div class="gc-carta-ornamento"><span></span><em>💌</em><span></span></div>
+        <div class="gc-carta-papel">
+          <div class="gc-carta-data">${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          <div class="gc-carta-linha"></div>
+          <div class="gc-carta-saudacao">${g.name2 ? escHtml(g.name2) + ',' : 'Amor,'}</div>
+          <div class="gc-carta-corpo" id="gcCartaCorpo"><span class="gc-cursor" id="gcCursor"></span></div>
+          <div class="gc-carta-assinatura" id="gcCartaAssinatura">
+            <span class="gc-assina-com">com todo o meu amor,</span>
+            <span class="gc-assina-nome">${g.name1 ? escHtml(g.name1) : 'Eu'}</span>
+            <span class="gc-assina-emoji">❤️</span>
+          </div>
+          <div class="gc-carta-selos" id="gcCartaSelos">
+            <div class="gc-selo"><span>💕</span>Para sempre</div>
+            <div class="gc-selo"><span>✨</span>Com amor</div>
+            <div class="gc-selo"><span>🔒</span>Só para você</div>
+          </div>
+        </div>
+      </section>` : '';
+
+    // Monta o HTML completo — duas telas
     root.innerHTML = `
-      <div class="gift-wrap">
 
-        <!-- Hero -->
-        <section class="gift-hero">
-          <div class="gift-cover">
-            ${heroHTML}
-            <div class="gift-cover-overlay"></div>
-          </div>
-          <div class="gift-hero-content">
-            <h1 class="gift-names">${escHtml(names)}</h1>
-            ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
-          </div>
-        </section>
+      <!-- ── TELA 1: O presente ── -->
+      <div class="gift-screen" id="giftScreenMain">
+        <div class="gift-wrap">
 
-        <!-- Player -->
-        ${playerHTML}
+          <!-- Hero -->
+          <section class="gift-hero">
+            <div class="gift-cover">
+              ${heroHTML}
+              <div class="gift-cover-overlay"></div>
+            </div>
+            <div class="gift-hero-content">
+              <h1 class="gift-names">${escHtml(names)}</h1>
+              ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
+            </div>
+          </section>
 
-        <!-- Contador + cidade -->
-        <section class="gift-info">
-          <p class="gift-info-label">Juntos há</p>
-          <div class="gift-counter-grid">
-            <div class="gift-counter-unit"><span id="gcYears">—</span><small>anos</small></div>
-            <div class="gift-counter-unit"><span id="gcMonths">—</span><small>meses</small></div>
-            <div class="gift-counter-unit"><span id="gcDays">—</span><small>dias</small></div>
-            <div class="gift-counter-unit"><span id="gcHours">—</span><small>horas</small></div>
-            <div class="gift-counter-unit"><span id="gcMinutes">—</span><small>min</small></div>
-            <div class="gift-counter-unit"><span id="gcSeconds">—</span><small>seg</small></div>
-          </div>
-          ${g.startDate
-            ? `<p class="gift-since">desde <strong>${formatDate(g.startDate)}</strong></p>`
-            : ''}
-          ${g.city
-            ? `<p class="gift-city">📍 ${escHtml(g.city)}</p>`
-            : ''}
-        </section>
+          <!-- Player -->
+          ${playerHTML}
 
-        <!-- Mensagem -->
-        ${messageHTML}
+          <!-- Contador + cidade -->
+          <section class="gift-info">
+            <p class="gift-info-label">Juntos há</p>
+            <div class="gift-counter-grid">
+              <div class="gift-counter-unit"><span id="gcYears">—</span><small>anos</small></div>
+              <div class="gift-counter-unit"><span id="gcMonths">—</span><small>meses</small></div>
+              <div class="gift-counter-unit"><span id="gcDays">—</span><small>dias</small></div>
+              <div class="gift-counter-unit"><span id="gcHours">—</span><small>horas</small></div>
+              <div class="gift-counter-unit"><span id="gcMinutes">—</span><small>min</small></div>
+              <div class="gift-counter-unit"><span id="gcSeconds">—</span><small>seg</small></div>
+            </div>
+            ${g.startDate ? `<p class="gift-since">desde <strong>${formatDate(g.startDate)}</strong></p>` : ''}
+            ${g.city     ? `<p class="gift-city">📍 ${escHtml(g.city)}</p>` : ''}
+          </section>
 
-        <!-- Galeria -->
-        ${galleryHTML}
+          <!-- Galeria -->
+          ${galleryHTML}
 
-        <!-- Footer -->
-        <footer class="gift-footer">
-          <p>Criado com ❤ no SoulMates</p>
-          <a href="./index.html">Criar o meu presente →</a>
-        </footer>
+          <!-- Botão de transição para tela 2 -->
+          ${(capsulaHTML || cartaHTML) ? `
+          <div class="gift-next-wrap">
+            <p class="gift-next-hint">Ainda tem mais para você...</p>
+            <button class="gift-next-btn" id="btnGoCapsulas">
+              <span class="gift-next-icon">💌</span>
+              Tem algo guardado para você
+            </button>
+          </div>` : ''}
 
+          <!-- Footer -->
+          <footer class="gift-footer">
+            <p>Criado com ❤ no SoulMates</p>
+            <a href="./index.html">Criar o meu presente →</a>
+          </footer>
+
+        </div>
+      </div>
+
+      <!-- ── TELA 2: Cápsulas + Carta ── -->
+      <div class="gift-screen gift-screen--hidden" id="giftScreenCapsulas">
+        <canvas class="gc-star-canvas" id="gcStarCanvas"></canvas>
+        <div class="gc-bg-particles" id="gcBgParticles"></div>
+        <div class="gc-burst-wrap" id="gcBurstWrap"></div>
+        <div class="gc-page-wrap">
+          ${capsulaHTML}
+          ${cartaHTML}
+          <footer class="gift-footer" style="margin-top:48px;position:relative;z-index:1">
+            <p>Criado com ❤ no SoulMates</p>
+            <a href="./index.html">Criar o meu presente →</a>
+          </footer>
+        </div>
       </div>`;
 
     // Inicia as interações após renderizar
     if (g.startDate) startCounter(g.startDate);
     setupPlayer(g);
+    setupCapsulasCarta(g);
     setupGallery();
   }
 
   /* ── 3. Contador em tempo real ──────────────────────── */
-  let counterInterval = null;
-
   function startCounter(dateStr) {
     function tick() {
       const t = calcTimeSince(dateStr);
@@ -392,7 +475,174 @@
     });
   }
 
-  /* ── 5. Galeria — Stories viewer ────────────────────── */
+  /* ── 5. Cápsulas + Carta ────────────────────────────── */
+  function setupCapsulasCarta(g) {
+    /* ── Transição tela 1 → tela 2 ── */
+    const btnGo     = document.getElementById('btnGoCapsulas');
+    const screen1   = document.getElementById('giftScreenMain');
+    const screen2   = document.getElementById('giftScreenCapsulas');
+
+    if (btnGo && screen1 && screen2) {
+      btnGo.addEventListener('click', () => {
+        screen1.classList.add('gift-screen--exit');
+        setTimeout(() => {
+          screen1.style.display = 'none';
+          screen2.classList.remove('gift-screen--hidden');
+          screen2.classList.add('gift-screen--enter');
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          initGcStarfield();
+          initGcParticles();
+        }, 420);
+      });
+    }
+
+    const capsulas    = document.querySelectorAll('.gc-capsula');
+    const progressFill = document.getElementById('gcProgressFill');
+    const progressText = document.getElementById('gcProgressText');
+    const btnWrap     = document.getElementById('gcBtnCartaWrap');
+    const btnCarta    = document.getElementById('gcBtnCarta');
+    const cartaSection = document.getElementById('gcCartaSection');
+    if (!capsulas.length) return;
+
+    let abertas = 0;
+    const total = capsulas.length;
+
+    /* Aparece as cápsulas com delay escalonado */
+    capsulas.forEach((c, i) => {
+      setTimeout(() => c.classList.add('gc-visible'), 300 + i * 120);
+    });
+
+    /* Abre cápsula ao clicar */
+    capsulas.forEach(c => {
+      c.addEventListener('click', () => {
+        if (c.classList.contains('gc-aberta')) return;
+        c.classList.add('gc-aberta');
+        abertas++;
+        spawnBurstCapsulas(c);
+        const pct = (abertas / total) * 100;
+        if (progressFill) progressFill.style.width = pct + '%';
+        if (progressText) progressText.textContent = `${abertas} / ${total}`;
+        if (abertas === total && btnWrap) {
+          setTimeout(() => btnWrap.classList.add('gc-visivel'), 500);
+        }
+      });
+    });
+
+    /* Burst de partículas ao abrir */
+    function spawnBurstCapsulas(el) {
+      const rect   = el.getBoundingClientRect();
+      const cx     = rect.left + rect.width / 2;
+      const cy     = rect.top  + rect.height / 2;
+      const emojis = ['💗','💖','✨','💫','🌸','💕','⭐','💝'];
+      const wrap   = document.getElementById('gcBurstWrap');
+      if (!wrap) return;
+      const n = 16;
+      for (let i = 0; i < n; i++) {
+        const p     = document.createElement('div');
+        p.className = 'gc-burst-p';
+        const angle = (i / n) * 360 + Math.random() * 20;
+        const dist  = 80 + Math.random() * 140;
+        const rad   = angle * Math.PI / 180;
+        const tx    = Math.cos(rad) * dist;
+        const ty    = Math.sin(rad) * dist;
+        const rot   = Math.round(Math.random() * 360 - 180);
+        const dur   = (0.5 + Math.random() * 0.4).toFixed(2);
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.cssText = `left:${cx}px;top:${cy}px;font-size:${12+Math.random()*12}px;--tx:${tx}px;--ty:${ty}px;--r:${rot}deg;--d:${dur}s`;
+        wrap.appendChild(p);
+        setTimeout(() => p.remove(), parseFloat(dur) * 1000 + 50);
+      }
+    }
+
+    /* Ver carta */
+    if (btnCarta && cartaSection) {
+      btnCarta.addEventListener('click', () => {
+        if (btnWrap) btnWrap.style.display = 'none';
+        cartaSection.classList.add('gc-carta-visivel');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          cartaSection.classList.add('gc-carta-animada');
+          setTimeout(() => {
+            cartaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => digitarCarta(g.message), 700);
+          }, 100);
+        }));
+      });
+    }
+
+    /* Máquina de escrever */
+    function digitarCarta(texto) {
+      if (!texto) return;
+      const corpo    = document.getElementById('gcCartaCorpo');
+      const cursor   = document.getElementById('gcCursor');
+      const assinatura = document.getElementById('gcCartaAssinatura');
+      const selos    = document.getElementById('gcCartaSelos');
+      if (!corpo || !cursor) return;
+
+      corpo.innerHTML = '';
+      corpo.appendChild(cursor);
+      let i = 0;
+
+      function tick() {
+        if (i >= texto.length) {
+          cursor.classList.add('gc-cursor-oculto');
+          if (assinatura) assinatura.classList.add('gc-visivel');
+          if (selos) selos.classList.add('gc-visivel');
+          return;
+        }
+        const ch = texto[i++];
+        if (ch === '\n') {
+          cursor.insertAdjacentHTML('beforebegin', '<br><br>');
+        } else {
+          cursor.insertAdjacentText('beforebegin', ch);
+        }
+        const delay = '.!?'.includes(ch) ? 110 : ch === ',' ? 70 : (Math.random() < 0.04 ? 55 : 26);
+        setTimeout(tick, delay);
+      }
+      tick();
+    }
+
+    function initGcStarfield() {
+      const canvas = document.getElementById('gcStarCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let stars = [], W, H;
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function createStars(n) {
+        stars = [];
+        for (let i = 0; i < n; i++) stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.4+0.2, alpha: Math.random(), speed: Math.random()*0.004+0.001, phase: Math.random()*Math.PI*2 });
+      }
+      function draw(t) {
+        ctx.clearRect(0, 0, W, H);
+        stars.forEach(s => {
+          s.alpha = 0.25 + 0.65 * Math.abs(Math.sin(s.phase + t * s.speed));
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(255,255,255,${s.alpha.toFixed(2)})`; ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      resize(); createStars(160);
+      window.addEventListener('resize', () => { resize(); createStars(160); });
+      requestAnimationFrame(draw);
+    }
+
+    function initGcParticles() {
+      const wrap = document.getElementById('gcBgParticles');
+      if (!wrap) return;
+      const emojis = ['💕','💗','✨','🌸','💫','⭐','🥀','💞'];
+      for (let i = 0; i < 14; i++) {
+        const el = document.createElement('div');
+        el.className = 'gc-bg-particle';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = Math.random() * 100 + '%';
+        el.style.fontSize = (10 + Math.random() * 12) + 'px';
+        el.style.animationDuration = (18 + Math.random() * 20) + 's';
+        el.style.animationDelay = -(Math.random() * 20) + 's';
+        wrap.appendChild(el);
+      }
+    }
+  }
+
+  /* ── 6. Galeria — Stories viewer ────────────────────── */
   function setupGallery() {
     const thumbs   = [...document.querySelectorAll('.gift-gallery-thumb')];
     if (!thumbs.length) return;

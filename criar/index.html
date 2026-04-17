@@ -223,12 +223,73 @@
           </div>
         </div>
 
+        <!-- ── ETAPA 9: Cápsulas ── -->
+        <div class="step" id="step-9">
+          <div class="step-header">
+            <div class="step-num">09</div>
+            <h2 class="step-title">Mensagens das cápsulas 💌</h2>
+            <p class="step-sub">A pessoa abre cada cápsula antes de ler sua carta. Escreva algo curto e especial em cada uma.</p>
+          </div>
+          <div class="capsulas-form">
+
+            <div class="capsula-field">
+              <div class="capsula-field-head">
+                <span class="capsula-field-emoji">💌</span>
+                <div>
+                  <strong class="capsula-field-label">Cápsula 1</strong>
+                  <small>Sobre o início — o primeiro encontro</small>
+                </div>
+              </div>
+              <textarea id="capsula1" maxlength="150" rows="3" placeholder="Ex: Me lembro de cada detalhe do dia em que te vi pela primeira vez..."></textarea>
+              <small class="char-hint"><span id="capsulaCount1">0</span>/150</small>
+            </div>
+
+            <div class="capsula-field">
+              <div class="capsula-field-head">
+                <span class="capsula-field-emoji">🎵</span>
+                <div>
+                  <strong class="capsula-field-label">Cápsula 2</strong>
+                  <small>Sobre a nossa música</small>
+                </div>
+              </div>
+              <textarea id="capsula2" maxlength="150" rows="3" placeholder="Ex: Toda vez que essa música toca, o tempo para. Ela vai ser sempre nossa..."></textarea>
+              <small class="char-hint"><span id="capsulaCount2">0</span>/150</small>
+            </div>
+
+            <div class="capsula-field">
+              <div class="capsula-field-head">
+                <span class="capsula-field-emoji">📍</span>
+                <div>
+                  <strong class="capsula-field-label">Cápsula 3</strong>
+                  <small>Sobre um lugar especial</small>
+                </div>
+              </div>
+              <textarea id="capsula3" maxlength="150" rows="3" placeholder="Ex: Aquele lugar guarda uma versão de nós que ninguém mais conhece..."></textarea>
+              <small class="char-hint"><span id="capsulaCount3">0</span>/150</small>
+            </div>
+
+            <div class="capsula-field">
+              <div class="capsula-field-head">
+                <span class="capsula-field-emoji">🔮</span>
+                <div>
+                  <strong class="capsula-field-label">Cápsula 4</strong>
+                  <small>Sobre o futuro de vocês</small>
+                </div>
+              </div>
+              <textarea id="capsula4" maxlength="150" rows="3" placeholder="Ex: Tem muita coisa bonita pela frente. E eu quero cada momento do seu lado..."></textarea>
+              <small class="char-hint"><span id="capsulaCount4">0</span>/150</small>
+            </div>
+
+          </div>
+        </div>
+
         <!-- ── ETAPA FINAL: Conversão ── -->
         <div class="step step-final" id="step-final">
           <div class="final-top">
             <div class="final-emoji">🎉</div>
             <h2>Ficou incrível!</h2>
             <p>Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
+            <button class="btn-preview-gift" id="btnPreviewGift" type="button">👁 Ver como ficou</button>
           </div>
 
           <!-- Planos -->
@@ -412,14 +473,19 @@
               <div class="about-city" id="prevCity">📍 —</div>
             </div>
 
-            <!-- Seção de mensagem especial -->
-            <div class="message-section" id="msgSectionPreview">
-              <div class="msg-section-label">💌 mensagem especial</div>
-              <div class="msg-cover-wrap" id="msgCoverWrap">
-                <div class="msg-cover-placeholder" id="msgCoverPlaceholder">🖼️</div>
-                <img class="msg-cover-img hidden" id="msgCoverImg" src="" alt="Foto do casal" />
+            <!-- Cápsulas + Carta (preview) -->
+            <div class="prev-capsulas-section" id="msgSectionPreview">
+              <div class="msg-section-label">💌 cápsulas &amp; carta</div>
+              <div class="prev-capsulas-grid">
+                <div class="prev-capsula">💌<span>01</span></div>
+                <div class="prev-capsula">🎵<span>02</span></div>
+                <div class="prev-capsula">📍<span>03</span></div>
+                <div class="prev-capsula">🔮<span>04</span></div>
               </div>
-              <p class="msg-body" id="prevMessage">Sua mensagem especial aparecerá aqui...</p>
+              <div class="prev-carta-mini">
+                <div class="prev-carta-mini-linha"></div>
+                <p class="prev-carta-mini-texto" id="prevMessage">Sua carta aparecerá aqui...</p>
+              </div>
             </div>
 
             <!-- Timeline Nossa história -->

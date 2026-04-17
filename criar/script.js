@@ -10,7 +10,7 @@
    1. ESTADO GLOBAL
 ═══════════════════════════════════════════════════════════════ */
 const STORAGE_KEY = 'soulmates_wizard_state';
-const TOTAL_STEPS = 8; // etapas numeradas (1–8), depois step-final
+const TOTAL_STEPS = 9; // etapas numeradas (1–9), depois step-final
 const FLOW_VERSION = 2;
 const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
 const STORY_PHOTO_DURATION_MS = 1500;
@@ -51,6 +51,7 @@ const state = {
   artistName:   '',
   photos:      [],     // array de base64 strings (máx 6)
   message:     '',
+  capsulas:    ['', '', '', ''],
   extraPhoto:  null,   // base64 string
   selectedPlan: '',
   wrappedSelected: false,
@@ -1980,6 +1981,20 @@ function setupPlanSelection() {
       openFinalGift(button.dataset.plan);
     });
   });
+
+  /* Botão de preview direto (desenvolvimento) */
+  const btnPreview = document.getElementById('btnPreviewGift');
+  if (btnPreview) {
+    btnPreview.addEventListener('click', () => {
+      const giftId = localStorage.getItem('soulmates_last_gift_id');
+      const template = getFinalTemplate();
+      const templateMeta = getTemplateMeta(template);
+      const url = giftId
+        ? `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`
+        : templateMeta.finalUrl;
+      window.location.href = url;
+    });
+  }
 }
 
 function bindInputs() {
@@ -2072,6 +2087,20 @@ function bindInputs() {
     updatePreview();
   });
 
+  /* Etapa 9 — cápsulas */
+  [1, 2, 3, 4].forEach(n => {
+    const el    = document.getElementById(`capsula${n}`);
+    const count = document.getElementById(`capsulaCount${n}`);
+    if (!el) return;
+    el.value = state.capsulas[n - 1] || '';
+    count.textContent = el.value.length;
+    el.addEventListener('input', () => {
+      state.capsulas[n - 1] = el.value;
+      count.textContent = el.value.length;
+      saveState();
+    });
+  });
+
   /* Restaura valores dos campos de texto */
   restoreInputValues();
 }
@@ -2152,6 +2181,7 @@ function saveGift() {
       previewUrl: state.previewUrl,
       photos:     state.photos,
       message:    state.message,
+      capsulas:   state.capsulas.slice(),
       extraPhoto: state.extraPhoto,
       giftType:   state.giftType,
       wrappedSelected: state.wrappedSelected,
