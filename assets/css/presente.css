@@ -202,6 +202,29 @@ body {
   transition: opacity 0.25s ease;
 }
 
+/* Slides do carrossel hero — empilhados, um visível por vez */
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.35s ease;
+}
+
+/* Zonas de toque do carrossel hero */
+.gift-hero-tap-left,
+.gift-hero-tap-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  z-index: 5;
+  cursor: pointer;
+}
+.gift-hero-tap-left  { left: 0; }
+.gift-hero-tap-right { right: 0; }
+
 .gift-cover-overlay {
   position: absolute;
   inset: 0;
@@ -496,9 +519,132 @@ body {
   text-align: right;
 }
 
-/* ── Galeria de fotos ─────────────────────────────────── */
-.gift-gallery-section {
-  margin: 16px 16px 0;
+/* ── Constelação ──────────────────────────────────────── */
+.gift-constellation {
+  margin: 28px 16px 0;
+  text-align: center;
+}
+
+.gift-constellation-eyebrow {
+  font-family: var(--font-b);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin: 0 0 20px;
+  padding: 0 8px;
+  background: linear-gradient(90deg,
+    #a78bff 0%,
+    #c4b5fd 25%,
+    #ffffff 50%,
+    #c4b5fd 75%,
+    #a78bff 100%);
+  background-size: 300% auto;
+  background-position: right center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Globe — wrapper relativo para anel SVG sobreposto */
+.gift-constellation-globe {
+  position: relative;
+  width: min(272px, 76vw);
+  height: min(272px, 76vw);
+  margin: 0 auto;
+}
+
+.gift-constellation-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    0 0 24px rgba(140,80,255,0.35),
+    0 0 56px rgba(180,80,255,0.14),
+    0 0 90px rgba(255,109,186,0.07);
+}
+
+.gift-constellation-ring canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Arco SVG animado — anel que acende ao entrar na tela */
+.gift-constellation-arc {
+  position: absolute;
+  inset: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  pointer-events: none;
+  transform: rotate(-90deg); /* começa do topo */
+  overflow: visible;
+}
+
+.gift-constellation-arc circle {
+  fill: none;
+  stroke: rgba(148, 96, 255, 0.55);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  filter:
+    drop-shadow(0 0 3px rgba(160,100,255,0.40))
+    drop-shadow(0 0 8px rgba(180,80,255,0.20));
+}
+
+.gift-constellation-footer {
+  margin-top: 18px;
+}
+
+.gift-constellation-date {
+  font-family: var(--font-b);
+  font-size: 12px;
+  letter-spacing: .08em;
+  margin: 0 0 4px;
+  background: linear-gradient(90deg,
+    #e879f9 0%,
+    #f0abfc 25%,
+    #ffffff 50%,
+    #f0abfc 75%,
+    #e879f9 100%);
+  background-size: 300% auto;
+  background-position: right center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gift-constellation-tagline {
+  font-family: var(--font-h);
+  font-size: 13px;
+  font-style: italic;
+  letter-spacing: .04em;
+  margin: 0;
+  background: linear-gradient(90deg,
+    #818cf8 0%,
+    #a78bff 25%,
+    #e0d9ff 50%,
+    #a78bff 75%,
+    #818cf8 100%);
+  background-size: 300% auto;
+  background-position: right center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Shimmer — luz suave varrendo as letras */
+@keyframes constellationShimmer {
+  from { background-position: 160% center; }
+  to   { background-position: -60% center; }
+}
+
+.constellation-shimmer {
+  animation: constellationShimmer 3.8s cubic-bezier(0.25,0.1,0.25,1) forwards;
+}
+
+/* ── Polaroids ────────────────────────────────────────── */
+.gift-polaroid-section {
+  margin: 28px 16px 0;
 }
 
 .gift-section-title {
@@ -521,30 +667,51 @@ body {
   letter-spacing: 0.3px;
 }
 
-.gift-gallery {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  border-radius: 16px;
-  overflow: hidden;
+.gift-polaroid-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 4px 16px;
 }
 
-.gift-gallery-thumb {
-  aspect-ratio: 1;
-  overflow: hidden;
+.gift-polaroid {
+  background: #f5f0eb;
+  padding: 8px 8px 30px;
+  width: calc(46% - 7px);
+  max-width: 158px;
   cursor: pointer;
-  background: var(--card2);
+  position: relative;
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.40),
+    0 1px 3px rgba(0,0,0,0.25);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.35s ease;
+  will-change: transform;
 }
 
-.gift-gallery-thumb img {
+.gift-polaroid:nth-child(1) { transform: rotate(-3.5deg); }
+.gift-polaroid:nth-child(2) { transform: rotate(2.2deg);  }
+.gift-polaroid:nth-child(3) { transform: rotate(1.8deg);  }
+.gift-polaroid:nth-child(4) { transform: rotate(-2.5deg); }
+.gift-polaroid:nth-child(5) { transform: rotate(-1.2deg); }
+.gift-polaroid:nth-child(6) { transform: rotate(3deg);    }
+
+.gift-polaroid:hover {
+  transform: rotate(0deg) translateY(-8px) scale(1.06) !important;
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.50),
+    0 4px 8px rgba(0,0,0,0.30);
+  z-index: 10;
+}
+
+.gift-polaroid img {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 1;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s ease;
 }
-
-.gift-gallery-thumb:hover img { transform: scale(1.07); }
 
 /* ── Stories Overlay ──────────────────────────────────── */
 .stories-overlay {

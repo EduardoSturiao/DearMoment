@@ -130,20 +130,54 @@
     document.querySelector('meta[property="og:title"]').content =
       `${names} — Um presente feito com amor ❤️`;
 
-    // Foto de capa
-    const coverSrc = g.extraPhoto || (g.photos && g.photos[0]) || '';
-    const heroHTML = coverSrc
-      ? `<img src="${coverSrc}" alt="Foto de capa" />`
-      : `<div class="gift-cover-placeholder">❤️</div>`;
+    // Fotos do carrossel (step 6) e capa de fallback (step 8)
+    const heroPhotos = Array.isArray(g.photos) ? g.photos.filter(Boolean) : [];
+    const coverSrc = g.extraPhoto || heroPhotos[0] || '';
 
-    // Galeria (exclui foto de capa para não duplicar)
+    const heroSectionHTML = heroPhotos.length ? `
+      <section class="gift-hero" id="giftHero">
+        <div class="gift-hero-bars" id="heroBars">
+          ${heroPhotos.map((_, i) => `
+            <div class="gift-hero-bar">
+              <div class="gift-hero-bar-fill" data-bar="${i}"></div>
+            </div>`).join('')}
+        </div>
+        <div class="gift-cover" id="heroCover">
+          ${heroPhotos.map((src, i) => `<img src="${src}" alt="Foto ${i+1}" class="hero-slide" style="opacity:${i===0?'1':'0'}">`).join('')}
+          <div class="gift-cover-overlay"></div>
+        </div>
+        <div class="gift-hero-tap-left"  id="heroTapLeft"></div>
+        <div class="gift-hero-tap-right" id="heroTapRight"></div>
+        <button class="gift-hero-arrow prev" id="heroPrev">&#8249;</button>
+        <button class="gift-hero-arrow next" id="heroNext">&#8250;</button>
+        <div class="gift-hero-content">
+          <h1 class="gift-names">${escHtml(names)}</h1>
+          ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
+        </div>
+      </section>
+    ` : `
+      <section class="gift-hero">
+        <div class="gift-cover">
+          ${coverSrc
+            ? `<img src="${coverSrc}" alt="Foto de capa" />`
+            : `<div class="gift-cover-placeholder">❤️</div>`}
+          <div class="gift-cover-overlay"></div>
+        </div>
+        <div class="gift-hero-content">
+          <h1 class="gift-names">${escHtml(names)}</h1>
+          ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
+        </div>
+      </section>
+    `;
+
+    // Galeria em formato polaroid
     const galleryPhotos = g.photos || [];
     const galleryHTML = galleryPhotos.length
-      ? `<section class="gift-gallery-section">
-           <p class="gift-section-title">Nossas Fotos 📸 <span class="gift-section-hint">toque para ver</span></p>
-           <div class="gift-gallery" id="giftGallery">
+      ? `<section class="gift-polaroid-section">
+           <p class="gift-section-title">Nossas Fotos <span class="gift-section-hint">toque para ver</span></p>
+           <div class="gift-polaroid-grid">
              ${galleryPhotos.map((src, i) => `
-               <div class="gift-gallery-thumb" data-src="${src}" data-index="${i}">
+               <div class="gift-polaroid gift-gallery-thumb" data-src="${src}" data-index="${i}">
                  <img src="${src}" alt="Foto ${i + 1}" loading="lazy">
                </div>`).join('')}
            </div>
@@ -257,16 +291,7 @@
         <div class="gift-wrap">
 
           <!-- Hero -->
-          <section class="gift-hero">
-            <div class="gift-cover">
-              ${heroHTML}
-              <div class="gift-cover-overlay"></div>
-            </div>
-            <div class="gift-hero-content">
-              <h1 class="gift-names">${escHtml(names)}</h1>
-              ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
-            </div>
-          </section>
+          ${heroSectionHTML}
 
           <!-- Player -->
           ${playerHTML}
@@ -285,6 +310,24 @@
             ${g.startDate ? `<p class="gift-since">desde <strong>${formatDate(g.startDate)}</strong></p>` : ''}
             ${g.city     ? `<p class="gift-city">📍 ${escHtml(g.city)}</p>` : ''}
           </section>
+
+          <!-- Constelação -->
+          ${g.startDate ? `
+          <section class="gift-constellation" id="giftConstellation">
+            <p class="gift-constellation-eyebrow">Quando as estrelas registraram o início desta história</p>
+            <div class="gift-constellation-globe">
+              <div class="gift-constellation-ring">
+                <canvas id="starCanvas"></canvas>
+              </div>
+              <svg class="gift-constellation-arc" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48.5"/>
+              </svg>
+            </div>
+            <div class="gift-constellation-footer">
+              <p class="gift-constellation-date">${formatDate(g.startDate)}</p>
+              <p class="gift-constellation-tagline">O universo já sabia...</p>
+            </div>
+          </section>` : ''}
 
           <!-- Galeria -->
           ${galleryHTML}
@@ -328,6 +371,8 @@
     setupPlayer(g);
     setupCapsulasCarta(g);
     setupGallery();
+    setupHeroCarousel(heroPhotos);
+    if (g.startDate) setupConstellation(g.startDate);
   }
 
   /* ── 3. Contador em tempo real ──────────────────────── */
@@ -424,10 +469,24 @@
         syncAudioUi();
       });
 
-      audio.addEventListener('timeupdate', syncAudioUi);
-      audio.addEventListener('play', syncAudioUi);
+      const FADE_DURATION = 3;
+
+      audio.addEventListener('timeupdate', () => {
+        syncAudioUi();
+        const duration = Number(audio.duration);
+        if (Number.isFinite(duration) && duration > 0 && !audio.paused) {
+          const remaining = duration - audio.currentTime;
+          if (remaining <= FADE_DURATION) {
+            audio.volume = Math.max(0, remaining / FADE_DURATION);
+          } else {
+            audio.volume = 1;
+          }
+        }
+      });
+      audio.addEventListener('play', () => { audio.volume = 1; syncAudioUi(); });
       audio.addEventListener('pause', syncAudioUi);
       audio.addEventListener('ended', () => {
+        audio.volume = 1;
         try {
           audio.currentTime = getPreviewStart();
         } catch (_) { /* no-op */ }
@@ -438,6 +497,7 @@
         if (overlay.classList.contains('open')) closeYoutubeOverlay();
 
         if (audio.paused) {
+          audio.volume = 1;
           if (audio.currentTime <= 0.05) {
             try {
               audio.currentTime = getPreviewStart();
@@ -724,6 +784,251 @@
       if (e.key === 'Escape')      closeStories();
       if (e.key === 'ArrowRight')  advance(1);
       if (e.key === 'ArrowLeft')   advance(-1);
+    });
+  }
+
+  /* ── 7. Carrossel do Hero (fotos step 6) ────────────── */
+  function setupHeroCarousel(photos) {
+    if (!photos || !photos.length) return;
+
+    const DURATION = 5000;
+    const slides = Array.from(document.querySelectorAll('#heroCover .hero-slide'));
+    const fills  = Array.from(document.querySelectorAll('#heroBars .gift-hero-bar-fill'));
+    if (!slides.length) return;
+
+    let current = 0;
+    let timer   = null;
+
+    fills.forEach(f => f.style.setProperty('--dur', `${DURATION / 1000}s`));
+
+    // Define o estado de uma barra: 'active' | 'done' | ''
+    function setBarState(fill, state) {
+      fill.style.animation = 'none';
+      void fill.offsetHeight;     // reflow força reinício
+      fill.style.animation = '';  // remove inline → CSS da classe assume
+      fill.classList.remove('active', 'done');
+      if (state) fill.classList.add(state);
+    }
+
+    function updateBars() {
+      fills.forEach((f, i) => {
+        if (i < current)       setBarState(f, 'done');
+        else if (i === current) setBarState(f, 'active');
+        else                   setBarState(f, '');
+      });
+    }
+
+    function scheduleNext() {
+      clearTimeout(timer);
+      timer = setTimeout(() => goTo(current + 1), DURATION);
+    }
+
+    function goTo(idx) {
+      slides[current].style.opacity = '0';
+      const isLooping = idx >= photos.length;
+
+      if (isLooping) {
+        // Completa visualmente a última barra antes de reiniciar
+        setBarState(fills[current], 'done');
+        setTimeout(() => {
+          current = 0;
+          slides[current].style.opacity = '1';
+          updateBars();
+          scheduleNext();
+        }, 350);
+        return;
+      }
+
+      current = ((idx % photos.length) + photos.length) % photos.length;
+      slides[current].style.opacity = '1';
+      updateBars();
+      scheduleNext();
+    }
+
+    // Swipe touch no hero
+    let touchStartX = 0;
+    const hero = document.getElementById('giftHero');
+    if (hero) {
+      hero.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      hero.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
+      });
+    }
+
+    document.getElementById('heroNext')?.addEventListener('click',     () => goTo(current + 1));
+    document.getElementById('heroPrev')?.addEventListener('click',     () => goTo(current - 1));
+    document.getElementById('heroTapRight')?.addEventListener('click', () => goTo(current + 1));
+    document.getElementById('heroTapLeft')?.addEventListener('click',  () => goTo(current - 1));
+
+    updateBars();
+    scheduleNext();
+  }
+
+  /* ── 8. Constelação do dia ───────────────────────────── */
+  function setupConstellation(dateStr) {
+    const canvas = document.getElementById('starCanvas');
+    if (!canvas) return;
+
+    const CONS = [
+      { name: 'Órion',
+        stars: [[.32,.28],[.68,.24],[.28,.52],[.50,.49],[.72,.52],[.34,.76],[.68,.73]],
+        lines: [[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]],
+        cx:.50, cy:.74, sc:.28 },
+      { name: 'Leão',
+        stars: [[.18,.52],[.30,.28],[.48,.18],[.64,.28],[.74,.50],[.66,.70],[.44,.74]],
+        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[3,0]],
+        cx:.76, cy:.42, sc:.26 },
+      { name: 'Cassiopeia',
+        stars: [[.10,.62],[.28,.30],[.50,.52],[.72,.30],[.90,.62]],
+        lines: [[0,1],[1,2],[2,3],[3,4]],
+        cx:.50, cy:.20, sc:.30 },
+      { name: 'Cruz do Sul',
+        stars: [[.50,.10],[.50,.90],[.10,.50],[.90,.50],[.78,.18]],
+        lines: [[0,1],[2,3],[0,4]],
+        cx:.22, cy:.60, sc:.22 },
+      { name: 'Escorpião',
+        stars: [[.38,.10],[.54,.18],[.68,.10],[.76,.28],[.72,.44],[.62,.56],[.54,.66],[.48,.78],[.44,.90],[.36,.84]],
+        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9]],
+        cx:.76, cy:.70, sc:.24 },
+      { name: 'Ursa Maior',
+        stars: [[.14,.58],[.28,.48],[.42,.44],[.56,.46],[.64,.34],[.76,.24],[.86,.36]],
+        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]],
+        cx:.24, cy:.30, sc:.28 },
+      { name: 'Gêmeos',
+        stars: [[.20,.18],[.80,.18],[.22,.44],[.78,.44],[.26,.70],[.74,.70]],
+        lines: [[0,2],[2,4],[1,3],[3,5],[4,5]],
+        cx:.72, cy:.24, sc:.24 },
+    ];
+
+    const FEAT_MONTH = [0,0,1,1,6,6,4,4,2,2,5,0];
+
+    const d = new Date(dateStr + 'T00:00:00');
+    let seed = (d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate()) | 0;
+    function rand() {
+      seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+      return (seed >>> 0) / 4294967296;
+    }
+
+    const featIdx = FEAT_MONTH[d.getMonth()];
+
+    // ── Animações ao entrar na tela ───────────────────────
+    const arcCircle = document.querySelector('.gift-constellation-arc circle');
+    const circ = 2 * Math.PI * 48.5;
+    if (arcCircle) {
+      arcCircle.style.strokeDasharray = circ;
+      arcCircle.style.strokeDashoffset = circ;
+    }
+
+    const section = document.getElementById('giftConstellation');
+    if (section) {
+      const obs = new IntersectionObserver(entries => {
+        if (!entries[0].isIntersecting) return;
+
+        // Anel acende em volta (sweep 360°)
+        if (arcCircle) {
+          arcCircle.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.25,0.46,0.45,0.94)';
+          arcCircle.style.strokeDashoffset = 0;
+        }
+
+        // Shimmer nas letras com delay escalonado
+        ['gift-constellation-eyebrow', 'gift-constellation-date', 'gift-constellation-tagline']
+          .forEach((cls, i) => {
+            const el = document.querySelector('.' + cls);
+            if (el) setTimeout(() => el.classList.add('constellation-shimmer'), i * 220 + 200);
+          });
+
+        obs.disconnect();
+      }, { threshold: 0.45 });
+      obs.observe(section);
+    }
+
+    requestAnimationFrame(() => {
+      const S = canvas.parentElement.clientWidth || 280;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = S * dpr;
+      canvas.height = S * dpr;
+      canvas.style.width  = S + 'px';
+      canvas.style.height = S + 'px';
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // ── Fundo escuro ─────────────────────────────────────
+      ctx.fillStyle = '#06060f';
+      ctx.fillRect(0, 0, S, S);
+
+      // ── Poeira estelar — manchas de cor distribuídas ──────
+      // Vários blooms pequenos e suaves espalhados pelo círculo
+      const dusts = [
+        { x:.48, y:.46, r:.38, c:'rgba(90,45,200,0.28)' },   // violeta centro
+        { x:.22, y:.30, r:.22, c:'rgba(60,30,180,0.18)' },   // azul sup-esq
+        { x:.75, y:.28, r:.20, c:'rgba(100,40,220,0.16)' },  // violeta sup-dir
+        { x:.30, y:.68, r:.22, c:'rgba(255,109,186,0.12)' }, // pink inf-esq
+        { x:.72, y:.65, r:.20, c:'rgba(80,30,200,0.15)' },   // azul inf-dir
+        { x:.55, y:.20, r:.18, c:'rgba(120,60,230,0.13)' },  // violeta topo
+        { x:.20, y:.55, r:.18, c:'rgba(255,90,180,0.10)' },  // pink esq
+        { x:.60, y:.75, r:.20, c:'rgba(70,25,180,0.14)' },   // azul base
+      ];
+      dusts.forEach(({ x, y, r, c }) => {
+        const g = ctx.createRadialGradient(x*S, y*S, 0, x*S, y*S, r*S);
+        g.addColorStop(0, c);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, S, S);
+      });
+
+      // ── Estrelas de fundo ─────────────────────────────────
+      for (let i = 0; i < 280; i++) {
+        const angle = rand() * Math.PI * 2;
+        const r = Math.sqrt(rand()) * S * .495;
+        const x = S/2 + Math.cos(angle) * r;
+        const y = S/2 + Math.sin(angle) * r;
+        const sz = rand() * 1.3 + 0.12;
+        const a  = rand() * 0.60 + 0.20;
+        ctx.beginPath();
+        ctx.arc(x, y, sz, 0, Math.PI * 2);
+        ctx.fillStyle = rand() > .6
+          ? `rgba(210,220,255,${a.toFixed(2)})`
+          : `rgba(255,255,255,${a.toFixed(2)})`;
+        ctx.fill();
+      }
+
+      // ── Constelações — sem nomes, todas com mesmo brilho ──
+      CONS.forEach(con => {
+        const pts = con.stars.map(([sx, sy]) => [
+          (con.cx + (sx - .5) * con.sc) * S,
+          (con.cy + (sy - .5) * con.sc) * S,
+        ]);
+
+        ctx.strokeStyle = 'rgba(200,220,255,0.48)';
+        ctx.lineWidth   = 0.85;
+        con.lines.forEach(([a, b]) => {
+          ctx.beginPath();
+          ctx.moveTo(pts[a][0], pts[a][1]);
+          ctx.lineTo(pts[b][0], pts[b][1]);
+          ctx.stroke();
+        });
+
+        pts.forEach(([x, y]) => {
+          const glow = ctx.createRadialGradient(x, y, 0, x, y, 7);
+          glow.addColorStop(0, 'rgba(210,225,255,0.28)');
+          glow.addColorStop(1, 'rgba(210,225,255,0)');
+          ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2);
+          ctx.fillStyle = glow; ctx.fill();
+
+          ctx.beginPath(); ctx.arc(x, y, 1.9, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(235,245,255,0.95)';
+          ctx.fill();
+        });
+      });
+
+      // ── Vinheta circular ──────────────────────────────────
+      const vig = ctx.createRadialGradient(S/2, S/2, S*.22, S/2, S/2, S*.50);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(4,4,14,0.72)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, S, S);
     });
   }
 
