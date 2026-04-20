@@ -969,7 +969,9 @@ body {
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  max-height: 220px;
+  aspect-ratio: 1;
+  max-width: 280px;
+  margin: 0 auto;
 }
 .extra-preview img {
   width: 100%;

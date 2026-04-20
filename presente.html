@@ -5,39 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Presente SoulMates</title>
 
-  <!-- Open Graph — link bonito ao compartilhar no WhatsApp/Instagram -->
   <meta property="og:title"       content="Você recebeu um presente especial ❤️">
   <meta property="og:description" content="Abra e descubra uma homenagem criada só para você.">
   <meta property="og:image"       content="./assets/images/icons8-relationship-64.png">
 
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/presente.css">
   <link rel="stylesheet" href="./assets/css/cookies.css">
 </head>
 <body>
 
-  <!-- Partículas de coração -->
   <div class="particles">
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>
   </div>
 
-  <!-- Header fixo -->
   <header class="gift-header">
     <span class="gift-logo">❤ SoulMates</span>
     <span class="gift-tag">Presente exclusivo</span>
   </header>
 
-  <!-- Conteúdo principal — preenchido pelo JS -->
   <div id="giftRoot"></div>
 
-  <!-- Overlay do YouTube -->
   <div class="yt-overlay" id="ytOverlay">
     <iframe id="ytFrame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     <button class="yt-close-btn" id="btnYtClose">✕ Fechar player</button>
   </div>
 
-  <!-- Stories de fotos -->
   <div class="stories-overlay" id="storiesOverlay">
     <div class="stories-bars" id="storiesBars"></div>
     <button class="stories-close" id="storiesClose">✕</button>
@@ -47,176 +41,308 @@
     <div class="stories-counter"   id="storiesCounter"></div>
   </div>
 
-  <audio id="giftAudio" preload="metadata"></audio>
+  <audio id="giftAudio" preload="auto"></audio>
 
   <script>
   /* ================================================================
-     PRESENTE.HTML — Renderização da página pública do presente
+     PRESENTE.HTML — v2 multi-páginas
   ================================================================ */
 
-  /* ── 1. Lê o ID da URL e encontra o presente ────────── */
   let counterInterval = null;
   const WIZARD_STORAGE_KEY = 'soulmates_wizard_state';
-  const params  = new URLSearchParams(window.location.search);
-  const giftId  = params.get('id');
-  const gifts   = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
+  const params   = new URLSearchParams(window.location.search);
+  const giftId   = params.get('id');
+  const gifts    = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
   const lastGiftId = localStorage.getItem('soulmates_last_gift_id');
   let gift = gifts.find(g => g.id === giftId);
-
   const root = document.getElementById('giftRoot');
 
+  if (!gift) gift = getGiftFromWizardState(giftId, lastGiftId);
+
+  /* ── Demo mode: sem gift real → cria gift demo completo ── */
   if (!gift) {
-    gift = getGiftFromWizardState(giftId, lastGiftId);
+    gift = {
+      id: 'demo',
+      name1: 'Ana', name2: 'Pedro',
+      startDate: '2021-06-14', city: 'São Paulo',
+      title: 'Para meu amor',
+      youtubeId: '', previewUrl: '',
+      musicMoment: 0, songName: 'Nossa música', artistName: 'Artista',
+      photos: ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'],
+      message: 'Cada dia ao seu lado é uma nova razão pra sorrir. Você é o meu lar.',
+      capsulas: ['Lembra quando a gente se conheceu?', 'Nosso primeiro beijo foi mágico.', 'Quero envelhecer do seu lado.', ''],
+      extraPhoto: './assets/images/demo-cover.jpg',
+      giftType: 'amoroso',
+      createdAt: new Date().toISOString(),
+    };
   }
 
-  if (!gift) {
-    root.innerHTML = `
-      <div class="gift-error">
-        <div class="gift-error-emoji">💔</div>
-        <h2>Presente não encontrado</h2>
-        <p>O link pode ter expirado ou não está disponível neste dispositivo.<br>
-           Peça ao remetente para compartilhar novamente.</p>
-        <a href="./index.html">Criar o meu presente →</a>
-      </div>`;
-    document.title = 'SoulMates';
-    stopAll();
-  } else {
-    renderGift(gift);
+  /* ── Suplementa fotos ausentes com demos (wizard incompleto) ── */
+  if (!gift.extraPhoto) gift.extraPhoto = './assets/images/demo-cover.jpg';
+  if (!Array.isArray(gift.photos) || !gift.photos.length) {
+    gift.photos = ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'];
   }
 
+  renderGift(gift);
+
+  /* ── 1. Wizard state fallback ───────────────────────── */
   function getGiftFromWizardState(requestedId, savedLastGiftId) {
     try {
       const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
       if (!raw) return null;
-
       const wizard = JSON.parse(raw);
       if (!wizard) return null;
-
       const matchesCurrentFlow = !requestedId || requestedId === savedLastGiftId;
       const hasMinimumData = Boolean(wizard.name1 || wizard.name2 || wizard.title || wizard.message);
-
       if (!matchesCurrentFlow || !hasMinimumData) return null;
-
       return {
         id: savedLastGiftId || requestedId || 'wizard-preview',
-        name1: wizard.name1 || '',
-        name2: wizard.name2 || '',
-        startDate: wizard.startDate || '',
-        city: wizard.city || '',
-        title: wizard.title || '',
-        youtubeId: wizard.youtubeId || '',
+        name1: wizard.name1 || '', name2: wizard.name2 || '',
+        startDate: wizard.startDate || '', city: wizard.city || '',
+        title: wizard.title || '', youtubeId: wizard.youtubeId || '',
         previewUrl: wizard.previewUrl || '',
         musicMoment: Math.max(0, Number(wizard.musicMoment) || 0),
-        songName: wizard.songName || '',
-        artistName: wizard.artistName || '',
+        songName: wizard.songName || '', artistName: wizard.artistName || '',
         photos: Array.isArray(wizard.photos) ? wizard.photos.filter(Boolean) : [],
         message: wizard.message || '',
         capsulas: Array.isArray(wizard.capsulas) ? wizard.capsulas : ['', '', '', ''],
         extraPhoto: wizard.extraPhoto || '',
         giftType: wizard.giftType || 'amoroso',
-        selectedTemplate: wizard.selectedTemplate || 'spotify',
         createdAt: wizard.createdAt || new Date().toISOString(),
       };
-    } catch (_) {
-      return null;
-    }
+    } catch (_) { return null; }
   }
 
-  /* ── 2. Renderiza o presente completo ───────────────── */
+  /* ── 2. Render principal ────────────────────────────── */
   function renderGift(g) {
-    // Atualiza título da aba e meta OG
-    const names = g.name1 && g.name2 ? `${g.name1} & ${g.name2}` : 'Presente especial';
+    const names = g.name1 && g.name2 ? `${g.name1} & ${g.name2}` : (g.name1 || 'Presente especial');
     document.title = names + ' | SoulMates';
     document.querySelector('meta[property="og:title"]').content =
       `${names} — Um presente feito com amor ❤️`;
 
-    // Fotos do carrossel (step 6) e capa de fallback (step 8)
-    const heroPhotos = Array.isArray(g.photos) ? g.photos.filter(Boolean) : [];
-    const coverSrc = g.extraPhoto || heroPhotos[0] || '';
+    const galleryPhotos = Array.isArray(g.photos) ? g.photos.filter(Boolean) : [];
+    const coverSrc  = g.extraPhoto || galleryPhotos[0] || '';
+    const coupleSrc = (g.extraPhoto && galleryPhotos.length > 0)
+      ? galleryPhotos[0]
+      : (galleryPhotos[0] || g.extraPhoto || '');
+    const songName      = g.songName   || 'Nossa Música';
+    const artistName    = g.artistName || 'Artista';
+    const startYear     = g.startDate
+      ? new Date(g.startDate + 'T00:00:00').getFullYear() : '';
 
-    const heroSectionHTML = heroPhotos.length ? `
-      <section class="gift-hero" id="giftHero">
-        <div class="gift-hero-bars" id="heroBars">
-          ${heroPhotos.map((_, i) => `
-            <div class="gift-hero-bar">
-              <div class="gift-hero-bar-fill" data-bar="${i}"></div>
-            </div>`).join('')}
-        </div>
-        <div class="gift-cover" id="heroCover">
-          ${heroPhotos.map((src, i) => `<img src="${src}" alt="Foto ${i+1}" class="hero-slide" style="opacity:${i===0?'1':'0'}">`).join('')}
-          <div class="gift-cover-overlay"></div>
-        </div>
-        <div class="gift-hero-tap-left"  id="heroTapLeft"></div>
-        <div class="gift-hero-tap-right" id="heroTapRight"></div>
-        <button class="gift-hero-arrow prev" id="heroPrev">&#8249;</button>
-        <button class="gift-hero-arrow next" id="heroNext">&#8250;</button>
-        <div class="gift-hero-content">
-          <h1 class="gift-names">${escHtml(names)}</h1>
-          ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
-        </div>
-      </section>
-    ` : `
-      <section class="gift-hero">
-        <div class="gift-cover">
-          ${coverSrc
-            ? `<img src="${coverSrc}" alt="Foto de capa" />`
-            : `<div class="gift-cover-placeholder">❤️</div>`}
-          <div class="gift-cover-overlay"></div>
-        </div>
-        <div class="gift-hero-content">
-          <h1 class="gift-names">${escHtml(names)}</h1>
-          ${g.title ? `<p class="gift-title-text">${escHtml(g.title)}</p>` : ''}
-        </div>
-      </section>
-    `;
+    const hasGallery       = galleryPhotos.length > 0;
+    const hasConstellation = Boolean(g.startDate);
 
-    // Galeria em formato polaroid
-    const galleryPhotos = g.photos || [];
-    const galleryHTML = galleryPhotos.length
-      ? `<section class="gift-polaroid-section">
-           <p class="gift-section-title">Nossas Fotos <span class="gift-section-hint">toque para ver</span></p>
-           <div class="gift-polaroid-grid">
-             ${galleryPhotos.map((src, i) => `
-               <div class="gift-polaroid gift-gallery-thumb" data-src="${src}" data-index="${i}">
-                 <img src="${src}" alt="Foto ${i + 1}" loading="lazy">
-               </div>`).join('')}
-           </div>
-         </section>`
-      : '';
+    /* Determina o próximo screen de cada página */
+    const nextOfPlayer = hasGallery ? 'screenGallery'
+                       : hasConstellation ? 'screenConstellation'
+                       : 'screenCapsulas';
+    const nextOfGallery = hasConstellation ? 'screenConstellation' : 'screenCapsulas';
 
-    // Player
-    const songName   = g.songName   || 'Nossa Música';
-    const artistName = g.artistName || 'Artista';
-    const thumbSrc   = coverSrc;
-
-    const playerHTML = `
-      <div class="gift-player">
-        <div class="gift-player-inner">
-          <div class="gift-player-thumb">
-            ${thumbSrc
-              ? `<img src="${thumbSrc}" alt="Capa">`
-              : '🎵'}
+    /* ── Intro screen ── */
+    const revealHTML = `
+      <div id="screenReveal" class="pg-screen">
+        <div class="pg-reveal-bg">
+          <div class="pg-reveal-particles" id="pgRevealParticles"></div>
+          <div class="pg-reveal-content">
+            <div class="pg-reveal-envelope">💌</div>
+            <p class="pg-reveal-sender">${escHtml(g.name1 || 'Alguém especial')}</p>
+            <p class="pg-reveal-msg">preparou um presente especial para você...</p>
+            <button class="pg-reveal-btn" id="btnReveal">Ver presente</button>
           </div>
-          <div class="gift-player-meta">
-            <div class="gift-song-name">${escHtml(songName)}</div>
-            <div class="gift-artist-name">${escHtml(artistName)}</div>
-          </div>
-          <button class="gift-play-btn" id="btnGiftPlay" title="Ouvir música">▶</button>
-        </div>
-        <div class="gift-player-bar">
-          <div class="gift-player-bar-fill" id="giftPlayerBarFill"></div>
-        </div>
-        <div class="gift-player-times">
-          <span id="giftPlayerCurrent">0:00</span>
-          <span id="giftPlayerDuration">—:——</span>
         </div>
       </div>`;
 
-    // Cápsulas + Carta
+    /* ── Player page ── */
+    const coverHTML = coverSrc
+      ? `<img src="${escHtml(coverSrc)}" alt="Foto de capa" class="sp-cover-img">`
+      : `<div class="sp-cover-placeholder">❤️</div>`;
+
+    const playerHTML = `
+      <div id="screenPlayer" class="pg-screen pg-hidden">
+        <div class="sp-page">
+
+          <div class="sp-topbar">
+            <span class="sp-topbar-chevron">⌄</span>
+            <span class="sp-topbar-title">${escHtml(g.title || 'Para você ❤️')}</span>
+            <span class="sp-topbar-dots">•••</span>
+          </div>
+
+          <div class="sp-cover">${coverHTML}</div>
+
+          <div class="sp-info-row">
+            <div class="sp-info-text">
+              <div class="sp-track-name">${escHtml(songName)}</div>
+              <div class="sp-track-artist">${escHtml(artistName)}</div>
+            </div>
+            <button class="sp-heart-btn" id="spHeartBtn">♡</button>
+          </div>
+
+          <div class="sp-progress-wrap">
+            <div class="sp-progress-track">
+              <div class="sp-progress-fill" id="giftPlayerBarFill"></div>
+            </div>
+            <div class="sp-progress-times">
+              <span id="giftPlayerCurrent">0:00</span>
+              <span id="giftPlayerDuration">—:——</span>
+            </div>
+          </div>
+
+          <div class="sp-controls">
+            <button class="sp-ctrl-btn sp-btn-side" title="Aleatório">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17zm4.15-5.09v1.11l1.79 1.79 1.42-1.42zM4 18.59L5.41 20l9.55-9.55-1.41-1.41zm10.33.5l1.42 1.42L20 16.5V20h-5.5v1.5l2.04-2.04z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-side" title="Anterior">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-play" id="btnGiftPlay" title="Reproduzir">
+              <svg id="spPlayIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="spPauseIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-side" title="Próxima">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-side" title="Repetir">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+            </button>
+          </div>
+
+          <div class="sp-couple-card">
+            <p class="sp-couple-label">Sobre o casal</p>
+            ${coupleSrc ? `
+            <div class="sp-couple-photo-wrap">
+              <img src="${escHtml(coupleSrc)}" alt="Foto do casal">
+            </div>` : ''}
+            <div class="sp-couple-info">
+              <div class="sp-couple-names">${escHtml(g.name1 || '')}${g.name1 && g.name2 ? ' e ' : ''}${escHtml(g.name2 || '')}</div>
+              ${startYear ? `<div class="sp-couple-since">Juntos desde ${startYear}</div>` : ''}
+            </div>
+            ${g.startDate ? `
+            <div class="sp-counter-grid">
+              <div class="sp-c-item"><span id="gcYears">—</span><small>Anos</small></div>
+              <div class="sp-c-item"><span id="gcMonths">—</span><small>Meses</small></div>
+              <div class="sp-c-item"><span id="gcDays">—</span><small>Dias</small></div>
+              <div class="sp-c-item"><span id="gcHours">—</span><small>Horas</small></div>
+              <div class="sp-c-item"><span id="gcMinutes">—</span><small>Minutos</small></div>
+              <div class="sp-c-item sp-c-sec"><span id="gcSeconds">—</span><small>Segundos</small></div>
+            </div>
+            ${g.city ? `<p class="sp-city">📍 ${escHtml(g.city)}</p>` : ''}` : ''}
+          </div>
+
+          <div class="pg-next-wrap">
+            <button class="pg-next-btn" data-to="${nextOfPlayer}">
+              ${hasGallery ? '📸 Ver nossas fotos' : hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
+            </button>
+          </div>
+
+          <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
+        </div>
+      </div>`;
+
+    /* ── Gallery page ── */
+    const CAPTIONS = ['para sempre','o nosso lugar','te amo tanto','nossa história',
+      'memórias','junto de você','o melhor dia','sorrisos nossos',
+      'eternamente','só nós dois','meu favorito','tão perfeito',
+      'você e eu','nosso momento','inesquecível','de coração'];
+
+    const CURVES = [
+      'M0,22 Q100,48 200,22 Q300,0 400,22',
+      'M0,18 Q130,4 200,32 Q270,52 400,16',
+      'M0,30 Q80,8 200,36 Q320,56 400,20',
+    ];
+
+    function buildFairyLights() {
+      if (!galleryPhotos.length) return '';
+      let rows = '';
+      for (let ri = 0; ri < galleryPhotos.length; ri += 2) {
+        const pair = galleryPhotos.slice(ri, ri + 2);
+        const curve = CURVES[ri % CURVES.length];
+        const xPos = pair.length === 1 ? [45] : [20, 62];
+
+        const lightCount = 20;
+        let lightsHTML = '';
+        for (let k = 0; k < lightCount; k++) {
+          const x = (k / lightCount * 92 + 4).toFixed(1);
+          const delay = (k * 0.15 + (k % 3) * 0.4).toFixed(2);
+          const size  = (3 + (k % 3) * 1.2).toFixed(1);
+          lightsHTML += `<span class="fl-light" style="left:${x}%;--fl-d:${delay}s;--fl-s:${size}px"></span>`;
+        }
+
+        const polaroidsHTML = pair.map((src, j) => {
+          const caption = CAPTIONS[(ri + j) % CAPTIONS.length];
+          const rot = j === 0 ? -3 + (ri % 2) * 1.5 : 2.5 - (ri % 2) * 1.2;
+          return `
+            <div class="fl-polaroid gift-gallery-thumb"
+                 data-src="${escHtml(src)}"
+                 data-index="${ri + j}"
+                 style="left:${xPos[j]}%;--fl-rot:${rot}deg">
+              <div class="fl-pin"></div>
+              <div class="fl-photo-wrap">
+                <img src="${escHtml(src)}" alt="Foto ${ri + j + 1}" loading="lazy">
+              </div>
+              <p class="fl-caption">${escHtml(caption)}</p>
+            </div>`;
+        }).join('');
+
+        rows += `
+          <div class="fl-row">
+            <svg class="fl-rope" viewBox="0 0 400 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="${curve}" stroke="#c4a44a" stroke-width="1.4" fill="none" opacity="0.75"/>
+            </svg>
+            <div class="fl-lights-wrap">${lightsHTML}</div>
+            ${polaroidsHTML}
+          </div>`;
+      }
+      return rows;
+    }
+
+    const galleryHTML = hasGallery ? `
+      <div id="screenGallery" class="pg-screen pg-hidden fl-page">
+        <div class="fl-header">
+          <h2 class="fl-title">Eu e você</h2>
+        </div>
+        <div class="fl-stage">${buildFairyLights()}</div>
+        <div class="pg-next-wrap">
+          <button class="pg-next-btn" data-to="${nextOfGallery}">
+            ${hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
+          </button>
+        </div>
+        <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
+      </div>` : '';
+
+    /* ── Constellation page ── */
+    const constellationHTML = hasConstellation ? `
+      <div id="screenConstellation" class="pg-screen pg-hidden">
+        <div class="pg-wrap">
+          <section class="gift-constellation" id="giftConstellation">
+            <p class="gift-constellation-eyebrow">Quando as estrelas registraram o início desta história</p>
+            <div class="gift-constellation-globe">
+              <div class="gift-constellation-ring">
+                <canvas id="starCanvas"></canvas>
+              </div>
+              <svg class="gift-constellation-arc" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48.5"/>
+              </svg>
+            </div>
+            <div class="gift-constellation-footer">
+              <p class="gift-constellation-date">${formatDate(g.startDate)}</p>
+              <p class="gift-constellation-tagline">O universo já sabia...</p>
+            </div>
+          </section>
+          <div class="pg-next-wrap">
+            <p class="pg-next-hint">Ainda tem mais para você...</p>
+            <button class="pg-next-btn pg-next-special" data-to="screenCapsulas">
+              <span class="pg-next-icon">💌</span>
+              Tem algo guardado para você
+            </button>
+          </div>
+          <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
+        </div>
+      </div>` : '';
+
+    /* ── Capsulas page ── */
     const capsulaEmojis  = ['💌', '🎵', '📍', '🔮'];
-    const capsulaTextos  = (g.capsulas && g.capsulas.length)
-      ? g.capsulas
-      : ['', '', '', ''];
+    const capsulaTextos  = (g.capsulas && g.capsulas.length) ? g.capsulas : ['', '', '', ''];
     const capsulasTitles = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'O que vem aí'];
 
     const capsulaItems = capsulaEmojis.map((emoji, i) => `
@@ -235,32 +361,6 @@
           </div>
         </div>
       </div>`).join('');
-
-    const capsulaHTML = `
-      <div class="gc-hero">
-        <div class="gc-hero-glow"></div>
-        <div class="gc-hero-badge">✦ SoulMates · Presente Especial</div>
-        <h1 class="gc-hero-title">Guardei<br>tudo isso<br>para você</h1>
-        <p class="gc-hero-sub">Abra cada cápsula com calma.<br>Cada uma guarda um pedaço do que sinto.</p>
-        <div class="gc-hero-divider"><span></span><em>💌</em><span></span></div>
-      </div>
-      <div class="gc-progress-wrap">
-        <div class="gc-progress-label">
-          <span>Cápsulas abertas</span>
-          <span id="gcProgressText">0 / 4</span>
-        </div>
-        <div class="gc-progress-track"><div class="gc-progress-fill" id="gcProgressFill"></div></div>
-      </div>
-      <div class="gc-capsulas-grid" id="gcCapsulaGrid">
-        ${capsulaItems}
-      </div>
-      <div class="gc-btn-carta-wrap" id="gcBtnCartaWrap">
-        <p class="gc-btn-carta-hint">Você abriu tudo. Tem uma última coisa...</p>
-        <button class="gc-btn-carta" id="gcBtnCarta">
-          <span class="gc-btn-icon">✉️</span>
-          Ler a carta completa
-        </button>
-      </div>`;
 
     const cartaHTML = g.message ? `
       <section class="gc-carta-section" id="gcCartaSection">
@@ -283,81 +383,34 @@
         </div>
       </section>` : '';
 
-    // Monta o HTML completo — duas telas
-    root.innerHTML = `
-
-      <!-- ── TELA 1: O presente ── -->
-      <div class="gift-screen" id="giftScreenMain">
-        <div class="gift-wrap">
-
-          <!-- Hero -->
-          ${heroSectionHTML}
-
-          <!-- Player -->
-          ${playerHTML}
-
-          <!-- Contador + cidade -->
-          <section class="gift-info">
-            <p class="gift-info-label">Juntos há</p>
-            <div class="gift-counter-grid">
-              <div class="gift-counter-unit"><span id="gcYears">—</span><small>anos</small></div>
-              <div class="gift-counter-unit"><span id="gcMonths">—</span><small>meses</small></div>
-              <div class="gift-counter-unit"><span id="gcDays">—</span><small>dias</small></div>
-              <div class="gift-counter-unit"><span id="gcHours">—</span><small>horas</small></div>
-              <div class="gift-counter-unit"><span id="gcMinutes">—</span><small>min</small></div>
-              <div class="gift-counter-unit"><span id="gcSeconds">—</span><small>seg</small></div>
-            </div>
-            ${g.startDate ? `<p class="gift-since">desde <strong>${formatDate(g.startDate)}</strong></p>` : ''}
-            ${g.city     ? `<p class="gift-city">📍 ${escHtml(g.city)}</p>` : ''}
-          </section>
-
-          <!-- Constelação -->
-          ${g.startDate ? `
-          <section class="gift-constellation" id="giftConstellation">
-            <p class="gift-constellation-eyebrow">Quando as estrelas registraram o início desta história</p>
-            <div class="gift-constellation-globe">
-              <div class="gift-constellation-ring">
-                <canvas id="starCanvas"></canvas>
-              </div>
-              <svg class="gift-constellation-arc" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="48.5"/>
-              </svg>
-            </div>
-            <div class="gift-constellation-footer">
-              <p class="gift-constellation-date">${formatDate(g.startDate)}</p>
-              <p class="gift-constellation-tagline">O universo já sabia...</p>
-            </div>
-          </section>` : ''}
-
-          <!-- Galeria -->
-          ${galleryHTML}
-
-          <!-- Botão de transição para tela 2 -->
-          ${(capsulaHTML || cartaHTML) ? `
-          <div class="gift-next-wrap">
-            <p class="gift-next-hint">Ainda tem mais para você...</p>
-            <button class="gift-next-btn" id="btnGoCapsulas">
-              <span class="gift-next-icon">💌</span>
-              Tem algo guardado para você
-            </button>
-          </div>` : ''}
-
-          <!-- Footer -->
-          <footer class="gift-footer">
-            <p>Criado com ❤ no SoulMates</p>
-            <a href="./index.html">Criar o meu presente →</a>
-          </footer>
-
-        </div>
-      </div>
-
-      <!-- ── TELA 2: Cápsulas + Carta ── -->
-      <div class="gift-screen gift-screen--hidden" id="giftScreenCapsulas">
+    const capsulaPageHTML = `
+      <div id="screenCapsulas" class="pg-screen pg-hidden">
         <canvas class="gc-star-canvas" id="gcStarCanvas"></canvas>
         <div class="gc-bg-particles" id="gcBgParticles"></div>
         <div class="gc-burst-wrap" id="gcBurstWrap"></div>
         <div class="gc-page-wrap">
-          ${capsulaHTML}
+          <div class="gc-hero">
+            <div class="gc-hero-glow"></div>
+            <div class="gc-hero-badge">✦ SoulMates · Presente Especial</div>
+            <h1 class="gc-hero-title">Guardei<br>tudo isso<br>para você</h1>
+            <p class="gc-hero-sub">Abra cada cápsula com calma.<br>Cada uma guarda um pedaço do que sinto.</p>
+            <div class="gc-hero-divider"><span></span><em>💌</em><span></span></div>
+          </div>
+          <div class="gc-progress-wrap">
+            <div class="gc-progress-label">
+              <span>Cápsulas abertas</span>
+              <span id="gcProgressText">0 / 4</span>
+            </div>
+            <div class="gc-progress-track"><div class="gc-progress-fill" id="gcProgressFill"></div></div>
+          </div>
+          <div class="gc-capsulas-grid" id="gcCapsulaGrid">${capsulaItems}</div>
+          <div class="gc-btn-carta-wrap" id="gcBtnCartaWrap">
+            <p class="gc-btn-carta-hint">Você abriu tudo. Tem uma última coisa...</p>
+            <button class="gc-btn-carta" id="gcBtnCarta">
+              <span class="gc-btn-icon">✉️</span>
+              Ler a carta completa
+            </button>
+          </div>
           ${cartaHTML}
           <footer class="gift-footer" style="margin-top:48px;position:relative;z-index:1">
             <p>Criado com ❤ no SoulMates</p>
@@ -366,16 +419,88 @@
         </div>
       </div>`;
 
-    // Inicia as interações após renderizar
+    root.innerHTML = revealHTML + playerHTML + galleryHTML + constellationHTML + capsulaPageHTML;
+
     if (g.startDate) startCounter(g.startDate);
     setupPlayer(g);
+    setupNavigation(g);
     setupCapsulasCarta(g);
     setupGallery();
-    setupHeroCarousel(heroPhotos);
-    if (g.startDate) setupConstellation(g.startDate);
+    if (hasConstellation) setupConstellation(g.startDate);
   }
 
-  /* ── 3. Contador em tempo real ──────────────────────── */
+  /* ── 3. Navegação entre telas ───────────────────────── */
+  function setupNavigation(g) {
+    spawnRevealParticles();
+
+    function transitionTo(fromId, toId) {
+      const from = document.getElementById(fromId);
+      const to   = document.getElementById(toId);
+      if (!from || !to) return;
+      from.classList.add('pg-exit');
+      setTimeout(() => {
+        from.style.display = 'none';
+        to.classList.remove('pg-hidden');
+        to.classList.add('pg-enter');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        if (toId === 'screenCapsulas') {
+          initGcStarfield();
+          initGcParticles();
+        }
+      }, 420);
+    }
+
+    const btnReveal = document.getElementById('btnReveal');
+    if (btnReveal) {
+      btnReveal.addEventListener('click', () => {
+        transitionTo('screenReveal', 'screenPlayer');
+        const aud = document.getElementById('giftAudio');
+        if (aud && aud.src) {
+          setTimeout(() => {
+            if (aud._readyToPlay) {
+              aud.play().catch(() => {});
+            } else {
+              aud.addEventListener('canplay', function once() {
+                aud.removeEventListener('canplay', once);
+                aud.play().catch(() => {});
+              });
+              aud._readyToPlay = false;
+            }
+          }, 450);
+        }
+      });
+    }
+
+    document.querySelectorAll('.pg-next-btn[data-to]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const screen = btn.closest('.pg-screen');
+        if (screen) transitionTo(screen.id, btn.dataset.to);
+      });
+    });
+
+    const heartBtn = document.getElementById('spHeartBtn');
+    if (heartBtn) {
+      heartBtn.addEventListener('click', () => {
+        heartBtn.textContent = heartBtn.textContent === '♡' ? '♥' : '♡';
+        heartBtn.style.color = heartBtn.textContent === '♥' ? '#ff6dba' : '';
+      });
+    }
+  }
+
+  function spawnRevealParticles() {
+    const wrap = document.getElementById('pgRevealParticles');
+    if (!wrap) return;
+    const emojis = ['💕','💗','✨','🌸','💫','⭐','💝','🥀'];
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'pg-rp';
+      p.textContent = emojis[i % emojis.length];
+      p.style.cssText = `left:${Math.random()*100}%;font-size:${10+Math.random()*14}px;animation-duration:${12+Math.random()*10}s;animation-delay:-${Math.random()*15}s`;
+      wrap.appendChild(p);
+    }
+  }
+
+  /* ── 4. Contador em tempo real ──────────────────────── */
   function startCounter(dateStr) {
     function tick() {
       const t = calcTimeSince(dateStr);
@@ -395,190 +520,133 @@
     const start = new Date(dateStr + 'T00:00:00');
     const now   = new Date();
     if (isNaN(start) || start > now) return null;
-
     let years  = now.getFullYear() - start.getFullYear();
     let months = now.getMonth()    - start.getMonth();
     let days   = now.getDate()     - start.getDate();
-
     if (days   < 0) { months--; days   += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
     if (months < 0) { years--;  months += 12; }
-
-    const totalMs  = now - start;
-    const hours    = Math.floor((totalMs / 3600000) % 24);
-    const minutes  = Math.floor((totalMs / 60000)   % 60);
-    const seconds  = Math.floor((totalMs / 1000)    % 60);
-
+    const totalMs = now - start;
+    const hours   = Math.floor((totalMs / 3600000) % 24);
+    const minutes = Math.floor((totalMs / 60000)   % 60);
+    const seconds = Math.floor((totalMs / 1000)    % 60);
     return { years, months, days, hours, minutes, seconds };
   }
 
-  /* ── 4. Player de música (YouTube overlay) ──────────── */
+  /* ── 5. Player de música ────────────────────────────── */
   function setupPlayer(gift) {
-    const btn     = document.getElementById('btnGiftPlay');
-    const overlay = document.getElementById('ytOverlay');
-    const frame   = document.getElementById('ytFrame');
-    const closeBtn = document.getElementById('btnYtClose');
-    const audio = document.getElementById('giftAudio');
-    const barFill = document.getElementById('giftPlayerBarFill');
+    const btn          = document.getElementById('btnGiftPlay');
+    const overlay      = document.getElementById('ytOverlay');
+    const frame        = document.getElementById('ytFrame');
+    const closeBtn     = document.getElementById('btnYtClose');
+    const audio        = document.getElementById('giftAudio');
+    const barFill      = document.getElementById('giftPlayerBarFill');
     const currentLabel = document.getElementById('giftPlayerCurrent');
-    const durationLabel = document.getElementById('giftPlayerDuration');
-    const previewUrl = gift.previewUrl || '';
-    const youtubeId = gift.youtubeId || '';
+    const durationLabel= document.getElementById('giftPlayerDuration');
+    const playIcon     = document.getElementById('spPlayIcon');
+    const pauseIcon    = document.getElementById('spPauseIcon');
+    const previewUrl   = gift.previewUrl || '';
+    const youtubeId    = gift.youtubeId  || '';
     const desiredStart = Math.max(0, Number(gift.musicMoment) || 0);
 
     if (!btn) return;
 
-    function formatAudioTime(totalSeconds) {
-      const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
-      const minutes = Math.floor(safeSeconds / 60);
-      const seconds = Math.floor(safeSeconds % 60).toString().padStart(2, '0');
-      return `${minutes}:${seconds}`;
+    function formatAudioTime(s) {
+      const safe = Math.max(0, Number(s) || 0);
+      return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2,'0')}`;
     }
 
     function getPreviewStart() {
-      const duration = Number(audio.duration);
-      if (Number.isFinite(duration) && duration > 0) {
-        if (desiredStart > duration) return 0;
-        return Math.min(desiredStart, Math.max(0, duration - 0.35));
+      const dur = Number(audio.duration);
+      if (Number.isFinite(dur) && dur > 0) {
+        return desiredStart > dur ? 0 : Math.min(desiredStart, Math.max(0, dur - 0.35));
       }
       return desiredStart;
     }
 
-    function syncAudioUi() {
+    function syncUI() {
       if (!audio || !barFill || !currentLabel || !durationLabel) return;
-
-      const current = Number(audio.currentTime) || 0;
+      const current  = Number(audio.currentTime) || 0;
       const duration = Number(audio.duration) || 0;
-      currentLabel.textContent = formatAudioTime(current);
+      currentLabel.textContent  = formatAudioTime(current);
       durationLabel.textContent = duration > 0 ? formatAudioTime(duration) : '—:——';
-      barFill.style.width = duration > 0 ? `${Math.min((current / duration) * 100, 100)}%` : '0%';
-      btn.textContent = audio.paused ? '▶' : '❚❚';
+      barFill.style.width = duration > 0 ? `${Math.min((current/duration)*100,100)}%` : '0%';
+      if (playIcon && pauseIcon) {
+        playIcon.style.display  = audio.paused ? '' : 'none';
+        pauseIcon.style.display = audio.paused ? 'none' : '';
+      }
     }
 
-    function closeYoutubeOverlay() {
-      overlay.classList.remove('open');
-      frame.src = '';
-    }
+    function closeYT() { overlay.classList.remove('open'); frame.src = ''; }
 
     if (previewUrl && audio) {
       audio.src = previewUrl;
-
       audio.addEventListener('loadedmetadata', () => {
-        try {
-          audio.currentTime = getPreviewStart();
-        } catch (_) { /* no-op */ }
-        syncAudioUi();
+        try { audio.currentTime = getPreviewStart(); } catch (_) {}
+        syncUI();
       });
-
-      const FADE_DURATION = 3;
-
+      audio._readyToPlay = false;
+      audio.addEventListener('canplay', () => { audio._readyToPlay = true; });
+      const FADE = 3;
       audio.addEventListener('timeupdate', () => {
-        syncAudioUi();
-        const duration = Number(audio.duration);
-        if (Number.isFinite(duration) && duration > 0 && !audio.paused) {
-          const remaining = duration - audio.currentTime;
-          if (remaining <= FADE_DURATION) {
-            audio.volume = Math.max(0, remaining / FADE_DURATION);
-          } else {
-            audio.volume = 1;
-          }
+        syncUI();
+        const dur = Number(audio.duration);
+        if (Number.isFinite(dur) && dur > 0 && !audio.paused) {
+          const rem = dur - audio.currentTime;
+          audio.volume = rem <= FADE ? Math.max(0, rem/FADE) : 1;
         }
       });
-      audio.addEventListener('play', () => { audio.volume = 1; syncAudioUi(); });
-      audio.addEventListener('pause', syncAudioUi);
+      audio.addEventListener('play',  () => { audio.volume = 1; syncUI(); });
+      audio.addEventListener('pause', syncUI);
       audio.addEventListener('ended', () => {
         audio.volume = 1;
-        try {
-          audio.currentTime = getPreviewStart();
-        } catch (_) { /* no-op */ }
-        syncAudioUi();
+        try { audio.currentTime = getPreviewStart(); } catch (_) {}
+        syncUI();
       });
-
       btn.addEventListener('click', () => {
-        if (overlay.classList.contains('open')) closeYoutubeOverlay();
-
+        if (overlay.classList.contains('open')) closeYT();
         if (audio.paused) {
           audio.volume = 1;
-          if (audio.currentTime <= 0.05) {
-            try {
-              audio.currentTime = getPreviewStart();
-            } catch (_) { /* no-op */ }
-          }
-          audio.play().catch(() => {});
-        } else {
-          audio.pause();
-        }
+          if (audio.currentTime <= 0.05) { try { audio.currentTime = getPreviewStart(); } catch (_) {} }
+          audio.play().catch(()=>{});
+        } else { audio.pause(); }
       });
-
-      syncAudioUi();
+      syncUI();
       return;
     }
 
-    if (!youtubeId) {
-      btn.disabled = true;
-      btn.textContent = '—';
-      return;
-    }
+    if (!youtubeId) { btn.disabled = true; return; }
 
     btn.addEventListener('click', () => {
       frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`;
       overlay.classList.add('open');
     });
-
-    closeBtn.addEventListener('click', () => {
-      closeYoutubeOverlay();
-    });
-
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) {
-        closeYoutubeOverlay();
-      }
-    });
+    closeBtn.addEventListener('click', closeYT);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeYT(); });
   }
 
-  /* ── 5. Cápsulas + Carta ────────────────────────────── */
+  /* ── 6. Cápsulas + Carta ────────────────────────────── */
   function setupCapsulasCarta(g) {
-    /* ── Transição tela 1 → tela 2 ── */
-    const btnGo     = document.getElementById('btnGoCapsulas');
-    const screen1   = document.getElementById('giftScreenMain');
-    const screen2   = document.getElementById('giftScreenCapsulas');
-
-    if (btnGo && screen1 && screen2) {
-      btnGo.addEventListener('click', () => {
-        screen1.classList.add('gift-screen--exit');
-        setTimeout(() => {
-          screen1.style.display = 'none';
-          screen2.classList.remove('gift-screen--hidden');
-          screen2.classList.add('gift-screen--enter');
-          window.scrollTo({ top: 0, behavior: 'instant' });
-          initGcStarfield();
-          initGcParticles();
-        }, 420);
-      });
-    }
-
-    const capsulas    = document.querySelectorAll('.gc-capsula');
+    const capsulas     = document.querySelectorAll('.gc-capsula');
     const progressFill = document.getElementById('gcProgressFill');
     const progressText = document.getElementById('gcProgressText');
-    const btnWrap     = document.getElementById('gcBtnCartaWrap');
-    const btnCarta    = document.getElementById('gcBtnCarta');
+    const btnWrap      = document.getElementById('gcBtnCartaWrap');
+    const btnCarta     = document.getElementById('gcBtnCarta');
     const cartaSection = document.getElementById('gcCartaSection');
     if (!capsulas.length) return;
 
     let abertas = 0;
     const total = capsulas.length;
 
-    /* Aparece as cápsulas com delay escalonado */
     capsulas.forEach((c, i) => {
       setTimeout(() => c.classList.add('gc-visible'), 300 + i * 120);
     });
 
-    /* Abre cápsula ao clicar */
     capsulas.forEach(c => {
       c.addEventListener('click', () => {
         if (c.classList.contains('gc-aberta')) return;
         c.classList.add('gc-aberta');
         abertas++;
-        spawnBurstCapsulas(c);
+        spawnBurst(c);
         const pct = (abertas / total) * 100;
         if (progressFill) progressFill.style.width = pct + '%';
         if (progressText) progressText.textContent = `${abertas} / ${total}`;
@@ -588,19 +656,17 @@
       });
     });
 
-    /* Burst de partículas ao abrir */
-    function spawnBurstCapsulas(el) {
-      const rect   = el.getBoundingClientRect();
-      const cx     = rect.left + rect.width / 2;
-      const cy     = rect.top  + rect.height / 2;
+    function spawnBurst(el) {
+      const rect  = el.getBoundingClientRect();
+      const cx    = rect.left + rect.width / 2;
+      const cy    = rect.top  + rect.height / 2;
       const emojis = ['💗','💖','✨','💫','🌸','💕','⭐','💝'];
-      const wrap   = document.getElementById('gcBurstWrap');
+      const wrap  = document.getElementById('gcBurstWrap');
       if (!wrap) return;
-      const n = 16;
-      for (let i = 0; i < n; i++) {
-        const p     = document.createElement('div');
+      for (let i = 0; i < 16; i++) {
+        const p   = document.createElement('div');
         p.className = 'gc-burst-p';
-        const angle = (i / n) * 360 + Math.random() * 20;
+        const angle = (i / 16) * 360 + Math.random() * 20;
         const dist  = 80 + Math.random() * 140;
         const rad   = angle * Math.PI / 180;
         const tx    = Math.cos(rad) * dist;
@@ -614,7 +680,6 @@
       }
     }
 
-    /* Ver carta */
     if (btnCarta && cartaSection) {
       btnCarta.addEventListener('click', () => {
         if (btnWrap) btnWrap.style.display = 'none';
@@ -629,19 +694,16 @@
       });
     }
 
-    /* Máquina de escrever */
     function digitarCarta(texto) {
       if (!texto) return;
-      const corpo    = document.getElementById('gcCartaCorpo');
-      const cursor   = document.getElementById('gcCursor');
+      const corpo      = document.getElementById('gcCartaCorpo');
+      const cursor     = document.getElementById('gcCursor');
       const assinatura = document.getElementById('gcCartaAssinatura');
-      const selos    = document.getElementById('gcCartaSelos');
+      const selos      = document.getElementById('gcCartaSelos');
       if (!corpo || !cursor) return;
-
       corpo.innerHTML = '';
       corpo.appendChild(cursor);
       let i = 0;
-
       function tick() {
         if (i >= texto.length) {
           cursor.classList.add('gc-cursor-oculto');
@@ -650,93 +712,84 @@
           return;
         }
         const ch = texto[i++];
-        if (ch === '\n') {
-          cursor.insertAdjacentHTML('beforebegin', '<br><br>');
-        } else {
-          cursor.insertAdjacentText('beforebegin', ch);
-        }
+        if (ch === '\n') cursor.insertAdjacentHTML('beforebegin','<br><br>');
+        else cursor.insertAdjacentText('beforebegin', ch);
         const delay = '.!?'.includes(ch) ? 110 : ch === ',' ? 70 : (Math.random() < 0.04 ? 55 : 26);
         setTimeout(tick, delay);
       }
       tick();
     }
+  }
 
-    function initGcStarfield() {
-      const canvas = document.getElementById('gcStarCanvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      let stars = [], W, H;
-      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-      function createStars(n) {
-        stars = [];
-        for (let i = 0; i < n; i++) stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.4+0.2, alpha: Math.random(), speed: Math.random()*0.004+0.001, phase: Math.random()*Math.PI*2 });
-      }
-      function draw(t) {
-        ctx.clearRect(0, 0, W, H);
-        stars.forEach(s => {
-          s.alpha = 0.25 + 0.65 * Math.abs(Math.sin(s.phase + t * s.speed));
-          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(255,255,255,${s.alpha.toFixed(2)})`; ctx.fill();
-        });
-        requestAnimationFrame(draw);
-      }
-      resize(); createStars(160);
-      window.addEventListener('resize', () => { resize(); createStars(160); });
+  /* ── 7. Starfield + Particles (cápsulas) ────────────── */
+  function initGcStarfield() {
+    const canvas = document.getElementById('gcStarCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let stars = [], W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    function createStars(n) {
+      stars = [];
+      for (let i = 0; i < n; i++)
+        stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.4+0.2,
+          alpha: Math.random(), speed: Math.random()*0.004+0.001, phase: Math.random()*Math.PI*2 });
+    }
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      stars.forEach(s => {
+        s.alpha = 0.25 + 0.65 * Math.abs(Math.sin(s.phase + t * s.speed));
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${s.alpha.toFixed(2)})`; ctx.fill();
+      });
       requestAnimationFrame(draw);
     }
+    resize(); createStars(160);
+    window.addEventListener('resize', () => { resize(); createStars(160); });
+    requestAnimationFrame(draw);
+  }
 
-    function initGcParticles() {
-      const wrap = document.getElementById('gcBgParticles');
-      if (!wrap) return;
-      const emojis = ['💕','💗','✨','🌸','💫','⭐','🥀','💞'];
-      for (let i = 0; i < 14; i++) {
-        const el = document.createElement('div');
-        el.className = 'gc-bg-particle';
-        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        el.style.left = Math.random() * 100 + '%';
-        el.style.fontSize = (10 + Math.random() * 12) + 'px';
-        el.style.animationDuration = (18 + Math.random() * 20) + 's';
-        el.style.animationDelay = -(Math.random() * 20) + 's';
-        wrap.appendChild(el);
-      }
+  function initGcParticles() {
+    const wrap = document.getElementById('gcBgParticles');
+    if (!wrap) return;
+    const emojis = ['💕','💗','✨','🌸','💫','⭐','🥀','💞'];
+    for (let i = 0; i < 14; i++) {
+      const el = document.createElement('div');
+      el.className = 'gc-bg-particle';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.fontSize = (10 + Math.random() * 12) + 'px';
+      el.style.animationDuration = (18 + Math.random() * 20) + 's';
+      el.style.animationDelay = -(Math.random() * 20) + 's';
+      wrap.appendChild(el);
     }
   }
 
-  /* ── 6. Galeria — Stories viewer ────────────────────── */
+  /* ── 8. Galeria stories viewer ──────────────────────── */
   function setupGallery() {
-    const thumbs   = [...document.querySelectorAll('.gift-gallery-thumb')];
+    const thumbs  = [...document.querySelectorAll('.gift-gallery-thumb')];
     if (!thumbs.length) return;
+    const photos  = thumbs.map(t => t.dataset.src);
+    const overlay = document.getElementById('storiesOverlay');
+    const barsEl  = document.getElementById('storiesBars');
+    const closeBtn= document.getElementById('storiesClose');
+    const imgEl   = document.getElementById('storiesImg');
+    const tapLeft = document.getElementById('storiesTapLeft');
+    const tapRight= document.getElementById('storiesTapRight');
+    const counter = document.getElementById('storiesCounter');
+    const DURATION= 4000;
+    let current = 0, timer = null;
 
-    const photos   = thumbs.map(t => t.dataset.src);
-    const overlay  = document.getElementById('storiesOverlay');
-    const barsEl   = document.getElementById('storiesBars');
-    const closeBtn = document.getElementById('storiesClose');
-    const imgEl    = document.getElementById('storiesImg');
-    const tapLeft  = document.getElementById('storiesTapLeft');
-    const tapRight = document.getElementById('storiesTapRight');
-    const counter  = document.getElementById('storiesCounter');
-
-    const DURATION = 4000;
-    let current = 0;
-    let timer   = null;
-
-    /* Abre o stories no índice clicado */
     function openStories(index) {
       current = index;
       overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
       showStory(current);
     }
-
-    /* Fecha e limpa tudo */
     function closeStories() {
       overlay.classList.remove('open');
       document.body.style.overflow = '';
-      clearTimeout(timer);
-      imgEl.src = '';
+      clearTimeout(timer); imgEl.src = '';
     }
-
-    /* Exibe uma foto e reinicia o progresso */
     function showStory(index) {
       clearTimeout(timer);
       imgEl.style.opacity = '0';
@@ -746,311 +799,131 @@
       buildBars(index);
       timer = setTimeout(() => advance(1), DURATION);
     }
-
-    /* Constrói as barras de progresso */
     function buildBars(active) {
       barsEl.innerHTML = photos.map((_, i) => {
         const cls = i < active ? 'done' : i === active ? 'active' : '';
         return `<div class="stories-bar"><div class="stories-bar-fill ${cls}"></div></div>`;
       }).join('');
     }
-
-    /* Avança ou recua; fecha ao sair dos extremos */
     function advance(dir) {
       const next = current + dir;
       if (next < 0 || next >= photos.length) { closeStories(); return; }
-      current = next;
-      showStory(current);
+      current = next; showStory(current);
     }
 
-    /* Abre ao clicar num thumbnail */
-    thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => openStories(i)));
-
+    thumbs.forEach((t, i) => t.addEventListener('click', () => openStories(i)));
     closeBtn.addEventListener('click', closeStories);
     tapLeft.addEventListener('click',  () => advance(-1));
     tapRight.addEventListener('click', () => advance(1));
 
-    /* Swipe mobile */
     let touchStartX = 0;
     overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
     overlay.addEventListener('touchend',   e => {
       const dx = e.changedTouches[0].clientX - touchStartX;
       if (Math.abs(dx) > 40) advance(dx < 0 ? 1 : -1);
     });
-
-    /* Fechar com Escape no desktop */
     document.addEventListener('keydown', e => {
       if (!overlay.classList.contains('open')) return;
-      if (e.key === 'Escape')      closeStories();
-      if (e.key === 'ArrowRight')  advance(1);
-      if (e.key === 'ArrowLeft')   advance(-1);
+      if (e.key === 'Escape')     closeStories();
+      if (e.key === 'ArrowRight') advance(1);
+      if (e.key === 'ArrowLeft')  advance(-1);
     });
   }
 
-  /* ── 7. Carrossel do Hero (fotos step 6) ────────────── */
-  function setupHeroCarousel(photos) {
-    if (!photos || !photos.length) return;
-
-    const DURATION = 5000;
-    const slides = Array.from(document.querySelectorAll('#heroCover .hero-slide'));
-    const fills  = Array.from(document.querySelectorAll('#heroBars .gift-hero-bar-fill'));
-    if (!slides.length) return;
-
-    let current = 0;
-    let timer   = null;
-
-    fills.forEach(f => f.style.setProperty('--dur', `${DURATION / 1000}s`));
-
-    // Define o estado de uma barra: 'active' | 'done' | ''
-    function setBarState(fill, state) {
-      fill.style.animation = 'none';
-      void fill.offsetHeight;     // reflow força reinício
-      fill.style.animation = '';  // remove inline → CSS da classe assume
-      fill.classList.remove('active', 'done');
-      if (state) fill.classList.add(state);
-    }
-
-    function updateBars() {
-      fills.forEach((f, i) => {
-        if (i < current)       setBarState(f, 'done');
-        else if (i === current) setBarState(f, 'active');
-        else                   setBarState(f, '');
-      });
-    }
-
-    function scheduleNext() {
-      clearTimeout(timer);
-      timer = setTimeout(() => goTo(current + 1), DURATION);
-    }
-
-    function goTo(idx) {
-      slides[current].style.opacity = '0';
-      const isLooping = idx >= photos.length;
-
-      if (isLooping) {
-        // Completa visualmente a última barra antes de reiniciar
-        setBarState(fills[current], 'done');
-        setTimeout(() => {
-          current = 0;
-          slides[current].style.opacity = '1';
-          updateBars();
-          scheduleNext();
-        }, 350);
-        return;
-      }
-
-      current = ((idx % photos.length) + photos.length) % photos.length;
-      slides[current].style.opacity = '1';
-      updateBars();
-      scheduleNext();
-    }
-
-    // Swipe touch no hero
-    let touchStartX = 0;
-    const hero = document.getElementById('giftHero');
-    if (hero) {
-      hero.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-      hero.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
-      });
-    }
-
-    document.getElementById('heroNext')?.addEventListener('click',     () => goTo(current + 1));
-    document.getElementById('heroPrev')?.addEventListener('click',     () => goTo(current - 1));
-    document.getElementById('heroTapRight')?.addEventListener('click', () => goTo(current + 1));
-    document.getElementById('heroTapLeft')?.addEventListener('click',  () => goTo(current - 1));
-
-    updateBars();
-    scheduleNext();
-  }
-
-  /* ── 8. Constelação do dia ───────────────────────────── */
+  /* ── 9. Constelação ─────────────────────────────────── */
   function setupConstellation(dateStr) {
     const canvas = document.getElementById('starCanvas');
     if (!canvas) return;
 
     const CONS = [
-      { name: 'Órion',
-        stars: [[.32,.28],[.68,.24],[.28,.52],[.50,.49],[.72,.52],[.34,.76],[.68,.73]],
-        lines: [[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]],
-        cx:.50, cy:.74, sc:.28 },
-      { name: 'Leão',
-        stars: [[.18,.52],[.30,.28],[.48,.18],[.64,.28],[.74,.50],[.66,.70],[.44,.74]],
-        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[3,0]],
-        cx:.76, cy:.42, sc:.26 },
-      { name: 'Cassiopeia',
-        stars: [[.10,.62],[.28,.30],[.50,.52],[.72,.30],[.90,.62]],
-        lines: [[0,1],[1,2],[2,3],[3,4]],
-        cx:.50, cy:.20, sc:.30 },
-      { name: 'Cruz do Sul',
-        stars: [[.50,.10],[.50,.90],[.10,.50],[.90,.50],[.78,.18]],
-        lines: [[0,1],[2,3],[0,4]],
-        cx:.22, cy:.60, sc:.22 },
-      { name: 'Escorpião',
-        stars: [[.38,.10],[.54,.18],[.68,.10],[.76,.28],[.72,.44],[.62,.56],[.54,.66],[.48,.78],[.44,.90],[.36,.84]],
-        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9]],
-        cx:.76, cy:.70, sc:.24 },
-      { name: 'Ursa Maior',
-        stars: [[.14,.58],[.28,.48],[.42,.44],[.56,.46],[.64,.34],[.76,.24],[.86,.36]],
-        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]],
-        cx:.24, cy:.30, sc:.28 },
-      { name: 'Gêmeos',
-        stars: [[.20,.18],[.80,.18],[.22,.44],[.78,.44],[.26,.70],[.74,.70]],
-        lines: [[0,2],[2,4],[1,3],[3,5],[4,5]],
-        cx:.72, cy:.24, sc:.24 },
+      { name:'Órion',      stars:[[.32,.28],[.68,.24],[.28,.52],[.50,.49],[.72,.52],[.34,.76],[.68,.73]], lines:[[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]], cx:.50,cy:.74,sc:.28 },
+      { name:'Leão',       stars:[[.18,.52],[.30,.28],[.48,.18],[.64,.28],[.74,.50],[.66,.70],[.44,.74]], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[3,0]], cx:.76,cy:.42,sc:.26 },
+      { name:'Cassiopeia', stars:[[.10,.62],[.28,.30],[.50,.52],[.72,.30],[.90,.62]],                    lines:[[0,1],[1,2],[2,3],[3,4]],                         cx:.50,cy:.20,sc:.30 },
+      { name:'Cruz do Sul',stars:[[.50,.10],[.50,.90],[.10,.50],[.90,.50],[.78,.18]],                    lines:[[0,1],[2,3],[0,4]],                               cx:.22,cy:.60,sc:.22 },
+      { name:'Escorpião',  stars:[[.38,.10],[.54,.18],[.68,.10],[.76,.28],[.72,.44],[.62,.56],[.54,.66],[.48,.78],[.44,.90],[.36,.84]], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9]], cx:.76,cy:.70,sc:.24 },
+      { name:'Ursa Maior', stars:[[.14,.58],[.28,.48],[.42,.44],[.56,.46],[.64,.34],[.76,.24],[.86,.36]], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]],            cx:.24,cy:.30,sc:.28 },
+      { name:'Gêmeos',     stars:[[.20,.18],[.80,.18],[.22,.44],[.78,.44],[.26,.70],[.74,.70]],           lines:[[0,2],[2,4],[1,3],[3,5],[4,5]],                  cx:.72,cy:.24,sc:.24 },
     ];
-
-    const FEAT_MONTH = [0,0,1,1,6,6,4,4,2,2,5,0];
 
     const d = new Date(dateStr + 'T00:00:00');
     let seed = (d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate()) | 0;
-    function rand() {
-      seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
-      return (seed >>> 0) / 4294967296;
-    }
+    function rand() { seed = (Math.imul(seed,1664525)+1013904223)|0; return (seed>>>0)/4294967296; }
 
-    const featIdx = FEAT_MONTH[d.getMonth()];
-
-    // ── Animações ao entrar na tela ───────────────────────
     const arcCircle = document.querySelector('.gift-constellation-arc circle');
     const circ = 2 * Math.PI * 48.5;
-    if (arcCircle) {
-      arcCircle.style.strokeDasharray = circ;
-      arcCircle.style.strokeDashoffset = circ;
-    }
+    if (arcCircle) { arcCircle.style.strokeDasharray = circ; arcCircle.style.strokeDashoffset = circ; }
 
     const section = document.getElementById('giftConstellation');
     if (section) {
       const obs = new IntersectionObserver(entries => {
         if (!entries[0].isIntersecting) return;
-
-        // Anel acende em volta (sweep 360°)
-        if (arcCircle) {
-          arcCircle.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.25,0.46,0.45,0.94)';
-          arcCircle.style.strokeDashoffset = 0;
-        }
-
-        // Shimmer nas letras com delay escalonado
-        ['gift-constellation-eyebrow', 'gift-constellation-date', 'gift-constellation-tagline']
+        if (arcCircle) { arcCircle.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.25,0.46,0.45,0.94)'; arcCircle.style.strokeDashoffset = 0; }
+        ['gift-constellation-eyebrow','gift-constellation-date','gift-constellation-tagline']
           .forEach((cls, i) => {
-            const el = document.querySelector('.' + cls);
-            if (el) setTimeout(() => el.classList.add('constellation-shimmer'), i * 220 + 200);
+            const el = document.querySelector('.'+cls);
+            if (el) setTimeout(() => el.classList.add('constellation-shimmer'), i*220+200);
           });
-
         obs.disconnect();
       }, { threshold: 0.45 });
       obs.observe(section);
     }
 
     requestAnimationFrame(() => {
-      const S = canvas.parentElement.clientWidth || 280;
+      const S   = canvas.parentElement.clientWidth || 280;
       const dpr = window.devicePixelRatio || 1;
-      canvas.width  = S * dpr;
-      canvas.height = S * dpr;
-      canvas.style.width  = S + 'px';
-      canvas.style.height = S + 'px';
-
+      canvas.width  = S * dpr; canvas.height = S * dpr;
+      canvas.style.width = S+'px'; canvas.style.height = S+'px';
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
 
-      // ── Fundo escuro ─────────────────────────────────────
-      ctx.fillStyle = '#06060f';
-      ctx.fillRect(0, 0, S, S);
+      ctx.fillStyle = '#06060f'; ctx.fillRect(0,0,S,S);
 
-      // ── Poeira estelar — manchas de cor distribuídas ──────
-      // Vários blooms pequenos e suaves espalhados pelo círculo
       const dusts = [
-        { x:.48, y:.46, r:.38, c:'rgba(90,45,200,0.28)' },   // violeta centro
-        { x:.22, y:.30, r:.22, c:'rgba(60,30,180,0.18)' },   // azul sup-esq
-        { x:.75, y:.28, r:.20, c:'rgba(100,40,220,0.16)' },  // violeta sup-dir
-        { x:.30, y:.68, r:.22, c:'rgba(255,109,186,0.12)' }, // pink inf-esq
-        { x:.72, y:.65, r:.20, c:'rgba(80,30,200,0.15)' },   // azul inf-dir
-        { x:.55, y:.20, r:.18, c:'rgba(120,60,230,0.13)' },  // violeta topo
-        { x:.20, y:.55, r:.18, c:'rgba(255,90,180,0.10)' },  // pink esq
-        { x:.60, y:.75, r:.20, c:'rgba(70,25,180,0.14)' },   // azul base
+        {x:.48,y:.46,r:.38,c:'rgba(90,45,200,0.28)'},{x:.22,y:.30,r:.22,c:'rgba(60,30,180,0.18)'},
+        {x:.75,y:.28,r:.20,c:'rgba(100,40,220,0.16)'},{x:.30,y:.68,r:.22,c:'rgba(255,109,186,0.12)'},
+        {x:.72,y:.65,r:.20,c:'rgba(80,30,200,0.15)'},{x:.55,y:.20,r:.18,c:'rgba(120,60,230,0.13)'},
+        {x:.20,y:.55,r:.18,c:'rgba(255,90,180,0.10)'},{x:.60,y:.75,r:.20,c:'rgba(70,25,180,0.14)'},
       ];
-      dusts.forEach(({ x, y, r, c }) => {
-        const g = ctx.createRadialGradient(x*S, y*S, 0, x*S, y*S, r*S);
-        g.addColorStop(0, c);
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, S, S);
+      dusts.forEach(({x,y,r,c}) => {
+        const g = ctx.createRadialGradient(x*S,y*S,0,x*S,y*S,r*S);
+        g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.fillRect(0,0,S,S);
       });
 
-      // ── Estrelas de fundo ─────────────────────────────────
       for (let i = 0; i < 280; i++) {
-        const angle = rand() * Math.PI * 2;
-        const r = Math.sqrt(rand()) * S * .495;
-        const x = S/2 + Math.cos(angle) * r;
-        const y = S/2 + Math.sin(angle) * r;
-        const sz = rand() * 1.3 + 0.12;
-        const a  = rand() * 0.60 + 0.20;
-        ctx.beginPath();
-        ctx.arc(x, y, sz, 0, Math.PI * 2);
-        ctx.fillStyle = rand() > .6
-          ? `rgba(210,220,255,${a.toFixed(2)})`
-          : `rgba(255,255,255,${a.toFixed(2)})`;
+        const angle = rand()*Math.PI*2;
+        const r = Math.sqrt(rand())*S*.495;
+        const x = S/2+Math.cos(angle)*r, y = S/2+Math.sin(angle)*r;
+        const sz = rand()*1.3+0.12, a = rand()*0.60+0.20;
+        ctx.beginPath(); ctx.arc(x,y,sz,0,Math.PI*2);
+        ctx.fillStyle = rand()>.6 ? `rgba(210,220,255,${a.toFixed(2)})` : `rgba(255,255,255,${a.toFixed(2)})`;
         ctx.fill();
       }
 
-      // ── Constelações — sem nomes, todas com mesmo brilho ──
       CONS.forEach(con => {
-        const pts = con.stars.map(([sx, sy]) => [
-          (con.cx + (sx - .5) * con.sc) * S,
-          (con.cy + (sy - .5) * con.sc) * S,
-        ]);
-
-        ctx.strokeStyle = 'rgba(200,220,255,0.48)';
-        ctx.lineWidth   = 0.85;
-        con.lines.forEach(([a, b]) => {
-          ctx.beginPath();
-          ctx.moveTo(pts[a][0], pts[a][1]);
-          ctx.lineTo(pts[b][0], pts[b][1]);
-          ctx.stroke();
-        });
-
-        pts.forEach(([x, y]) => {
-          const glow = ctx.createRadialGradient(x, y, 0, x, y, 7);
-          glow.addColorStop(0, 'rgba(210,225,255,0.28)');
-          glow.addColorStop(1, 'rgba(210,225,255,0)');
-          ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2);
-          ctx.fillStyle = glow; ctx.fill();
-
-          ctx.beginPath(); ctx.arc(x, y, 1.9, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(235,245,255,0.95)';
-          ctx.fill();
+        const pts = con.stars.map(([sx,sy]) => [(con.cx+(sx-.5)*con.sc)*S,(con.cy+(sy-.5)*con.sc)*S]);
+        ctx.strokeStyle='rgba(200,220,255,0.48)'; ctx.lineWidth=0.85;
+        con.lines.forEach(([a,b]) => { ctx.beginPath(); ctx.moveTo(pts[a][0],pts[a][1]); ctx.lineTo(pts[b][0],pts[b][1]); ctx.stroke(); });
+        pts.forEach(([x,y]) => {
+          const glow = ctx.createRadialGradient(x,y,0,x,y,7);
+          glow.addColorStop(0,'rgba(210,225,255,0.28)'); glow.addColorStop(1,'rgba(210,225,255,0)');
+          ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
+          ctx.beginPath(); ctx.arc(x,y,1.9,0,Math.PI*2); ctx.fillStyle='rgba(235,245,255,0.95)'; ctx.fill();
         });
       });
 
-      // ── Vinheta circular ──────────────────────────────────
-      const vig = ctx.createRadialGradient(S/2, S/2, S*.22, S/2, S/2, S*.50);
-      vig.addColorStop(0, 'rgba(0,0,0,0)');
-      vig.addColorStop(1, 'rgba(4,4,14,0.72)');
-      ctx.fillStyle = vig;
-      ctx.fillRect(0, 0, S, S);
+      const vig = ctx.createRadialGradient(S/2,S/2,S*.22,S/2,S/2,S*.50);
+      vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(4,4,14,0.72)');
+      ctx.fillStyle=vig; ctx.fillRect(0,0,S,S);
     });
   }
 
-  /* ── Utilitários ─────────────────────────────────────── */
-  function setTxt(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-  }
-
+  /* ── Utilitários ────────────────────────────────────── */
+  function setTxt(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
   function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
-  function formatDate(dateStr) {
-    const [y, m, d] = dateStr.split('-');
-    return `${d}/${m}/${y}`;
-  }
-
+  function formatDate(dateStr) { const [y,m,d]=dateStr.split('-'); return `${d}/${m}/${y}`; }
   function stopAll() {
     if (counterInterval) clearInterval(counterInterval);
     const audio = document.getElementById('giftAudio');
@@ -1058,7 +931,6 @@
   }
   </script>
 
-  <!-- Cookie Consent Banner -->
   <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
     <span class="sm-cookie-icon">🍪</span>
     <p class="sm-cookie-text">
