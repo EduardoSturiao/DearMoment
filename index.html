@@ -49,77 +49,68 @@
   </script>
 
   <!-- NAVBAR -->
-  <section>
-    <header class="d2c_navbar sticky-top nav-section">
-      <div class="container">
-        <nav class="navbar navbar-expand-lg px-0 py-0" id="d2c_main_nav"> <a class="navbar-brand" href="./index.html">
-              <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="40" height="28">
-                <defs>
-                  <!-- Clip: metade superior (anel direito na frente) -->
-                  <clipPath id="sm-clip-top">
-                    <rect x="0" y="3" width="34" height="11"/>
-                  </clipPath>
-                  <!-- Clip: metade inferior (anel direito por trás) -->
-                  <clipPath id="sm-clip-bot">
-                    <rect x="0" y="14" width="34" height="13"/>
-                  </clipPath>
-                </defs>
+  <header class="sm-pill-nav" id="smPillNav">
+    <nav class="sm-pill">
+      <a class="sm-pill-logo" href="./index.html">
+        <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+          <defs>
+            <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+        </svg>
+        <span class="sm-pill-logo-name">SoulMates</span>
+      </a>
 
-                <!-- Anel direito — metade inferior (passa POR TRÁS do anel esquerdo) -->
-                <circle cx="22" cy="14" r="9"
-                        stroke="#ffb6d9" stroke-width="3.2" fill="none"
-                        clip-path="url(#sm-clip-bot)"/>
+      <ul class="sm-pill-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">Como funciona</a></li>
+        <li><a href="#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="#team">FAQ</a></li>
+      </ul>
 
-                <!-- Anel esquerdo — completo -->
-                <circle cx="12" cy="14" r="9"
-                        stroke="#ff6dba" stroke-width="3.2" fill="none"/>
-
-                <!-- Anel direito — metade superior (passa NA FRENTE do anel esquerdo) -->
-                <circle cx="22" cy="14" r="9"
-                        stroke="#ffb6d9" stroke-width="3.2" fill="none"
-                        clip-path="url(#sm-clip-top)"/>
-              </svg>
-              <span class="navbar-brand-name">SoulMates</span>
-            </a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-            aria-label="Toggle navigation"> <span><i class="fas fa-bars"></i></span> </button>
-          <div class="collapse navbar-collapse js-clone-nav justify-content-end">
-            <ul class="navbar-nav">
-              <li class="nav-item"> <a class="nav-link active" href="#home">home</li>
-              <li class="nav-item"> <a class="nav-link" href="#about">Como funciona</a> </li>
-              <li class="nav-item"> <a class="nav-link" href="#service">Planos</a> </li>
-              <li class="nav-item"> <a class="nav-link" href="./meus-presentes.html">Meus Presentes</a> </li>
-              <li class="nav-item"> <a class="nav-link" href="#team">FAQ</a> </li>
-
-              <li class="nav-item"> <a href="#contact" class="btn d-block d-lg-none"></a></li>
-            </ul>
-          </div><a href="./login.html" class="btn d-none d-lg-block login-btn">Login</a>
-        </nav>
-        <div class="collapse navbar-collapse d2c_mobile_view" id="navbarSupportedContent">
-          <div class="show_width container">
-            <div class="text-right"> <button class="navbar-toggler d2c_cross_btn p-0" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> <span><i
-                    class="fa fa-times"></i></span> </button> </div>
-
-                    <!-- Versao MOBILE -->
-            <div class="navbar px-0 d2c_mobile_view_body">
-              <div class="navbar-nav ml-auto">
-                <ul class="navbar-nav">
-                  <li class="nav-item"> <a class="nav-link" href="#about">Home</a> </li>
-                  <li class="nav-item"> <a class="nav-link" href="#service">Como Funciona</a> </li>
-                  <li class="nav-item"> <a class="nav-link" href="#portfolio">Planos</a> </li>
-                  <li class="nav-item"> <a class="nav-link" href="#portfolio">Meus Presentes</a> </li>
-                  <li class="nav-item"> <a class="nav-link" href="#team">FAQ</a> </li>
-                  <li class="nav-item"> <a href="login.html" class="btn d-block d-lg-none">Login</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="sm-pill-right">
+        <a href="./login.html" class="sm-pill-login">Login</a>
+        <button class="sm-pill-burger" id="smBurger" aria-label="Menu">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+            <rect y="0" width="16" height="2" rx="1"/>
+            <rect y="5" width="16" height="2" rx="1"/>
+            <rect y="10" width="16" height="2" rx="1"/>
+          </svg>
+        </button>
       </div>
-    </header>
-  </section>
+    </nav>
+
+    <div class="sm-pill-mobile" id="smMobileMenu">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">Como funciona</a></li>
+        <li><a href="#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="#team">FAQ</a></li>
+        <li><a href="./login.html" class="sm-pill-mobile-login">Login</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <script>
+    (function () {
+      const burger = document.getElementById('smBurger');
+      const menu   = document.getElementById('smMobileMenu');
+      const nav    = document.getElementById('smPillNav');
+      if (!burger || !menu) return;
+      burger.addEventListener('click', () => menu.classList.toggle('open'));
+      document.addEventListener('click', e => {
+        if (!nav.contains(e.target)) menu.classList.remove('open');
+      });
+      menu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => menu.classList.remove('open'));
+      });
+    })();
+  </script>
 
   <!--HERO-->
 

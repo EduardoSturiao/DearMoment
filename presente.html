@@ -139,6 +139,12 @@
                        : 'screenCapsulas';
     const nextOfGallery = hasConstellation ? 'screenConstellation' : 'screenCapsulas';
 
+    /* Determina o screen anterior de cada página */
+    const prevOfGallery       = 'screenPlayer';
+    const prevOfConstellation = hasGallery ? 'screenGallery' : 'screenPlayer';
+    const prevOfCapsulas      = hasConstellation ? 'screenConstellation'
+                              : hasGallery ? 'screenGallery' : 'screenPlayer';
+
     /* ── Intro screen ── */
     const revealHTML = `
       <div id="screenReveal" class="pg-screen">
@@ -233,6 +239,7 @@
             <button class="pg-next-btn" data-to="${nextOfPlayer}">
               ${hasGallery ? '📸 Ver nossas fotos' : hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
             </button>
+            <button class="pg-back-btn" data-back="screenReveal">← Voltar</button>
           </div>
 
           <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
@@ -245,69 +252,50 @@
       'eternamente','só nós dois','meu favorito','tão perfeito',
       'você e eu','nosso momento','inesquecível','de coração'];
 
-    const CURVES = [
-      'M0,22 Q100,48 200,22 Q300,0 400,22',
-      'M0,18 Q130,4 200,32 Q270,52 400,16',
-      'M0,30 Q80,8 200,36 Q320,56 400,20',
-    ];
+    function buildCarouselCards() {
+      return galleryPhotos.map((src, i) => `
+        <div class="cp-card${i === 0 ? ' cp-active' : ''}" data-index="${i}" style="--cp-delay:${i * 85}ms">
+          <img class="cp-card-img" src="${escHtml(src)}" alt="Foto ${i + 1}" loading="lazy">
+          <div class="cp-overlay">
+            <p class="cp-caption">${escHtml(CAPTIONS[i % CAPTIONS.length])}</p>
+            <span class="cp-tap-hint">↑ toque para ampliar</span>
+          </div>
+        </div>`).join('');
+    }
 
-    function buildFairyLights() {
-      if (!galleryPhotos.length) return '';
-      let rows = '';
-      for (let ri = 0; ri < galleryPhotos.length; ri += 2) {
-        const pair = galleryPhotos.slice(ri, ri + 2);
-        const curve = CURVES[ri % CURVES.length];
-        const xPos = pair.length === 1 ? [45] : [20, 62];
-
-        const lightCount = 20;
-        let lightsHTML = '';
-        for (let k = 0; k < lightCount; k++) {
-          const x = (k / lightCount * 92 + 4).toFixed(1);
-          const delay = (k * 0.15 + (k % 3) * 0.4).toFixed(2);
-          const size  = (3 + (k % 3) * 1.2).toFixed(1);
-          lightsHTML += `<span class="fl-light" style="left:${x}%;--fl-d:${delay}s;--fl-s:${size}px"></span>`;
-        }
-
-        const polaroidsHTML = pair.map((src, j) => {
-          const caption = CAPTIONS[(ri + j) % CAPTIONS.length];
-          const rot = j === 0 ? -3 + (ri % 2) * 1.5 : 2.5 - (ri % 2) * 1.2;
-          return `
-            <div class="fl-polaroid gift-gallery-thumb"
-                 data-src="${escHtml(src)}"
-                 data-index="${ri + j}"
-                 style="left:${xPos[j]}%;--fl-rot:${rot}deg">
-              <div class="fl-pin"></div>
-              <div class="fl-photo-wrap">
-                <img src="${escHtml(src)}" alt="Foto ${ri + j + 1}" loading="lazy">
-              </div>
-              <p class="fl-caption">${escHtml(caption)}</p>
-            </div>`;
-        }).join('');
-
-        rows += `
-          <div class="fl-row">
-            <svg class="fl-rope" viewBox="0 0 400 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="${curve}" stroke="#c4a44a" stroke-width="1.4" fill="none" opacity="0.75"/>
-            </svg>
-            <div class="fl-lights-wrap">${lightsHTML}</div>
-            ${polaroidsHTML}
-          </div>`;
-      }
-      return rows;
+    function buildDots() {
+      return galleryPhotos.map((_, i) =>
+        `<div class="cp-dot${i === 0 ? ' cp-dot-active' : ''}" data-index="${i}"></div>`
+      ).join('');
     }
 
     const galleryHTML = hasGallery ? `
-      <div id="screenGallery" class="pg-screen pg-hidden fl-page">
-        <div class="fl-header">
-          <h2 class="fl-title">Eu e você</h2>
+      <div id="screenGallery" class="pg-screen pg-hidden">
+        <div class="cp-page">
+          <div class="cp-ambient" id="cpAmbient"></div>
+          <div class="cp-vignette"></div>
+          <div class="cp-header">
+            <p class="cp-eyebrow">Nossa história em fotos</p>
+            <h2 class="cp-title">Eu e você</h2>
+            <p class="cp-title-sub">deslize para navegar</p>
+          </div>
+          <div class="cp-wrap" id="cpWrap">
+            <div class="cp-track" id="cpTrack">${buildCarouselCards()}</div>
+          </div>
+          <div class="cp-controls">
+            <button class="cp-arrow" id="cpPrev" aria-label="Anterior" disabled>&#8249;</button>
+            <div class="cp-dots" id="cpDots">${buildDots()}</div>
+            <button class="cp-arrow" id="cpNext" aria-label="Próxima"${galleryPhotos.length <= 1 ? ' disabled' : ''}>&#8250;</button>
+          </div>
+          <p class="cp-counter" id="cpCounter">1 / ${galleryPhotos.length}</p>
+          <div class="pg-next-wrap">
+            <button class="pg-next-btn" data-to="${nextOfGallery}">
+              ${hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
+            </button>
+            <button class="pg-back-btn" data-back="${prevOfGallery}">← Voltar</button>
+          </div>
+          <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
         </div>
-        <div class="fl-stage">${buildFairyLights()}</div>
-        <div class="pg-next-wrap">
-          <button class="pg-next-btn" data-to="${nextOfGallery}">
-            ${hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
-          </button>
-        </div>
-        <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
       </div>` : '';
 
     /* ── Constellation page ── */
@@ -335,6 +323,7 @@
               <span class="pg-next-icon">💌</span>
               Tem algo guardado para você
             </button>
+            <button class="pg-back-btn" data-back="${prevOfConstellation}">← Voltar</button>
           </div>
           <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
         </div>
@@ -412,7 +401,10 @@
             </button>
           </div>
           ${cartaHTML}
-          <footer class="gift-footer" style="margin-top:48px;position:relative;z-index:1">
+          <div class="pg-next-wrap" style="padding-top:40px">
+            <button class="pg-back-btn" data-back="${prevOfCapsulas}">← Voltar</button>
+          </div>
+          <footer class="gift-footer" style="margin-top:16px;position:relative;z-index:1">
             <p>Criado com ❤ no SoulMates</p>
             <a href="./index.html">Criar o meu presente →</a>
           </footer>
@@ -425,7 +417,7 @@
     setupPlayer(g);
     setupNavigation(g);
     setupCapsulasCarta(g);
-    setupGallery();
+    setupCarousel(g);
     if (hasConstellation) setupConstellation(g.startDate);
   }
 
@@ -439,7 +431,8 @@
       if (!from || !to) return;
       from.classList.add('pg-exit');
       setTimeout(() => {
-        from.style.display = 'none';
+        from.classList.add('pg-hidden');
+        from.classList.remove('pg-exit', 'pg-enter');
         to.classList.remove('pg-hidden');
         to.classList.add('pg-enter');
         window.scrollTo({ top: 0, behavior: 'instant' });
@@ -475,6 +468,13 @@
       btn.addEventListener('click', () => {
         const screen = btn.closest('.pg-screen');
         if (screen) transitionTo(screen.id, btn.dataset.to);
+      });
+    });
+
+    document.querySelectorAll('.pg-back-btn[data-back]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const screen = btn.closest('.pg-screen');
+        if (screen) transitionTo(screen.id, btn.dataset.back);
       });
     });
 
@@ -764,69 +764,186 @@
     }
   }
 
-  /* ── 8. Galeria stories viewer ──────────────────────── */
-  function setupGallery() {
-    const thumbs  = [...document.querySelectorAll('.gift-gallery-thumb')];
-    if (!thumbs.length) return;
-    const photos  = thumbs.map(t => t.dataset.src);
-    const overlay = document.getElementById('storiesOverlay');
-    const barsEl  = document.getElementById('storiesBars');
-    const closeBtn= document.getElementById('storiesClose');
-    const imgEl   = document.getElementById('storiesImg');
-    const tapLeft = document.getElementById('storiesTapLeft');
-    const tapRight= document.getElementById('storiesTapRight');
-    const counter = document.getElementById('storiesCounter');
-    const DURATION= 4000;
-    let current = 0, timer = null;
+  /* ── 8. Carousel de fotos + stories viewer ─────────── */
+  function setupCarousel(g) {
+    const track   = document.getElementById('cpTrack');
+    const wrap    = document.getElementById('cpWrap');
+    const dotsEl  = document.getElementById('cpDots');
+    const counter = document.getElementById('cpCounter');
+    const ambient = document.getElementById('cpAmbient');
+    const prevBtn = document.getElementById('cpPrev');
+    const nextBtn = document.getElementById('cpNext');
+    if (!track || !wrap) return;
+
+    const cards  = () => [...track.querySelectorAll('.cp-card')];
+    const photos = cards().map(c => c.querySelector('img').src);
+    const total  = photos.length;
+    if (!total) return;
+
+    let current = 0;
+
+    function goTo(index, animate) {
+      if (index < 0 || index >= total) return;
+      const gap = 18;
+
+      cards().forEach((c, i) => {
+        c.classList.remove('cp-active', 'cp-adj');
+        const d = Math.abs(i - index);
+        if (d === 0) c.classList.add('cp-active');
+        else if (d === 1) c.classList.add('cp-adj');
+      });
+
+      /* Caption fade-in na foto ativa */
+      const cap = cards()[index].querySelector('.cp-caption');
+      if (cap) {
+        cap.classList.remove('cp-cap-in');
+        void cap.offsetWidth;
+        cap.classList.add('cp-cap-in');
+      }
+
+      if (dotsEl) [...dotsEl.querySelectorAll('.cp-dot')]
+        .forEach((d, i) => d.classList.toggle('cp-dot-active', i === index));
+
+      if (counter) counter.textContent = `${index + 1} / ${total}`;
+      if (prevBtn) prevBtn.disabled = index === 0;
+      if (nextBtn) nextBtn.disabled = index === total - 1;
+
+      const cardW  = cards()[0].offsetWidth;
+      const wrapW  = wrap.offsetWidth;
+      const offset = wrapW / 2 - cardW / 2 - index * (cardW + gap);
+      track.style.transition = animate === false
+        ? 'none'
+        : 'transform 0.52s cubic-bezier(0.4,0,0.2,1)';
+      track.style.transform = `translateX(${offset}px)`;
+
+      if (ambient && photos[index]) {
+        ambient.style.backgroundImage = `url(${photos[index]})`;
+        requestAnimationFrame(() => ambient.classList.add('cp-ready'));
+      }
+
+      current = index;
+    }
+
+    function triggerEntrance() {
+      const cs = cards();
+      cs.forEach(c => {
+        c.classList.remove('cp-entering');
+        void c.offsetWidth;
+        c.classList.add('cp-entering');
+      });
+      goTo(0, false);
+    }
+
+    /* Dispara entrada ao abrir a tela */
+    const galleryScreen = document.getElementById('screenGallery');
+    if (galleryScreen) {
+      new MutationObserver(() => {
+        if (!galleryScreen.classList.contains('pg-hidden')) triggerEntrance();
+      }).observe(galleryScreen, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    goTo(0, false);
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goTo(current - 1, true));
+    if (nextBtn) nextBtn.addEventListener('click', () => goTo(current + 1, true));
+
+    if (dotsEl) dotsEl.addEventListener('click', e => {
+      const dot = e.target.closest('.cp-dot');
+      if (dot) goTo(parseInt(dot.dataset.index), true);
+    });
+
+    track.addEventListener('click', e => {
+      const card = e.target.closest('.cp-card');
+      if (!card) return;
+      const idx = parseInt(card.dataset.index);
+      if (idx !== current) goTo(idx, true);
+      else openStories(idx);
+    });
+
+    let tsX = 0, tsY = 0;
+    track.addEventListener('touchstart', e => {
+      tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+    }, { passive: true });
+    track.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - tsX;
+      const dy = Math.abs(e.changedTouches[0].clientY - tsY);
+      if (Math.abs(dx) > 44 && dy < 70) goTo(current + (dx < 0 ? 1 : -1), true);
+    });
+
+    document.addEventListener('keydown', e => {
+      const scr = document.getElementById('screenGallery');
+      if (!scr || scr.classList.contains('pg-hidden')) return;
+      if (e.key === 'ArrowLeft')  goTo(current - 1, true);
+      if (e.key === 'ArrowRight') goTo(current + 1, true);
+    });
+
+    let resizeT;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => goTo(current, false), 80);
+    });
+
+    /* Stories viewer (toque na foto ativa → fullscreen) */
+    const overlay  = document.getElementById('storiesOverlay');
+    const barsEl   = document.getElementById('storiesBars');
+    const closeBtn = document.getElementById('storiesClose');
+    const imgEl    = document.getElementById('storiesImg');
+    const tapLeft  = document.getElementById('storiesTapLeft');
+    const tapRight = document.getElementById('storiesTapRight');
+    const stCnt    = document.getElementById('storiesCounter');
+    const DURATION = 4500;
+    let stCur = 0, stTimer = null;
 
     function openStories(index) {
-      current = index;
+      if (!overlay) return;
+      stCur = index;
       overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
-      showStory(current);
+      showSlide(stCur);
     }
     function closeStories() {
+      if (!overlay) return;
       overlay.classList.remove('open');
       document.body.style.overflow = '';
-      clearTimeout(timer); imgEl.src = '';
+      clearTimeout(stTimer);
+      if (imgEl) imgEl.src = '';
     }
-    function showStory(index) {
-      clearTimeout(timer);
+    function showSlide(i) {
+      clearTimeout(stTimer);
+      if (!imgEl) return;
       imgEl.style.opacity = '0';
-      imgEl.src = photos[index];
+      imgEl.src = photos[i];
       imgEl.onload = () => { imgEl.style.opacity = '1'; };
-      counter.textContent = `${index + 1} / ${photos.length}`;
-      buildBars(index);
-      timer = setTimeout(() => advance(1), DURATION);
-    }
-    function buildBars(active) {
-      barsEl.innerHTML = photos.map((_, i) => {
-        const cls = i < active ? 'done' : i === active ? 'active' : '';
+      if (stCnt) stCnt.textContent = `${i + 1} / ${total}`;
+      if (barsEl) barsEl.innerHTML = photos.map((_, k) => {
+        const cls = k < i ? 'done' : k === i ? 'active' : '';
         return `<div class="stories-bar"><div class="stories-bar-fill ${cls}"></div></div>`;
       }).join('');
+      stTimer = setTimeout(() => advSt(1), DURATION);
     }
-    function advance(dir) {
-      const next = current + dir;
-      if (next < 0 || next >= photos.length) { closeStories(); return; }
-      current = next; showStory(current);
+    function advSt(dir) {
+      const n = stCur + dir;
+      if (n < 0 || n >= total) { closeStories(); return; }
+      stCur = n; showSlide(stCur);
     }
 
-    thumbs.forEach((t, i) => t.addEventListener('click', () => openStories(i)));
-    closeBtn.addEventListener('click', closeStories);
-    tapLeft.addEventListener('click',  () => advance(-1));
-    tapRight.addEventListener('click', () => advance(1));
+    if (closeBtn) closeBtn.addEventListener('click', closeStories);
+    if (tapLeft)  tapLeft.addEventListener('click',  () => advSt(-1));
+    if (tapRight) tapRight.addEventListener('click', () => advSt(1));
 
-    let touchStartX = 0;
-    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    overlay.addEventListener('touchend',   e => {
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(dx) > 40) advance(dx < 0 ? 1 : -1);
-    });
+    if (overlay) {
+      let stTsX = 0;
+      overlay.addEventListener('touchstart', e => { stTsX = e.touches[0].clientX; }, { passive: true });
+      overlay.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - stTsX;
+        if (Math.abs(dx) > 40) advSt(dx < 0 ? 1 : -1);
+      });
+    }
     document.addEventListener('keydown', e => {
-      if (!overlay.classList.contains('open')) return;
+      if (!overlay || !overlay.classList.contains('open')) return;
       if (e.key === 'Escape')     closeStories();
-      if (e.key === 'ArrowRight') advance(1);
-      if (e.key === 'ArrowLeft')  advance(-1);
+      if (e.key === 'ArrowRight') advSt(1);
+      if (e.key === 'ArrowLeft')  advSt(-1);
     });
   }
 
