@@ -1999,35 +1999,116 @@ h2 {
 
 .cta-inner {
   position: relative;
-  background: linear-gradient(135deg, #ff6dba 0%, #e0458e 60%, #b83070 100%);
-  border-radius: 24px;
-  padding: 72px 40px;
+  background: linear-gradient(135deg, #1e0f35 0%, #5c1f5a 45%, #b83070 100%);
+  border-radius: 28px;
+  padding: 72px 40px 60px;
   text-align: center;
   overflow: hidden;
+  box-shadow: 0 0 80px rgba(140, 40, 100, 0.3), 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
 /* brilho de fundo decorativo */
 .cta-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% -20%, rgba(255, 255, 255, 0.18) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 50% -10%, rgba(255, 255, 255, 0.14) 0%, transparent 60%);
   pointer-events: none;
 }
 
-.cta-hearts {
-  display: block;
-  font-size: 36px;
-  margin-bottom: 20px;
-  line-height: 1;
+/* anéis decorativos */
+.cta-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cta-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+}
+
+.cta-ring-1 {
+  width: 340px;
+  height: 340px;
+  top: -120px;
+  right: -80px;
+  animation: cta-ring-pulse 5s ease-in-out infinite;
+}
+
+.cta-ring-2 {
+  width: 220px;
+  height: 220px;
+  bottom: -70px;
+  left: -50px;
+  animation: cta-ring-pulse 6.5s ease-in-out infinite 1.2s;
+}
+
+.cta-ring-3 {
+  width: 140px;
+  height: 140px;
+  top: 30px;
+  left: 12%;
+  animation: cta-ring-pulse 7s ease-in-out infinite 2.5s;
+}
+
+@keyframes cta-ring-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.1); opacity: 0.4; }
+}
+
+/* social proof */
+.cta-social-proof {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-avatar-stack {
+  display: flex;
+}
+
+.cta-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  font-family: "Sora", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -9px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.cta-av:first-child {
+  margin-left: 0;
+}
+
+.cta-social-text {
+  font-family: "Sora", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .cta-heading {
   font-family: "Sora", sans-serif;
-  font-size: clamp(26px, 5vw, 44px);
+  font-size: clamp(28px, 5vw, 46px);
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
   margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .cta-sub {
@@ -2037,38 +2118,81 @@ h2 {
   max-width: 480px;
   margin: 0 auto 36px;
   line-height: 1.6;
+  position: relative;
+  z-index: 1;
 }
 
 .cta-btn {
   font-family: "Sora", sans-serif;
   font-size: 16px;
-  font-weight: 600;
-  background: #121820;
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-  padding: 14px 40px;
-  transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.2s;
+  font-weight: 700;
+  background: #fff;
+  color: #c0396e;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 44px;
+  transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(255,255,255,0.3);
+  letter-spacing: 0.2px;
+}
+
+.cta-btn:hover {
+  background: #fff0f8;
+  color: #9b2c58;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+}
+
+/* trust row */
+.cta-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 22px;
+  flex-wrap: wrap;
   position: relative;
   z-index: 1;
 }
 
-.cta-btn:hover {
-  background: #fff;
-  color: #b83070;
-  border-color: transparent;
-  transform: translateY(-2px);
+.cta-trust span {
+  font-family: "Sora", sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cta-trust-dot {
+  color: rgba(255, 255, 255, 0.35) !important;
+  font-size: 14px !important;
 }
 
 @media (max-width: 575px) {
   .cta-inner {
-    padding: 52px 24px;
-    border-radius: 16px;
+    padding: 52px 24px 44px;
+    border-radius: 20px;
   }
 
   .cta-btn {
     width: 100%;
-    padding: 14px 20px;
+    justify-content: center;
+    padding: 16px 20px;
+  }
+
+  .cta-trust-dot {
+    display: none;
+  }
+
+  .cta-trust {
+    gap: 10px;
   }
 }
 

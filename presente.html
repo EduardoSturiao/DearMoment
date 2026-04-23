@@ -168,6 +168,8 @@
       <div id="screenPlayer" class="pg-screen pg-hidden">
         <div class="sp-page">
 
+          <div class="sp-particles" id="spParticles"></div>
+
           <div class="sp-topbar">
             <span class="sp-topbar-chevron">⌄</span>
             <span class="sp-topbar-title">${escHtml(g.title || 'Para você ❤️')}</span>
@@ -254,10 +256,9 @@
 
     function buildCarouselCards() {
       return galleryPhotos.map((src, i) => `
-        <div class="cp-card${i === 0 ? ' cp-active' : ''}" data-index="${i}" style="--cp-delay:${i * 85}ms">
+        <div class="cp-card${i === 0 ? ' cp-active' : ''}" data-index="${i}" data-caption="${escHtml(CAPTIONS[i % CAPTIONS.length])}" style="--cp-delay:${i * 85}ms">
           <img class="cp-card-img" src="${escHtml(src)}" alt="Foto ${i + 1}" loading="lazy">
           <div class="cp-overlay">
-            <p class="cp-caption">${escHtml(CAPTIONS[i % CAPTIONS.length])}</p>
             <span class="cp-tap-hint">↑ toque para ampliar</span>
           </div>
         </div>`).join('');
@@ -282,6 +283,12 @@
           <div class="cp-wrap" id="cpWrap">
             <div class="cp-track" id="cpTrack">${buildCarouselCards()}</div>
           </div>
+
+          <div class="cp-glass-caption" id="cpGlassCaption">
+            <span class="cp-glass-quote" aria-hidden="true">"</span>
+            <span class="cp-glass-text" id="cpGlassText">${escHtml(CAPTIONS[0])}</span>
+          </div>
+
           <div class="cp-controls">
             <button class="cp-arrow" id="cpPrev" aria-label="Anterior" disabled>&#8249;</button>
             <div class="cp-dots" id="cpDots">${buildDots()}</div>
@@ -424,6 +431,7 @@
   /* ── 3. Navegação entre telas ───────────────────────── */
   function setupNavigation(g) {
     spawnRevealParticles();
+    spawnPlayerParticles();
 
     function transitionTo(fromId, toId) {
       const from = document.getElementById(fromId);
@@ -459,7 +467,7 @@
               });
               aud._readyToPlay = false;
             }
-          }, 450);
+          }, 950);
         }
       });
     }
@@ -498,6 +506,21 @@
       p.style.cssText = `left:${Math.random()*100}%;font-size:${10+Math.random()*14}px;animation-duration:${12+Math.random()*10}s;animation-delay:-${Math.random()*15}s`;
       wrap.appendChild(p);
     }
+  }
+
+  function spawnPlayerParticles() {
+    const wrap = document.getElementById('spParticles');
+    if (!wrap) return;
+    const emojis = ['💕','✨','💫','🌸','💗','⭐'];
+    /* 6 partículas — 3 em cada lateral */
+    const positions = [4, 9, 14, 86, 91, 96];
+    emojis.forEach((emoji, i) => {
+      const p = document.createElement('div');
+      p.className = 'sp-particle';
+      p.textContent = emoji;
+      p.style.cssText = `left:${positions[i]}%;font-size:${8+Math.random()*6}px;animation-duration:${20+Math.random()*12}s;animation-delay:-${Math.random()*18}s`;
+      wrap.appendChild(p);
+    });
   }
 
   /* ── 4. Contador em tempo real ──────────────────────── */
@@ -775,10 +798,14 @@
     const nextBtn = document.getElementById('cpNext');
     if (!track || !wrap) return;
 
-    const cards  = () => [...track.querySelectorAll('.cp-card')];
-    const photos = cards().map(c => c.querySelector('img').src);
-    const total  = photos.length;
+    const cs     = [...track.querySelectorAll('.cp-card')];
+    const photos = cs.map(c => c.querySelector('img').src);
+    const total  = cs.length;
     if (!total) return;
+
+    const glassEl   = document.getElementById('cpGlassCaption');
+    const glassText = document.getElementById('cpGlassText');
+    const dots      = dotsEl ? [...dotsEl.querySelectorAll('.cp-dot')] : [];
 
     let current = 0;
 
@@ -786,34 +813,47 @@
       if (index < 0 || index >= total) return;
       const gap = 18;
 
-      cards().forEach((c, i) => {
+      /* Lê layout ANTES de escrever classes — evita forced reflow */
+      const cardW = cs[0].offsetWidth;
+      const wrapW = wrap.offsetWidth;
+
+      cs.forEach((c, i) => {
+        const wasActive = c.classList.contains('cp-active');
         c.classList.remove('cp-active', 'cp-adj');
         const d = Math.abs(i - index);
         if (d === 0) c.classList.add('cp-active');
         else if (d === 1) c.classList.add('cp-adj');
+        /* Limpa animation inline do card que saiu de ativo */
+        if (wasActive && i !== index) {
+          const img = c.querySelector('.cp-card-img');
+          if (img) img.style.animation = '';
+        }
       });
 
-      /* Caption fade-in na foto ativa */
-      const cap = cards()[index].querySelector('.cp-caption');
-      if (cap) {
-        cap.classList.remove('cp-cap-in');
-        void cap.offsetWidth;
-        cap.classList.add('cp-cap-in');
+      /* Glass caption — fade out → troca texto → fade in */
+      if (glassEl && glassText) {
+        const newCaption = cs[index].dataset.caption || '';
+        if (animate === false) {
+          glassText.textContent = newCaption;
+        } else {
+          glassEl.classList.add('cp-glass-fade');
+          setTimeout(() => {
+            glassText.textContent = newCaption;
+            glassEl.classList.remove('cp-glass-fade');
+          }, 190);
+        }
       }
 
-      if (dotsEl) [...dotsEl.querySelectorAll('.cp-dot')]
-        .forEach((d, i) => d.classList.toggle('cp-dot-active', i === index));
+      dots.forEach((d, i) => d.classList.toggle('cp-dot-active', i === index));
 
       if (counter) counter.textContent = `${index + 1} / ${total}`;
       if (prevBtn) prevBtn.disabled = index === 0;
       if (nextBtn) nextBtn.disabled = index === total - 1;
 
-      const cardW  = cards()[0].offsetWidth;
-      const wrapW  = wrap.offsetWidth;
       const offset = wrapW / 2 - cardW / 2 - index * (cardW + gap);
       track.style.transition = animate === false
         ? 'none'
-        : 'transform 0.52s cubic-bezier(0.4,0,0.2,1)';
+        : 'transform 0.38s cubic-bezier(0.4,0,0.2,1)';
       track.style.transform = `translateX(${offset}px)`;
 
       if (ambient && photos[index]) {
@@ -821,11 +861,31 @@
         requestAnimationFrame(() => ambient.classList.add('cp-ready'));
       }
 
+      /* Parallax: image entrance + card counter-nudge */
+      if (animate !== false) {
+        const dir      = index > current ? 'right' : 'left';
+        const animName = dir === 'right' ? 'cpImgFromRight' : 'cpImgFromLeft';
+        const img      = cs[index].querySelector('.cp-card-img');
+        const card     = cs[index];
+        if (img) {
+          img.style.animation = 'none';
+          requestAnimationFrame(() => {
+            /* Guard: só aplica se este card ainda for o ativo */
+            if (card.classList.contains('cp-active')) {
+              img.style.animation = `${animName} 0.52s cubic-bezier(0.34,1.1,0.64,1) both`;
+            }
+          });
+        }
+        card.style.translate = dir === 'right' ? '6px 0' : '-6px 0';
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => { card.style.translate = '0 0'; })
+        );
+      }
+
       current = index;
     }
 
     function triggerEntrance() {
-      const cs = cards();
       cs.forEach(c => {
         c.classList.remove('cp-entering');
         void c.offsetWidth;
