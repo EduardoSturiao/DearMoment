@@ -1995,6 +1995,14 @@ function setupPlanSelection() {
       window.location.href = url;
     });
   }
+
+  /* Atalho de teste no header — abre o presente final com os exemplos hardcoded */
+  const btnPreviewTest = document.getElementById('btnPreviewTest');
+  if (btnPreviewTest) {
+    btnPreviewTest.addEventListener('click', () => {
+      window.location.href = getTemplateMeta(getFinalTemplate()).finalUrl;
+    });
+  }
 }
 
 function bindInputs() {
