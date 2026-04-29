@@ -50,6 +50,7 @@ const state = {
   songName:     '',
   artistName:   '',
   photos:      [],     // array de base64 strings (máx 6)
+  photoCaptions: [],   // array de strings (legenda opcional por foto)
   message:     '',
   capsulas:    ['', '', '', ''],
   extraPhoto:  null,   // base64 string
@@ -1342,6 +1343,7 @@ function setupPhotoUpload() {
     for (const file of toAdd) {
       const b64 = await fileToBase64(file);
       state.photos.push(b64);
+      state.photoCaptions.push('');
     }
 
     saveState();
@@ -1353,23 +1355,38 @@ function setupPhotoUpload() {
     grid.innerHTML = '';
     countEl.textContent = state.photos.length;
 
+    if (!Array.isArray(state.photoCaptions)) state.photoCaptions = [];
+    while (state.photoCaptions.length < state.photos.length) state.photoCaptions.push('');
+
     state.photos.forEach((src, i) => {
-      const thumb = document.createElement('div');
-      thumb.className = 'photo-thumb';
-      thumb.innerHTML = `
-        <img src="${src}" alt="Foto ${i + 1}" loading="lazy" />
-        <button class="btn-remove" data-index="${i}" title="Remover foto">✕</button>
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-thumb-wrap';
+      const captionVal = (state.photoCaptions[i] || '').replace(/"/g, '&quot;');
+      wrap.innerHTML = `
+        <div class="photo-thumb">
+          <img src="${src}" alt="Foto ${i + 1}" loading="lazy" />
+          <button class="btn-remove" data-index="${i}" title="Remover foto">✕</button>
+        </div>
+        <input class="photo-caption-input" type="text" maxlength="40" placeholder="Legenda (opcional)" value="${captionVal}" data-index="${i}" />
       `;
-      thumb.querySelector('.btn-remove').addEventListener('click', e => {
+      wrap.querySelector('.btn-remove').addEventListener('click', e => {
         e.stopPropagation();
         removePhoto(i);
       });
-      grid.appendChild(thumb);
+      const capInput = wrap.querySelector('.photo-caption-input');
+      capInput.addEventListener('input', () => {
+        state.photoCaptions[i] = capInput.value;
+        saveState();
+        updatePreview();
+      });
+      capInput.addEventListener('click', e => e.stopPropagation());
+      grid.appendChild(wrap);
     });
   }
 
   function removePhoto(index) {
     state.photos.splice(index, 1);
+    if (Array.isArray(state.photoCaptions)) state.photoCaptions.splice(index, 1);
     saveState();
     renderPhotosGrid();
     updatePreview();
@@ -2188,6 +2205,7 @@ function saveGift() {
       artistName: state.artistName,
       previewUrl: state.previewUrl,
       photos:     state.photos,
+      photoCaptions: Array.isArray(state.photoCaptions) ? state.photoCaptions.slice() : [],
       message:    state.message,
       capsulas:   state.capsulas.slice(),
       extraPhoto: state.extraPhoto,

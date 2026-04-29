@@ -980,6 +980,36 @@ body {
 }
 .photo-thumb .btn-remove:hover { background: #e33; }
 
+.photo-thumb-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.photo-thumb-wrap .photo-thumb {
+  aspect-ratio: 1;
+}
+.photo-caption-input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--dark-4, rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--text, #fff);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background 0.2s;
+}
+.photo-caption-input::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+.photo-caption-input:focus {
+  border-color: rgba(255,109,186,0.7);
+  background: rgba(255,109,186,0.05);
+}
+
 .photos-count {
   font-size: 12px;
   color: var(--text-muted);

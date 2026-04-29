@@ -42,6 +42,9 @@
   </div>
 
   <audio id="giftAudio" preload="auto"></audio>
+  <audio id="typewriterAudio" src="./assets/audio/typewriter.mp3" preload="auto" loop></audio>
+  <audio id="sparkleAudio"  src="./assets/audio/sparkle-whoosh.mp3"   preload="auto"></audio>
+  <audio id="sparkleAudio2" src="./assets/audio/sparkle-whoosh-2.mp3" preload="auto"></audio>
 
   <script>
   /* ================================================================
@@ -50,6 +53,91 @@
 
   let counterInterval = null;
   const WIZARD_STORAGE_KEY = 'soulmates_wizard_state';
+
+  /* ── SFX (Web Audio API — sem arquivos extras) ─────── */
+  const sfx = (() => {
+    let ctx = null;
+    function ensure() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      return ctx;
+    }
+    function pop() {
+      const a = ensure(); if (!a) return;
+      const t = a.currentTime;
+      const osc = a.createOscillator();
+      const gain = a.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(220, t + 0.18);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.18, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(gain).connect(a.destination);
+      osc.start(t); osc.stop(t + 0.24);
+    }
+    return { pop };
+  })();
+
+  /* Áudio da máquina de escrever — toca em loop durante a digitação da carta */
+  const typewriter = (() => {
+    const el = document.getElementById('typewriterAudio');
+    if (!el) return { start: () => {}, stop: () => {} };
+    el.volume = 0.45;
+    let fadeTimer = null;
+    function start() {
+      clearInterval(fadeTimer);
+      try { el.currentTime = 0; } catch (_) {}
+      el.volume = 0.45;
+      el.play().catch(() => {});
+    }
+    function stop() {
+      clearInterval(fadeTimer);
+      const start = el.volume;
+      const steps = 18;
+      let s = 0;
+      fadeTimer = setInterval(() => {
+        s++;
+        el.volume = Math.max(0, start * (1 - s / steps));
+        if (s >= steps) {
+          clearInterval(fadeTimer);
+          el.pause();
+          try { el.currentTime = 0; } catch (_) {}
+          el.volume = 0.45;
+        }
+      }, 28);
+    }
+    return { start, stop };
+  })();
+
+  /* SFX da abertura de cápsula — sparkle whooshes (alterna entre dois MP3s) */
+  const sparkle = (() => {
+    const els = [
+      document.getElementById('sparkleAudio'),
+      document.getElementById('sparkleAudio2'),
+    ].filter(Boolean);
+    if (!els.length) return { play: () => {} };
+    els.forEach(el => { el.volume = 0.55; });
+    let lastIdx = -1;
+    function play() {
+      let idx;
+      if (els.length === 1) {
+        idx = 0;
+      } else {
+        do { idx = Math.floor(Math.random() * els.length); }
+        while (idx === lastIdx);
+      }
+      lastIdx = idx;
+      const el = els[idx];
+      try { el.currentTime = 0; } catch (_) {}
+      el.play().catch(() => {});
+    }
+    return { play };
+  })();
   const params   = new URLSearchParams(window.location.search);
   const giftId   = params.get('id');
   const gifts    = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
@@ -69,6 +157,7 @@
       youtubeId: '', previewUrl: '',
       musicMoment: 0, songName: 'Nossa música', artistName: 'Artista',
       photos: ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'],
+      photoCaptions: ['nosso primeiro dia', 'aquela viagem inesquecível'],
       message: 'Cada dia ao seu lado é uma nova razão pra sorrir. Você é o meu lar.',
       capsulas: ['Lembra quando a gente se conheceu?', 'Nosso primeiro beijo foi mágico.', 'Quero envelhecer do seu lado.', ''],
       extraPhoto: './assets/images/demo-cover.jpg',
@@ -104,6 +193,7 @@
         musicMoment: Math.max(0, Number(wizard.musicMoment) || 0),
         songName: wizard.songName || '', artistName: wizard.artistName || '',
         photos: Array.isArray(wizard.photos) ? wizard.photos.filter(Boolean) : [],
+        photoCaptions: Array.isArray(wizard.photoCaptions) ? wizard.photoCaptions : [],
         message: wizard.message || '',
         capsulas: Array.isArray(wizard.capsulas) ? wizard.capsulas : ['', '', '', ''],
         extraPhoto: wizard.extraPhoto || '',
@@ -239,24 +329,36 @@
 
           <div class="pg-next-wrap">
             <button class="pg-next-btn" data-to="${nextOfPlayer}">
-              ${hasGallery ? '📸 Ver nossas fotos' : hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
+              ${hasGallery ? '📸 Lembra disso?' : hasConstellation ? '✨ Naquele dia, o céu...' : '💌 Tem algo só pra você ↓'}
             </button>
-            <button class="pg-back-btn" data-back="screenReveal">← Voltar</button>
           </div>
-
-          <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
         </div>
       </div>`;
 
     /* ── Gallery page ── */
-    const CAPTIONS = ['para sempre','o nosso lugar','te amo tanto','nossa história',
-      'memórias','junto de você','o melhor dia','sorrisos nossos',
-      'eternamente','só nós dois','meu favorito','tão perfeito',
-      'você e eu','nosso momento','inesquecível','de coração'];
+    const FALLBACK_CAPTIONS = [
+      'só nós dois 💖',
+      'meu lugar favorito 🌸',
+      'pra sempre ✨',
+      'eu e você 🥰',
+      'nosso momento 🌙',
+      'inesquecível 💫',
+      'meu sorriso 💕',
+      'te amo 💗',
+      'minha pessoa 🤍',
+      'amor sem fim 💞',
+      'memórias nossas 🌷',
+      'no seu olhar 👀💗',
+    ];
+    const userCaptions = Array.isArray(g.photoCaptions) ? g.photoCaptions : [];
+    const captionFor = i => {
+      const c = (userCaptions[i] || '').trim();
+      return c || FALLBACK_CAPTIONS[i % FALLBACK_CAPTIONS.length];
+    };
 
     function buildCarouselCards() {
       return galleryPhotos.map((src, i) => `
-        <div class="cp-card${i === 0 ? ' cp-active' : ''}" data-index="${i}" data-caption="${escHtml(CAPTIONS[i % CAPTIONS.length])}" style="--cp-delay:${i * 85}ms">
+        <div class="cp-card${i === 0 ? ' cp-active' : ''}" data-index="${i}" data-caption="${escHtml(captionFor(i))}" style="--cp-delay:${i * 85}ms">
           <img class="cp-card-img" src="${escHtml(src)}" alt="Foto ${i + 1}" loading="lazy">
           <div class="cp-overlay">
             <span class="cp-tap-hint">↑ toque para ampliar</span>
@@ -272,6 +374,7 @@
 
     const galleryHTML = hasGallery ? `
       <div id="screenGallery" class="pg-screen pg-hidden">
+        <button class="pg-back-chevron" data-back="${prevOfGallery}" aria-label="Voltar">‹</button>
         <div class="cp-page">
           <div class="cp-ambient" id="cpAmbient"></div>
           <div class="cp-vignette"></div>
@@ -286,7 +389,7 @@
 
           <div class="cp-glass-caption" id="cpGlassCaption">
             <span class="cp-glass-quote" aria-hidden="true">"</span>
-            <span class="cp-glass-text" id="cpGlassText">${escHtml(CAPTIONS[0])}</span>
+            <span class="cp-glass-text" id="cpGlassText">${escHtml(captionFor(0))}</span>
           </div>
 
           <div class="cp-controls">
@@ -297,17 +400,16 @@
           <p class="cp-counter" id="cpCounter">1 / ${galleryPhotos.length}</p>
           <div class="pg-next-wrap">
             <button class="pg-next-btn" data-to="${nextOfGallery}">
-              ${hasConstellation ? '✨ Continuar' : '💌 Tem algo guardado para você'}
+              ${hasConstellation ? '✨ Naquele dia, o céu...' : '💌 Tem algo só pra você ↓'}
             </button>
-            <button class="pg-back-btn" data-back="${prevOfGallery}">← Voltar</button>
           </div>
-          <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
         </div>
       </div>` : '';
 
     /* ── Constellation page ── */
     const constellationHTML = hasConstellation ? `
       <div id="screenConstellation" class="pg-screen pg-hidden">
+        <button class="pg-back-chevron" data-back="${prevOfConstellation}" aria-label="Voltar">‹</button>
         <div class="pg-wrap">
           <section class="gift-constellation" id="giftConstellation">
             <p class="gift-constellation-eyebrow">Quando as estrelas registraram o início desta história</p>
@@ -328,18 +430,16 @@
             <p class="pg-next-hint">Ainda tem mais para você...</p>
             <button class="pg-next-btn pg-next-special" data-to="screenCapsulas">
               <span class="pg-next-icon">💌</span>
-              Tem algo guardado para você
+              Tem algo só pra você ↓
             </button>
-            <button class="pg-back-btn" data-back="${prevOfConstellation}">← Voltar</button>
           </div>
-          <footer class="gift-footer"><p>Criado com ❤ no SoulMates</p><a href="./index.html">Criar o meu presente →</a></footer>
         </div>
       </div>` : '';
 
     /* ── Capsulas page ── */
     const capsulaEmojis  = ['💌', '🎵', '📍', '🔮'];
     const capsulaTextos  = (g.capsulas && g.capsulas.length) ? g.capsulas : ['', '', '', ''];
-    const capsulasTitles = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'O que vem aí'];
+    const capsulasTitles = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'Nosso futuro'];
 
     const capsulaItems = capsulaEmojis.map((emoji, i) => `
       <div class="gc-capsula" data-index="${i}">
@@ -377,10 +477,25 @@
             <div class="gc-selo"><span>🔒</span>Só para você</div>
           </div>
         </div>
+
+        <div class="gc-despedida" id="gcDespedida">
+          <p class="gc-despedida-line">Para sempre,</p>
+          <p class="gc-despedida-names">${escHtml(g.name1 || '')}${g.name1 && g.name2 ? ' &amp; ' : ''}${escHtml(g.name2 || '')}</p>
+          <div class="gc-despedida-actions">
+            <button class="gc-despedida-btn gc-despedida-primary" id="gcBtnRever" type="button">
+              <span aria-hidden="true">↻</span> Rever desde o início
+            </button>
+            <a class="gc-despedida-btn gc-despedida-secondary" href="./cadastro.html">
+              <span aria-hidden="true">✦</span> Criar minha conta
+            </a>
+            <p class="gc-despedida-hint">Crie sua conta para acessar este presente quando quiser e gerenciar os que você criar.</p>
+          </div>
+        </div>
       </section>` : '';
 
     const capsulaPageHTML = `
       <div id="screenCapsulas" class="pg-screen pg-hidden">
+        <button class="pg-back-chevron" data-back="${prevOfCapsulas}" aria-label="Voltar">‹</button>
         <canvas class="gc-star-canvas" id="gcStarCanvas"></canvas>
         <div class="gc-bg-particles" id="gcBgParticles"></div>
         <div class="gc-burst-wrap" id="gcBurstWrap"></div>
@@ -408,10 +523,20 @@
             </button>
           </div>
           ${cartaHTML}
-          <div class="pg-next-wrap" style="padding-top:40px">
-            <button class="pg-back-btn" data-back="${prevOfCapsulas}">← Voltar</button>
+
+          <div class="gc-modal-overlay" id="gcModalOverlay" aria-hidden="true">
+            <div class="gc-modal-card" role="dialog" aria-modal="true" aria-labelledby="gcModalTitle">
+              <button class="gc-modal-close" id="gcModalClose" type="button" aria-label="Fechar cápsula">✕</button>
+              <div class="gc-modal-glow"></div>
+              <div class="gc-modal-emoji" id="gcModalEmoji">💌</div>
+              <div class="gc-modal-num" id="gcModalNum">Cápsula</div>
+              <h3 class="gc-modal-title" id="gcModalTitle">Título</h3>
+              <p class="gc-modal-text" id="gcModalText">Texto</p>
+              <button class="gc-modal-cta" id="gcModalCta" type="button">Fechar e continuar</button>
+            </div>
           </div>
-          <footer class="gift-footer" style="margin-top:16px;position:relative;z-index:1">
+
+          <footer class="gift-footer gift-footer-final" id="gcFinalFooter" style="margin-top:16px;position:relative;z-index:1">
             <p>Criado com ❤ no SoulMates</p>
             <a href="./index.html">Criar o meu presente →</a>
           </footer>
@@ -419,6 +544,12 @@
       </div>`;
 
     root.innerHTML = revealHTML + playerHTML + galleryHTML + constellationHTML + capsulaPageHTML;
+
+    /* Move o modal pra body — evita que position:fixed seja contido por ancestrais com transform (.pg-enter) */
+    const modalEl = document.getElementById('gcModalOverlay');
+    if (modalEl && modalEl.parentElement !== document.body) {
+      document.body.appendChild(modalEl);
+    }
 
     if (g.startDate) startCounter(g.startDate);
     setupPlayer(g);
@@ -479,7 +610,7 @@
       });
     });
 
-    document.querySelectorAll('.pg-back-btn[data-back]').forEach(btn => {
+    document.querySelectorAll('.pg-back-btn[data-back], .pg-back-chevron[data-back]').forEach(btn => {
       btn.addEventListener('click', () => {
         const screen = btn.closest('.pg-screen');
         if (screen) transitionTo(screen.id, btn.dataset.back);
@@ -664,18 +795,63 @@
       setTimeout(() => c.classList.add('gc-visible'), 300 + i * 120);
     });
 
+    const capsulaEmojisLocal  = ['💌', '🎵', '📍', '🔮'];
+    const capsulasTitlesLocal = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'Nosso futuro'];
+    const capsulasTextosLocal = (g.capsulas && g.capsulas.length) ? g.capsulas : ['', '', '', ''];
+
+    const modalOverlay = document.getElementById('gcModalOverlay');
+    const modalClose   = document.getElementById('gcModalClose');
+    const modalCta     = document.getElementById('gcModalCta');
+    const modalEmoji   = document.getElementById('gcModalEmoji');
+    const modalNum     = document.getElementById('gcModalNum');
+    const modalTitle   = document.getElementById('gcModalTitle');
+    const modalText    = document.getElementById('gcModalText');
+
+    function openCapsulaModal(index) {
+      if (!modalOverlay) return;
+      modalEmoji.textContent = capsulaEmojisLocal[index] || '💌';
+      modalNum.textContent   = `Cápsula 0${index + 1}`;
+      modalTitle.textContent = capsulasTitlesLocal[index] || '';
+      modalText.textContent  = capsulasTextosLocal[index] || capsulasTitlesLocal[index] || '';
+      modalOverlay.classList.add('gc-modal-open');
+      modalOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeCapsulaModal() {
+      if (!modalOverlay) return;
+      modalOverlay.classList.remove('gc-modal-open');
+      modalOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      capsulas.forEach(c => c.classList.remove('gc-aberta'));
+    }
+    if (modalClose) modalClose.addEventListener('click', closeCapsulaModal);
+    if (modalCta)   modalCta.addEventListener('click',   closeCapsulaModal);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('gc-modal-open')) {
+        closeCapsulaModal();
+      }
+    });
+
     capsulas.forEach(c => {
       c.addEventListener('click', () => {
-        if (c.classList.contains('gc-aberta')) return;
+        if (c.classList.contains('gc-aberta')) return; /* já abrindo, ignora double-click */
+        const isFirst = c.dataset.wasOpened !== 'true';
+        const idx = parseInt(c.dataset.index, 10);
         c.classList.add('gc-aberta');
-        abertas++;
+        sparkle.play();
         spawnBurst(c);
-        const pct = (abertas / total) * 100;
-        if (progressFill) progressFill.style.width = pct + '%';
-        if (progressText) progressText.textContent = `${abertas} / ${total}`;
-        if (abertas === total && btnWrap) {
-          setTimeout(() => btnWrap.classList.add('gc-visivel'), 500);
+        if (isFirst) {
+          c.dataset.wasOpened = 'true';
+          abertas++;
+          const pct = (abertas / total) * 100;
+          if (progressFill) progressFill.style.width = pct + '%';
+          if (progressText) progressText.textContent = `${abertas} / ${total}`;
+          if (abertas === total && btnWrap) {
+            setTimeout(() => btnWrap.classList.add('gc-visivel'), 500 + 800);
+          }
         }
+        /* Espera o flip avançar antes de abrir o modal — combina com o sparkle whoosh */
+        setTimeout(() => openCapsulaModal(idx), 750);
       });
     });
 
@@ -707,6 +883,8 @@
       btnCarta.addEventListener('click', () => {
         if (btnWrap) btnWrap.style.display = 'none';
         cartaSection.classList.add('gc-carta-visivel');
+        const finalFooter = document.getElementById('gcFinalFooter');
+        if (finalFooter) finalFooter.classList.add('gc-final-visivel');
         requestAnimationFrame(() => requestAnimationFrame(() => {
           cartaSection.classList.add('gc-carta-animada');
           setTimeout(() => {
@@ -723,15 +901,24 @@
       const cursor     = document.getElementById('gcCursor');
       const assinatura = document.getElementById('gcCartaAssinatura');
       const selos      = document.getElementById('gcCartaSelos');
+      const despedida  = document.getElementById('gcDespedida');
       if (!corpo || !cursor) return;
       corpo.innerHTML = '';
       corpo.appendChild(cursor);
+      typewriter.start();
       let i = 0;
       function tick() {
         if (i >= texto.length) {
+          typewriter.stop();
           cursor.classList.add('gc-cursor-oculto');
           if (assinatura) assinatura.classList.add('gc-visivel');
           if (selos) selos.classList.add('gc-visivel');
+          if (despedida) {
+            setTimeout(() => {
+              despedida.classList.add('gc-visivel');
+              despedida.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 1100);
+          }
           return;
         }
         const ch = texto[i++];
@@ -741,6 +928,58 @@
         setTimeout(tick, delay);
       }
       tick();
+    }
+
+    /* Botão "Rever desde o início" — reseta cápsulas/carta e volta pro Reveal */
+    const btnRever = document.getElementById('gcBtnRever');
+    if (btnRever) {
+      btnRever.addEventListener('click', () => {
+        typewriter.stop();
+        closeCapsulaModal();
+        capsulas.forEach(c => {
+          c.classList.remove('gc-aberta');
+          delete c.dataset.wasOpened;
+        });
+        abertas = 0;
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressText) progressText.textContent = `0 / ${total}`;
+        if (btnWrap) {
+          btnWrap.classList.remove('gc-visivel');
+          btnWrap.style.display = '';
+        }
+        if (cartaSection) {
+          cartaSection.classList.remove('gc-carta-visivel', 'gc-carta-animada');
+          const corpo = document.getElementById('gcCartaCorpo');
+          const cursor = document.getElementById('gcCursor');
+          if (corpo) {
+            corpo.innerHTML = '';
+            if (cursor) {
+              cursor.classList.remove('gc-cursor-oculto');
+              corpo.appendChild(cursor);
+            }
+          }
+          const assinatura = document.getElementById('gcCartaAssinatura');
+          const selos      = document.getElementById('gcCartaSelos');
+          const despedida  = document.getElementById('gcDespedida');
+          if (assinatura) assinatura.classList.remove('gc-visivel');
+          if (selos)      selos.classList.remove('gc-visivel');
+          if (despedida)  despedida.classList.remove('gc-visivel');
+        }
+        const finalFooter = document.getElementById('gcFinalFooter');
+        if (finalFooter) finalFooter.classList.remove('gc-final-visivel');
+        const cap = document.getElementById('screenCapsulas');
+        const rev = document.getElementById('screenReveal');
+        if (cap && rev) {
+          cap.classList.add('pg-exit');
+          setTimeout(() => {
+            cap.classList.add('pg-hidden');
+            cap.classList.remove('pg-exit', 'pg-enter');
+            rev.classList.remove('pg-hidden');
+            rev.classList.add('pg-enter');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }, 420);
+        }
+      });
     }
   }
 

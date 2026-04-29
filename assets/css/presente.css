@@ -1610,7 +1610,7 @@ body {
   width: 100%;
   padding-top: 108%;
   transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.4,0.2,0.2,1);
+  transition: transform 1.25s cubic-bezier(0.34, 1.06, 0.5, 1);
 }
 .gc-capsula.gc-aberta .gc-capsula-inner {
   transform: rotateY(180deg);
@@ -1978,6 +1978,241 @@ body {
 }
 .gc-selo span { font-size: 16px; }
 
+/* ── Modal de cápsula ─────────────────────────────────── */
+.gc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 6, 18, 0.62);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.42s ease, backdrop-filter 0.42s ease;
+}
+.gc-modal-overlay.gc-modal-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.gc-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  padding: 56px 32px 36px;
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255,109,186,0.18) 0%, transparent 60%),
+    linear-gradient(160deg, #1a1226 0%, #0f0a18 100%);
+  border: 1px solid rgba(255,109,186,0.18);
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 0 80px rgba(255,109,186,0.12);
+  text-align: center;
+  transform: scale(0.86) translateY(18px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.4s ease;
+  overflow: hidden;
+}
+.gc-modal-overlay.gc-modal-open .gc-modal-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+.gc-modal-glow {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  width: 220px;
+  height: 220px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(255,109,186,0.35) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(20px);
+}
+.gc-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50%;
+  font-size: 13px;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.gc-modal-close:hover {
+  background: rgba(255,109,186,0.15);
+  color: #fff;
+  border-color: rgba(255,109,186,0.45);
+  transform: rotate(90deg);
+}
+.gc-modal-emoji {
+  position: relative;
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 6px 18px rgba(255,109,186,0.45));
+  animation: gcModalEmojiFloat 3.2s ease-in-out infinite;
+}
+@keyframes gcModalEmojiFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.gc-modal-num {
+  position: relative;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255,109,186,0.75);
+  margin-bottom: 10px;
+}
+.gc-modal-title {
+  position: relative;
+  font-family: var(--font-h, 'Sora', sans-serif);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #fff;
+  margin: 0 0 18px;
+}
+.gc-modal-text {
+  position: relative;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: rgba(255,255,255,0.88);
+  margin: 0 0 32px;
+  white-space: pre-wrap;
+}
+.gc-modal-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #ff6dba, #e8509c);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(255,109,186,0.32);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.gc-modal-cta:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(255,109,186,0.46);
+}
+
+/* ── Despedida pós-carta ──────────────────────────────── */
+.gc-despedida {
+  position: relative;
+  z-index: 1;
+  margin: 56px auto 24px;
+  padding: 36px 24px 32px;
+  max-width: 460px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 1.4s ease, transform 1.4s ease;
+  pointer-events: none;
+}
+.gc-despedida.gc-visivel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.gc-despedida-line {
+  font-family: var(--font-h, 'Sora', sans-serif);
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin: 0 0 8px;
+}
+.gc-despedida-names {
+  font-family: var(--font-h, 'Sora', sans-serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: linear-gradient(135deg, #ff6dba 0%, #d05be0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 32px;
+}
+.gc-despedida-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.gc-despedida-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+  padding: 13px 24px;
+  border-radius: 999px;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s, color 0.2s;
+}
+.gc-despedida-primary {
+  background: linear-gradient(135deg, #ff6dba, #e8509c);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(255,109,186,0.32);
+}
+.gc-despedida-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(255,109,186,0.45);
+}
+.gc-despedida-secondary {
+  background: transparent;
+  color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.gc-despedida-secondary:hover {
+  border-color: rgba(255,109,186,0.6);
+  color: #fff;
+  background: rgba(255,109,186,0.08);
+}
+.gc-despedida-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
 /* ── Tela de erro (gift não encontrado) ───────────────── */
 .gift-error {
   display: flex;
@@ -2098,6 +2333,53 @@ body {
   color: var(--text);
   border-color: rgba(255,255,255,0.25);
   background: rgba(255,255,255,0.05);
+}
+
+/* Chevron discreto (substitui ← Voltar) */
+.pg-screen { position: relative; }
+.pg-back-chevron {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  z-index: 50;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50%;
+  font-family: var(--font-b);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: color 0.25s, border-color 0.25s, background 0.25s, opacity 0.25s;
+  opacity: 0.55;
+}
+.pg-back-chevron:hover {
+  opacity: 1;
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.08);
+}
+
+/* Footer final — só aparece após a carta ser revelada */
+.gift-footer-final {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 1.2s ease 0.2s, transform 1.2s ease 0.2s;
+}
+.gift-footer-final.gc-final-visivel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .gc-back-wrap {
   display: flex;
