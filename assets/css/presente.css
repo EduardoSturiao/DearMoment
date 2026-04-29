@@ -2283,6 +2283,8 @@ body {
   gap: 12px;
   padding: 52px 24px 40px;
   text-align: center;
+  position: relative;
+  z-index: 2;
 }
 .pg-next-hint {
   font-size: 13px;
@@ -2304,6 +2306,10 @@ body {
   box-shadow: 0 8px 28px rgba(255,109,186,0.35), 0 0 60px rgba(255,109,186,0.12);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   letter-spacing: 0.01em;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
 }
 .pg-next-btn:hover {
   transform: scale(1.04) translateY(-2px);
@@ -2602,6 +2608,8 @@ body {
   margin: 0 auto;
   padding-bottom: 80px;
   position: relative;
+  z-index: 1;
+  isolation: isolate;
 }
 
 .sp-particles {
@@ -2609,7 +2617,7 @@ body {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  z-index: 0;
+  z-index: -1;
 }
 .sp-particle {
   position: absolute;

@@ -19,12 +19,14 @@
   gap: 18px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   opacity: 0;
+  pointer-events: none;
   transition: transform 0.4s ease, opacity 0.4s ease;
 }
 
 #sm-cookie-banner.sm-cookie-show {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
+  pointer-events: auto;
 }
 
 #sm-cookie-banner.sm-cookie-hide {
