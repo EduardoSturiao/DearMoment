@@ -138,6 +138,55 @@
     }
     return { play };
   })();
+
+  /* Controlador de volume da música — fade-in inicial + ducking durante a carta */
+  const musicDuck = (() => {
+    const el = document.getElementById('giftAudio');
+    if (!el) return { fadeIn: () => {}, duck: () => {}, unduck: () => {}, baseline: () => 1 };
+    const NORMAL = 1.0;
+    const DUCKED = 0.35;
+    let target   = NORMAL;
+    let raf      = null;
+    let watchdog = null;
+
+    function setVol(v) {
+      const clamped = Math.max(0, Math.min(1, v));
+      try { el.volume = clamped; } catch (_) {}
+    }
+
+    function tween(to, ms) {
+      if (raf) cancelAnimationFrame(raf);
+      target = to;
+      const from = el.volume;
+      const t0   = performance.now();
+      function frame() {
+        const k = Math.min(1, (performance.now() - t0) / ms);
+        // ease-in-out cúbico — transição mais natural
+        const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        setVol(from + (to - from) * e);
+        if (k < 1) { raf = requestAnimationFrame(frame); }
+        else       { raf = null; }
+      }
+      raf = requestAnimationFrame(frame);
+    }
+
+    /* Watchdog: se algo externo mexer no volume enquanto não estamos
+       tweenando, reassere o target. Garante que o ducking mantém. */
+    function startWatchdog() {
+      if (watchdog) return;
+      watchdog = setInterval(() => {
+        if (raf) return; /* tween em progresso, deixa quieto */
+        if (Math.abs(el.volume - target) > 0.02) setVol(target);
+      }, 120);
+    }
+
+    return {
+      fadeIn()   { setVol(0); target = NORMAL; tween(NORMAL, 2800); startWatchdog(); },
+      duck()     { tween(DUCKED, 700); startWatchdog(); },
+      unduck()   { tween(NORMAL, 900); startWatchdog(); },
+      baseline() { return target; }
+    };
+  })();
   const params   = new URLSearchParams(window.location.search);
   const giftId   = params.get('id');
   const gifts    = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
@@ -410,7 +459,9 @@
     const constellationHTML = hasConstellation ? `
       <div id="screenConstellation" class="pg-screen pg-hidden">
         <button class="pg-back-chevron" data-back="${prevOfConstellation}" aria-label="Voltar">‹</button>
-        <div class="pg-wrap">
+        <canvas class="gc-star-canvas" id="constStarCanvas"></canvas>
+        <div class="gc-bg-particles" id="constBgParticles"></div>
+        <div class="pg-wrap pg-wrap-const">
           <section class="gift-constellation" id="giftConstellation">
             <p class="gift-constellation-eyebrow">Quando as estrelas registraram o início desta história</p>
             <div class="gift-constellation-globe">
@@ -423,6 +474,41 @@
             </div>
             <div class="gift-constellation-footer">
               <p class="gift-constellation-date">${formatDate(g.startDate)}</p>
+
+              <div class="gift-constellation-facts" id="giftConstellationFacts">
+                <div class="gcf-fact">
+                  <span class="gcf-fact-icon">🗓️</span>
+                  <div class="gcf-fact-content">
+                    <span class="gcf-fact-label">era</span>
+                    <span class="gcf-fact-value" id="gcfFactDay">—</span>
+                  </div>
+                </div>
+                <div class="gcf-fact">
+                  <span class="gcf-fact-icon gcf-fact-icon-moon" aria-hidden="true">
+                    <span class="gcf-moon-body">
+                      <span class="gcf-moon-shadow"></span>
+                    </span>
+                  </span>
+                  <div class="gcf-fact-content">
+                    <span class="gcf-fact-label">a lua estava</span>
+                    <span class="gcf-fact-value" id="gcfFactMoon">—</span>
+                  </div>
+                </div>
+                <div class="gcf-fact">
+                  <span class="gcf-fact-icon" id="gcfFactZodiacIcon">♋︎</span>
+                  <div class="gcf-fact-content">
+                    <span class="gcf-fact-label">no signo de</span>
+                    <span class="gcf-fact-value" id="gcfFactZodiac">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="gift-constellation-cons-list">
+                <span class="gccl-label">visíveis no céu brasileiro nessa época do ano</span>
+                <span class="gccl-names" id="gcclNames">—</span>
+                <span class="gccl-hint">— olhe pra cima e tente encontrá-las ✨</span>
+              </p>
+
               <p class="gift-constellation-tagline">O universo já sabia...</p>
             </div>
           </section>
@@ -579,6 +665,13 @@
           initGcStarfield();
           initGcParticles();
         }
+        if (toId === 'screenConstellation') {
+          initBgStarfield(document.getElementById('constStarCanvas'), 200);
+          initBgParticles(document.getElementById('constBgParticles'), {
+            emojis: ['✨','💫','⭐','🌙','✦','✧','🌟'],
+            count: 12,
+          });
+        }
       }, 420);
     }
 
@@ -588,13 +681,17 @@
         transitionTo('screenReveal', 'screenPlayer');
         const aud = document.getElementById('giftAudio');
         if (aud && aud.src) {
+          const startWithFade = () => {
+            musicDuck.fadeIn();
+            aud.play().catch(() => {});
+          };
           setTimeout(() => {
             if (aud._readyToPlay) {
-              aud.play().catch(() => {});
+              startWithFade();
             } else {
               aud.addEventListener('canplay', function once() {
                 aud.removeEventListener('canplay', once);
-                aud.play().catch(() => {});
+                startWithFade();
               });
               aud._readyToPlay = false;
             }
@@ -733,33 +830,22 @@
     function closeYT() { overlay.classList.remove('open'); frame.src = ''; }
 
     if (previewUrl && audio) {
-      audio.src = previewUrl;
+      audio.src  = previewUrl;
+      audio.loop = true;
       audio.addEventListener('loadedmetadata', () => {
         try { audio.currentTime = getPreviewStart(); } catch (_) {}
         syncUI();
       });
       audio._readyToPlay = false;
-      audio.addEventListener('canplay', () => { audio._readyToPlay = true; });
-      const FADE = 3;
-      audio.addEventListener('timeupdate', () => {
-        syncUI();
-        const dur = Number(audio.duration);
-        if (Number.isFinite(dur) && dur > 0 && !audio.paused) {
-          const rem = dur - audio.currentTime;
-          audio.volume = rem <= FADE ? Math.max(0, rem/FADE) : 1;
-        }
-      });
-      audio.addEventListener('play',  () => { audio.volume = 1; syncUI(); });
-      audio.addEventListener('pause', syncUI);
-      audio.addEventListener('ended', () => {
-        audio.volume = 1;
-        try { audio.currentTime = getPreviewStart(); } catch (_) {}
-        syncUI();
-      });
+      audio.addEventListener('canplay',    () => { audio._readyToPlay = true; });
+      audio.addEventListener('timeupdate', syncUI);
+      audio.addEventListener('play',       syncUI);
+      audio.addEventListener('pause',      syncUI);
+      audio.addEventListener('seeked',     syncUI);
       btn.addEventListener('click', () => {
         if (overlay.classList.contains('open')) closeYT();
         if (audio.paused) {
-          audio.volume = 1;
+          audio.volume = musicDuck.baseline();
           if (audio.currentTime <= 0.05) { try { audio.currentTime = getPreviewStart(); } catch (_) {} }
           audio.play().catch(()=>{});
         } else { audio.pause(); }
@@ -906,10 +992,12 @@
       corpo.innerHTML = '';
       corpo.appendChild(cursor);
       typewriter.start();
+      musicDuck.duck();
       let i = 0;
       function tick() {
         if (i >= texto.length) {
           typewriter.stop();
+          musicDuck.unduck();
           cursor.classList.add('gc-cursor-oculto');
           if (assinatura) assinatura.classList.add('gc-visivel');
           if (selos) selos.classList.add('gc-visivel');
@@ -935,6 +1023,7 @@
     if (btnRever) {
       btnRever.addEventListener('click', () => {
         typewriter.stop();
+        musicDuck.unduck();
         closeCapsulaModal();
         capsulas.forEach(c => {
           c.classList.remove('gc-aberta');
@@ -983,10 +1072,12 @@
     }
   }
 
-  /* ── 7. Starfield + Particles (cápsulas) ────────────── */
-  function initGcStarfield() {
-    const canvas = document.getElementById('gcStarCanvas');
-    if (!canvas) return;
+  /* ── 7. Starfield + Particles (background reutilizável) ── */
+  const _bgInited = new WeakSet();
+  function initBgStarfield(canvas, count) {
+    if (!canvas || _bgInited.has(canvas)) return;
+    _bgInited.add(canvas);
+    const N = count || 160;
     const ctx = canvas.getContext('2d');
     let stars = [], W, H;
     function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
@@ -1005,16 +1096,17 @@
       });
       requestAnimationFrame(draw);
     }
-    resize(); createStars(160);
-    window.addEventListener('resize', () => { resize(); createStars(160); });
+    resize(); createStars(N);
+    window.addEventListener('resize', () => { resize(); createStars(N); });
     requestAnimationFrame(draw);
   }
 
-  function initGcParticles() {
-    const wrap = document.getElementById('gcBgParticles');
-    if (!wrap) return;
-    const emojis = ['💕','💗','✨','🌸','💫','⭐','🥀','💞'];
-    for (let i = 0; i < 14; i++) {
+  function initBgParticles(wrap, opts) {
+    if (!wrap || _bgInited.has(wrap)) return;
+    _bgInited.add(wrap);
+    const emojis = (opts && opts.emojis) || ['💕','💗','✨','🌸','💫','⭐','🥀','💞'];
+    const count  = (opts && opts.count)  || 14;
+    for (let i = 0; i < count; i++) {
       const el = document.createElement('div');
       el.className = 'gc-bg-particle';
       el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -1025,6 +1117,9 @@
       wrap.appendChild(el);
     }
   }
+
+  function initGcStarfield() { initBgStarfield(document.getElementById('gcStarCanvas')); }
+  function initGcParticles() { initBgParticles(document.getElementById('gcBgParticles')); }
 
   /* ── 8. Carousel de fotos + stories viewer ─────────── */
   function setupCarousel(g) {
@@ -1265,9 +1360,100 @@
     let seed = (d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate()) | 0;
     function rand() { seed = (Math.imul(seed,1664525)+1013904223)|0; return (seed>>>0)/4294967296; }
 
+    /* ── Substância: dia da semana, fase da lua, signo ── */
+    const DAYS_PT = [
+      { word: 'domingo',       art: 'um'  },
+      { word: 'segunda-feira', art: 'uma' },
+      { word: 'terça-feira',   art: 'uma' },
+      { word: 'quarta-feira',  art: 'uma' },
+      { word: 'quinta-feira',  art: 'uma' },
+      { word: 'sexta-feira',   art: 'uma' },
+      { word: 'sábado',        art: 'um'  },
+    ];
+    function moonPhase(date) {
+      /* Sincronizado com a Lua Nova de 06/01/2000 (UT) */
+      const known = Date.UTC(2000, 0, 6, 18, 14);
+      const diff  = (date.getTime() - known) / 86400000;
+      const cycle = 29.530588853;
+      const age   = ((diff % cycle) + cycle) % cycle;
+      if (age < 1.84566)  return { name: 'Lua Nova',         icon: '🌑' };
+      if (age < 5.53699)  return { name: 'Crescente',        icon: '🌒' };
+      if (age < 9.22831)  return { name: 'Quarto Crescente', icon: '🌓' };
+      if (age < 12.91963) return { name: 'Gibosa Crescente', icon: '🌔' };
+      if (age < 16.61096) return { name: 'Lua Cheia',        icon: '🌕' };
+      if (age < 20.30228) return { name: 'Gibosa Minguante', icon: '🌖' };
+      if (age < 23.99361) return { name: 'Quarto Minguante', icon: '🌗' };
+      if (age < 27.68493) return { name: 'Minguante',        icon: '🌘' };
+      return                     { name: 'Lua Nova',         icon: '🌑' };
+    }
+    function zodiacSign(date) {
+      const m = date.getMonth() + 1, dd = date.getDate();
+      /* U+FE0F força a renderização emoji colorida (em vez do glyph de texto) */
+      const VS = '️';
+      if ((m===3 && dd>=21) || (m===4 && dd<=19))  return { name: 'Áries',       icon: '♈'+VS };
+      if ((m===4 && dd>=20) || (m===5 && dd<=20))  return { name: 'Touro',       icon: '♉'+VS };
+      if ((m===5 && dd>=21) || (m===6 && dd<=20))  return { name: 'Gêmeos',      icon: '♊'+VS };
+      if ((m===6 && dd>=21) || (m===7 && dd<=22))  return { name: 'Câncer',      icon: '♋'+VS };
+      if ((m===7 && dd>=23) || (m===8 && dd<=22))  return { name: 'Leão',        icon: '♌'+VS };
+      if ((m===8 && dd>=23) || (m===9 && dd<=22))  return { name: 'Virgem',      icon: '♍'+VS };
+      if ((m===9 && dd>=23) || (m===10 && dd<=22)) return { name: 'Libra',       icon: '♎'+VS };
+      if ((m===10 && dd>=23) || (m===11 && dd<=21))return { name: 'Escorpião',   icon: '♏'+VS };
+      if ((m===11 && dd>=22) || (m===12 && dd<=21))return { name: 'Sagitário',   icon: '♐'+VS };
+      if ((m===12 && dd>=22) || (m===1 && dd<=19)) return { name: 'Capricórnio', icon: '♑'+VS };
+      if ((m===1 && dd>=20) || (m===2 && dd<=18))  return { name: 'Aquário',     icon: '♒'+VS };
+      return { name: 'Peixes', icon: '♓'+VS };
+    }
+    const dayInfo  = DAYS_PT[d.getDay()];
+    const moonInfo = moonPhase(d);
+    const signInfo = zodiacSign(d);
+    const factDay     = document.getElementById('gcfFactDay');
+    const factMoon    = document.getElementById('gcfFactMoon');
+    const factMoonIc  = document.getElementById('gcfFactMoonIcon');
+    const factZodiac  = document.getElementById('gcfFactZodiac');
+    const factZodIc   = document.getElementById('gcfFactZodiacIcon');
+    if (factDay)    factDay.textContent    = `${dayInfo.art} ${dayInfo.word}`;
+    if (factMoon)   factMoon.textContent   = moonInfo.name;
+    if (factMoonIc) factMoonIc.textContent = moonInfo.icon;
+    if (factZodiac) factZodiac.textContent = signInfo.name;
+    if (factZodIc)  factZodIc.textContent  = signInfo.icon;
+
+    /* ── Seleciona 3 constelações reais para a época do ano ──
+       Mapeia meses em que cada constelação é visível no céu noturno
+       brasileiro (hemisfério sul + norte do BR para as boreais).      */
+    const CONS_VIS = {
+      'Órion':       [11, 12, 1, 2, 3, 4],          // verão BR: alta no zênite jan-fev
+      'Leão':        [2, 3, 4, 5, 6],               // outono BR
+      'Cassiopeia':  [9, 10, 11, 12, 1, 2],         // visível no N do BR, primavera/verão
+      'Cruz do Sul': [1,2,3,4,5,6,7,8,9,10,11,12],  // circumpolar no S — sempre, melhor mai-jul
+      'Escorpião':   [5, 6, 7, 8, 9],               // inverno BR
+      'Ursa Maior':  [2, 3, 4, 5, 6],               // visível no N do BR, outono
+      'Gêmeos':      [12, 1, 2, 3, 4],              // verão BR
+    };
+    const monthOfDate = d.getMonth() + 1;
+    const visiblePool = CONS.filter(c => (CONS_VIS[c.name] || []).includes(monthOfDate));
+    /* Fallback de segurança: se algum mês não tiver 3, completa com Cruz do Sul (sempre visível) */
+    const pool = visiblePool.length >= 3 ? visiblePool.slice() : CONS.slice();
+    const selected = [];
+    while (selected.length < 3 && pool.length) {
+      const idx = Math.floor(rand() * pool.length);
+      selected.push(pool.splice(idx, 1)[0]);
+    }
+    const namesEl = document.getElementById('gcclNames');
+    if (namesEl) namesEl.textContent = selected.map(c => c.name).join(' · ');
+
     const arcCircle = document.querySelector('.gift-constellation-arc circle');
     const circ = 2 * Math.PI * 48.5;
     if (arcCircle) { arcCircle.style.strokeDasharray = circ; arcCircle.style.strokeDashoffset = circ; }
+
+    /* Estado compartilhado entre o setup do canvas e o trigger do observer */
+    let canvasReady   = false;
+    let pendingStart  = false;
+    let runAnimation  = () => {};
+
+    function startConstellationAnim() {
+      if (!canvasReady) { pendingStart = true; return; }
+      runAnimation();
+    }
 
     const section = document.getElementById('giftConstellation');
     if (section) {
@@ -1279,6 +1465,7 @@
             const el = document.querySelector('.'+cls);
             if (el) setTimeout(() => el.classList.add('constellation-shimmer'), i*220+200);
           });
+        startConstellationAnim();
         obs.disconnect();
       }, { threshold: 0.45 });
       obs.observe(section);
@@ -1292,6 +1479,7 @@
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
 
+      /* ─── BASE estática (fundo + dusts + estrelas + vinheta) ─── */
       ctx.fillStyle = '#06060f'; ctx.fillRect(0,0,S,S);
 
       const dusts = [
@@ -1316,21 +1504,76 @@
         ctx.fill();
       }
 
-      CONS.forEach(con => {
-        const pts = con.stars.map(([sx,sy]) => [(con.cx+(sx-.5)*con.sc)*S,(con.cy+(sy-.5)*con.sc)*S]);
-        ctx.strokeStyle='rgba(200,220,255,0.48)'; ctx.lineWidth=0.85;
-        con.lines.forEach(([a,b]) => { ctx.beginPath(); ctx.moveTo(pts[a][0],pts[a][1]); ctx.lineTo(pts[b][0],pts[b][1]); ctx.stroke(); });
-        pts.forEach(([x,y]) => {
-          const glow = ctx.createRadialGradient(x,y,0,x,y,7);
-          glow.addColorStop(0,'rgba(210,225,255,0.28)'); glow.addColorStop(1,'rgba(210,225,255,0)');
-          ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
-          ctx.beginPath(); ctx.arc(x,y,1.9,0,Math.PI*2); ctx.fillStyle='rgba(235,245,255,0.95)'; ctx.fill();
-        });
-      });
-
       const vig = ctx.createRadialGradient(S/2,S/2,S*.22,S/2,S/2,S*.50);
       vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(4,4,14,0.72)');
       ctx.fillStyle=vig; ctx.fillRect(0,0,S,S);
+
+      /* Snapshot da base — cada frame da animação restaura isso antes de redesenhar */
+      const baseImg = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      /* ─── Schedule da animação progressiva ─── */
+      const sched = [];
+      selected.forEach((con, ci) => {
+        const pts = con.stars.map(([sx,sy]) => [(con.cx+(sx-.5)*con.sc)*S,(con.cy+(sy-.5)*con.sc)*S]);
+        const baseDelay = 200 + ci * 350;
+        /* pontos da constelação fazem fade-in juntos */
+        sched.push({ kind: 'points', start: baseDelay, dur: 700, pts });
+        /* linhas vão aparecendo em sequência */
+        con.lines.forEach(([a,b], li) => {
+          sched.push({
+            kind: 'line',
+            start: baseDelay + 500 + li * 240,
+            dur: 520,
+            from: pts[a], to: pts[b],
+          });
+        });
+      });
+      const totalDur = Math.max(...sched.map(s => s.start + s.dur)) + 200;
+
+      function easeOutCubic(k) { return 1 - Math.pow(1 - k, 3); }
+      function easeOutQuad(k)  { return 1 - Math.pow(1 - k, 2); }
+
+      function drawFrame(elapsed) {
+        ctx.putImageData(baseImg, 0, 0);
+        sched.forEach(s => {
+          if (elapsed < s.start) return;
+          const k = Math.min(1, (elapsed - s.start) / s.dur);
+          if (s.kind === 'points') {
+            const e = easeOutQuad(k);
+            s.pts.forEach(([x,y]) => {
+              const glow = ctx.createRadialGradient(x,y,0,x,y,7);
+              glow.addColorStop(0, `rgba(210,225,255,${(0.28*e).toFixed(2)})`);
+              glow.addColorStop(1, 'rgba(210,225,255,0)');
+              ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
+              ctx.beginPath(); ctx.arc(x,y,1.9,0,Math.PI*2);
+              ctx.fillStyle = `rgba(235,245,255,${(0.95*e).toFixed(2)})`; ctx.fill();
+            });
+          } else {
+            const e = easeOutCubic(k);
+            const [x1,y1] = s.from, [x2,y2] = s.to;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 + (x2-x1)*e, y1 + (y2-y1)*e);
+            ctx.strokeStyle = 'rgba(200,220,255,0.48)';
+            ctx.lineWidth = 0.85;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+          }
+        });
+      }
+
+      runAnimation = () => {
+        const t0 = performance.now();
+        function tick(now) {
+          const elapsed = now - t0;
+          drawFrame(Math.min(elapsed, totalDur));
+          if (elapsed < totalDur) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      };
+
+      canvasReady = true;
+      if (pendingStart) runAnimation();
     });
   }
 
