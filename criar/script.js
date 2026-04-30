@@ -1529,13 +1529,41 @@ function setupMusicSearch() {
     setTimeout(() => suggestionsList.classList.add('hidden'), 200);
   });
 
+  /* Usamos a Deezer Public API via JSONP. Motivos:
+     - iTunes Search API: o redirecionamento atual quebra CORS e o endpoint
+       redirecionado não devolve mais o callback JSONP, então falha silenciosa.
+     - Deezer suporta JSONP nativamente (output=jsonp&callback=fn) e devolve
+       título, artista, capa e preview de 30s — equivalente ao que usávamos. */
+  function jsonp(baseUrl, callbackParam = 'callback', timeoutMs = 8000) {
+    return new Promise((resolve, reject) => {
+      const cbName = 'dzCb_' + Math.random().toString(36).slice(2);
+      const script = document.createElement('script');
+      const cleanup = () => {
+        try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+        clearTimeout(timer);
+      };
+      const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeoutMs);
+      window[cbName] = data => { cleanup(); resolve(data); };
+      script.onerror = () => { cleanup(); reject(new Error('jsonp error')); };
+      script.src = baseUrl + (baseUrl.includes('?') ? '&' : '?') + callbackParam + '=' + cbName;
+      document.head.appendChild(script);
+    });
+  }
+
   async function fetchSuggestions(query) {
     try {
-      const res  = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=8&country=BR`
+      const data = await jsonp(
+        `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=8&output=jsonp`
       );
-      const data = await res.json();
-      renderSuggestions(data.results || []);
+      const tracks = (data.data || []).map(t => ({
+        trackName:       t.title,
+        artistName:      t.artist && t.artist.name ? t.artist.name : '',
+        artworkUrl60:    t.album && (t.album.cover_small || t.album.cover_medium) || '',
+        previewUrl:      t.preview || '',
+        trackTimeMillis: typeof t.duration === 'number' ? t.duration * 1000 : undefined
+      }));
+      renderSuggestions(tracks);
     } catch (_) {
       suggestionsList.classList.add('hidden');
     }
@@ -1570,15 +1598,25 @@ function setupMusicSearch() {
       li.appendChild(img);
       li.appendChild(info);
 
-      li.addEventListener('mousedown', e => {
+      const handleSelect = e => {
         e.preventDefault();
         selectTrack(track);
-      });
+      };
+      li.addEventListener('mousedown', handleSelect);
+      li.addEventListener('touchstart', handleSelect, { passive: false });
 
       suggestionsList.appendChild(li);
     });
 
     suggestionsList.classList.remove('hidden');
+
+    /* Mobile: traz o input pro topo da área de scroll para que a dropdown
+       renderize acima do teclado virtual, em vez de ficar atrás dele. */
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      requestAnimationFrame(() => {
+        searchInput.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      });
+    }
   }
 
   function selectTrack(track) {
@@ -2245,14 +2283,6 @@ function navigateBack() {
 function setupNavigation() {
   document.getElementById('btnNext').addEventListener('click', navigateNext);
   document.getElementById('btnBack').addEventListener('click', navigateBack);
-
-  /* Atalho de teclado: Enter avança (exceto em textareas) */
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-      navigateNext();
-    }
-  });
 }
 
 /* ═══════════════════════════════════════════════════════════════

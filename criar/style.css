@@ -2682,6 +2682,19 @@ body {
     width: 100%;
   }
 
+  /* Dropdown de sugestões: garante visibilidade acima do teclado mobile */
+  .autocomplete-list {
+    max-height: 44vh;
+    z-index: 200;
+  }
+  .music-suggestion-item {
+    padding: 12px 12px;
+  }
+  .suggestion-art {
+    width: 44px;
+    height: 44px;
+  }
+
   .preview-header-copy {
     align-items: flex-start;
   }
