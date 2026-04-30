@@ -10,6 +10,7 @@
   <meta property="og:image"       content="./assets/images/icons8-relationship-64.png">
 
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/presente.css">
   <link rel="stylesheet" href="./assets/css/cookies.css">
 </head>
@@ -477,17 +478,27 @@
 
               <div class="gift-constellation-facts" id="giftConstellationFacts">
                 <div class="gcf-fact">
-                  <span class="gcf-fact-icon">🗓️</span>
+                  <span class="gcf-fact-icon gcf-fact-icon-svg" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3.5" y="6" width="17" height="14" rx="2.6"/>
+                      <path d="M3.5 10.2h17"/>
+                      <path d="M8 3.8v4"/>
+                      <path d="M16 3.8v4"/>
+                      <circle cx="12" cy="14.6" r="1.35" fill="currentColor" stroke="none"/>
+                    </svg>
+                  </span>
                   <div class="gcf-fact-content">
                     <span class="gcf-fact-label">era</span>
                     <span class="gcf-fact-value" id="gcfFactDay">—</span>
                   </div>
                 </div>
                 <div class="gcf-fact">
-                  <span class="gcf-fact-icon gcf-fact-icon-moon" aria-hidden="true">
-                    <span class="gcf-moon-body">
-                      <span class="gcf-moon-shadow"></span>
-                    </span>
+                  <span class="gcf-fact-icon gcf-fact-icon-svg gcf-fact-icon-moon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19.6 14A8 8 0 1 1 10 4.4a6.5 6.5 0 0 0 9.6 9.6z"/>
+                      <path d="M5.4 7.6l.45 1.25 1.25.45-1.25.45-.45 1.25-.45-1.25-1.25-.45 1.25-.45z" fill="currentColor" stroke="none"/>
+                      <path d="M8.2 4.2l.32.95.95.32-.95.32-.32.95-.32-.95-.95-.32.95-.32z" fill="currentColor" stroke="none"/>
+                    </svg>
                   </span>
                   <div class="gcf-fact-content">
                     <span class="gcf-fact-label">a lua estava</span>
@@ -495,7 +506,7 @@
                   </div>
                 </div>
                 <div class="gcf-fact">
-                  <span class="gcf-fact-icon" id="gcfFactZodiacIcon">♋︎</span>
+                  <span class="gcf-fact-icon gcf-fact-icon-zodiac" id="gcfFactZodiacIcon" aria-hidden="true">♋</span>
                   <div class="gcf-fact-content">
                     <span class="gcf-fact-label">no signo de</span>
                     <span class="gcf-fact-value" id="gcfFactZodiac">—</span>
@@ -504,9 +515,9 @@
               </div>
 
               <p class="gift-constellation-cons-list">
-                <span class="gccl-label">visíveis no céu brasileiro nessa época do ano</span>
+                <span class="gccl-label">Constelações visíveis no céu brasileiro nessa época do ano</span>
                 <span class="gccl-names" id="gcclNames">—</span>
-                <span class="gccl-hint">— olhe pra cima e tente encontrá-las ✨</span>
+                <span class="gccl-hint">olhe pra cima e tente encontrá-las ✨</span>
               </p>
 
               <p class="gift-constellation-tagline">O universo já sabia...</p>
@@ -1388,32 +1399,28 @@
     }
     function zodiacSign(date) {
       const m = date.getMonth() + 1, dd = date.getDate();
-      /* U+FE0F força a renderização emoji colorida (em vez do glyph de texto) */
-      const VS = '️';
-      if ((m===3 && dd>=21) || (m===4 && dd<=19))  return { name: 'Áries',       icon: '♈'+VS };
-      if ((m===4 && dd>=20) || (m===5 && dd<=20))  return { name: 'Touro',       icon: '♉'+VS };
-      if ((m===5 && dd>=21) || (m===6 && dd<=20))  return { name: 'Gêmeos',      icon: '♊'+VS };
-      if ((m===6 && dd>=21) || (m===7 && dd<=22))  return { name: 'Câncer',      icon: '♋'+VS };
-      if ((m===7 && dd>=23) || (m===8 && dd<=22))  return { name: 'Leão',        icon: '♌'+VS };
-      if ((m===8 && dd>=23) || (m===9 && dd<=22))  return { name: 'Virgem',      icon: '♍'+VS };
-      if ((m===9 && dd>=23) || (m===10 && dd<=22)) return { name: 'Libra',       icon: '♎'+VS };
-      if ((m===10 && dd>=23) || (m===11 && dd<=21))return { name: 'Escorpião',   icon: '♏'+VS };
-      if ((m===11 && dd>=22) || (m===12 && dd<=21))return { name: 'Sagitário',   icon: '♐'+VS };
-      if ((m===12 && dd>=22) || (m===1 && dd<=19)) return { name: 'Capricórnio', icon: '♑'+VS };
-      if ((m===1 && dd>=20) || (m===2 && dd<=18))  return { name: 'Aquário',     icon: '♒'+VS };
-      return { name: 'Peixes', icon: '♓'+VS };
+      if ((m===3 && dd>=21) || (m===4 && dd<=19))  return { name: 'Áries',       icon: '♈' };
+      if ((m===4 && dd>=20) || (m===5 && dd<=20))  return { name: 'Touro',       icon: '♉' };
+      if ((m===5 && dd>=21) || (m===6 && dd<=20))  return { name: 'Gêmeos',      icon: '♊' };
+      if ((m===6 && dd>=21) || (m===7 && dd<=22))  return { name: 'Câncer',      icon: '♋' };
+      if ((m===7 && dd>=23) || (m===8 && dd<=22))  return { name: 'Leão',        icon: '♌' };
+      if ((m===8 && dd>=23) || (m===9 && dd<=22))  return { name: 'Virgem',      icon: '♍' };
+      if ((m===9 && dd>=23) || (m===10 && dd<=22)) return { name: 'Libra',       icon: '♎' };
+      if ((m===10 && dd>=23) || (m===11 && dd<=21))return { name: 'Escorpião',   icon: '♏' };
+      if ((m===11 && dd>=22) || (m===12 && dd<=21))return { name: 'Sagitário',   icon: '♐' };
+      if ((m===12 && dd>=22) || (m===1 && dd<=19)) return { name: 'Capricórnio', icon: '♑' };
+      if ((m===1 && dd>=20) || (m===2 && dd<=18))  return { name: 'Aquário',     icon: '♒' };
+      return { name: 'Peixes', icon: '♓' };
     }
     const dayInfo  = DAYS_PT[d.getDay()];
     const moonInfo = moonPhase(d);
     const signInfo = zodiacSign(d);
     const factDay     = document.getElementById('gcfFactDay');
     const factMoon    = document.getElementById('gcfFactMoon');
-    const factMoonIc  = document.getElementById('gcfFactMoonIcon');
     const factZodiac  = document.getElementById('gcfFactZodiac');
     const factZodIc   = document.getElementById('gcfFactZodiacIcon');
     if (factDay)    factDay.textContent    = `${dayInfo.art} ${dayInfo.word}`;
     if (factMoon)   factMoon.textContent   = moonInfo.name;
-    if (factMoonIc) factMoonIc.textContent = moonInfo.icon;
     if (factZodiac) factZodiac.textContent = signInfo.name;
     if (factZodIc)  factZodIc.textContent  = signInfo.icon;
 

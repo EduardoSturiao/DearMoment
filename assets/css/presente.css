@@ -928,6 +928,38 @@ body {
                "Segoe UI Symbol", emoji, var(--font-b);
   filter: drop-shadow(0 0 8px rgba(180, 120, 255, 0.28));
 }
+.gcf-fact-icon-svg {
+  color: #e9d5ff;
+  padding: 0;
+}
+.gcf-fact-icon-svg svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0 4px rgba(216, 180, 254, 0.55));
+}
+.gcf-fact-icon-moon svg {
+  width: 23px;
+  height: 23px;
+  color: #c4b5fd;
+  filter: drop-shadow(0 0 5px rgba(196, 181, 253, 0.7));
+}
+.gcf-fact-icon-zodiac {
+  font-family: "Noto Sans Symbols 2", "Segoe UI Symbol",
+               "Noto Sans Symbols", "DejaVu Sans", serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 40px;
+  text-align: center;
+  font-variant-emoji: text;
+  padding: 0;
+  background: linear-gradient(135deg, #ddd6fe 0%, #f0abfc 50%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
 .gcf-fact-content {
   display: flex;
   flex-direction: column;
@@ -956,46 +988,68 @@ body {
 
 /* ── Lista de constelações daquela noite ── */
 .gift-constellation-cons-list {
-  margin: 18px auto 0;
+  margin: 26px auto 6px;
   text-align: center;
   font-family: var(--font-b);
-  font-size: 11.5px;
-  letter-spacing: 0.04em;
-  max-width: 320px;
-  padding: 0 12px;
+  max-width: 360px;
+  padding: 18px 18px 16px;
+  position: relative;
   opacity: 0;
   transform: translateY(6px);
   animation: gcfFactsIn 0.9s cubic-bezier(0.25,0.46,0.45,0.94) 0.9s forwards;
 }
+.gift-constellation-cons-list::before,
+.gift-constellation-cons-list::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(200, 140, 255, 0.45) 50%,
+    transparent 100%);
+}
+.gift-constellation-cons-list::before { top: 0; }
+.gift-constellation-cons-list::after  { bottom: 0; }
 .gccl-label {
   display: block;
   color: rgba(200, 190, 230, 0.55);
-  font-weight: 300;
-  text-transform: lowercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 14px;
 }
 .gccl-names {
   display: block;
   font-family: var(--font-h);
   font-style: italic;
-  font-weight: 500;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  background: linear-gradient(90deg, #c4b5fd 0%, #ffffff 50%, #c4b5fd 100%);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+  background: linear-gradient(90deg,
+    #c4b5fd 0%,
+    #f0abfc 45%,
+    #ffffff 60%,
+    #f0abfc 75%,
+    #c4b5fd 100%);
   background-size: 200% auto;
   background-position: right center;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(200, 140, 255, 0.32));
 }
 .gccl-hint {
   display: block;
-  margin-top: 6px;
+  margin-top: 12px;
   font-size: 10.5px;
   font-style: italic;
   letter-spacing: 0.04em;
-  color: rgba(200, 190, 230, 0.45);
+  color: rgba(200, 190, 230, 0.5);
 }
 
 /* ── Background da tela de constelação ── */
