@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/cookies.css">
+  <link rel="stylesheet" href="assets/css/legal.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <title>Termos de Uso — SoulMates</title>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <header class="sm-pill-nav" id="smPillNav">
+    <nav class="sm-pill">
+      <a class="sm-pill-logo" href="./index.html">
+        <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+          <defs>
+            <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+        </svg>
+        <span class="sm-pill-logo-name">SoulMates</span>
+      </a>
+
+      <ul class="sm-pill-links">
+        <li><a href="./index.html#home">Home</a></li>
+        <li><a href="./index.html#about">Como funciona</a></li>
+        <li><a href="./index.html#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="./index.html#team">FAQ</a></li>
+      </ul>
+
+      <div class="sm-pill-right">
+        <a href="./login.html" class="sm-pill-login">Login</a>
+        <button class="sm-pill-burger" id="smBurger" aria-label="Menu">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+            <rect y="0" width="16" height="2" rx="1"/>
+            <rect y="5" width="16" height="2" rx="1"/>
+            <rect y="10" width="16" height="2" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sm-pill-mobile" id="smMobileMenu">
+      <ul>
+        <li><a href="./index.html#home">Home</a></li>
+        <li><a href="./index.html#about">Como funciona</a></li>
+        <li><a href="./index.html#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="./index.html#team">FAQ</a></li>
+        <li><a href="./login.html" class="sm-pill-mobile-login">Login</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <script>
+    (function () {
+      const burger = document.getElementById('smBurger');
+      const menu   = document.getElementById('smMobileMenu');
+      const nav    = document.getElementById('smPillNav');
+      if (!burger || !menu) return;
+      burger.addEventListener('click', () => menu.classList.toggle('open'));
+      document.addEventListener('click', e => {
+        if (!nav.contains(e.target)) menu.classList.remove('open');
+      });
+      menu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => menu.classList.remove('open'));
+      });
+    })();
+  </script>
+
+  <!-- HERO LEGAL -->
+  <section class="legal-hero">
+    <div class="legal-hero-bg" aria-hidden="true"></div>
+    <div class="container">
+      <nav class="legal-breadcrumb" aria-label="breadcrumb">
+        <a href="./index.html">Home</a>
+        <span>›</span>
+        <span>Legal</span>
+        <span>›</span>
+        <span class="legal-breadcrumb-current">Termos de Uso</span>
+      </nav>
+      <span class="features-pill">📜 Termos</span>
+      <h1 class="legal-title">Termos de <span class="legal-title-accent">Uso</span></h1>
+      <p class="legal-subtitle">As regras claras e diretas que regem o uso da plataforma SoulMates. Leia antes de criar sua homenagem — ao se cadastrar, você concorda com estes termos.</p>
+      <p class="legal-meta">Última atualização: <strong>02 de maio de 2026</strong></p>
+    </div>
+  </section>
+
+  <!-- CONTEÚDO -->
+  <section class="legal-section">
+    <div class="container">
+      <div class="legal-layout">
+
+        <!-- Sumário lateral -->
+        <aside class="legal-toc" aria-label="Sumário">
+          <p class="legal-toc-label">Nesta página</p>
+          <ul>
+            <li><a href="#aceitacao">1. Aceitação dos termos</a></li>
+            <li><a href="#servico">2. O que é o SoulMates</a></li>
+            <li><a href="#cadastro">3. Cadastro e conta</a></li>
+            <li><a href="#planos">4. Planos e pagamento</a></li>
+            <li><a href="#arrependimento">5. Direito de arrependimento</a></li>
+            <li><a href="#reembolso">6. Cancelamento e reembolso</a></li>
+            <li><a href="#conteudo-usuario">7. Conteúdo do usuário</a></li>
+            <li><a href="#conteudo-proibido">8. Conteúdo proibido</a></li>
+            <li><a href="#propriedade">9. Propriedade intelectual</a></li>
+            <li><a href="#licencas">10. Licenças</a></li>
+            <li><a href="#musica">11. Música e YouTube</a></li>
+            <li><a href="#disponibilidade">12. Disponibilidade do serviço</a></li>
+            <li><a href="#responsabilidade">13. Limitação de responsabilidade</a></li>
+            <li><a href="#suspensao">14. Suspensão e exclusão</a></li>
+            <li><a href="#modificacoes">15. Modificações</a></li>
+            <li><a href="#legislacao">16. Lei aplicável e foro</a></li>
+            <li><a href="#contato">17. Contato</a></li>
+          </ul>
+        </aside>
+
+        <!-- Texto principal -->
+        <article class="legal-content">
+
+          <p class="legal-intro">Estes Termos de Uso ("<strong>Termos</strong>") regem a relação entre você ("<strong>Usuário</strong>") e o <strong>SoulMates</strong> ("nós", "nosso") quando você acessa ou utiliza a plataforma <em>soulmates.com.br</em>. Ao se cadastrar, criar uma homenagem ou efetuar qualquer compra, você declara ter lido, compreendido e concordado integralmente com estes Termos.</p>
+
+          <!-- 1 -->
+          <h2 id="aceitacao" class="legal-h2">1. Aceitação dos termos</h2>
+          <p>O uso do SoulMates está condicionado à aceitação destes Termos e da nossa <a href="./politica-de-privacidade.html">Política de Privacidade</a>. Se você não concorda com qualquer disposição, não utilize a plataforma.</p>
+          <p>Para utilizar o serviço, você deve:</p>
+          <ul class="legal-list">
+            <li>Ter pelo menos <strong>18 anos</strong> de idade ou estar autorizado e acompanhado por responsável legal;</li>
+            <li>Possuir capacidade civil plena para contratar, nos termos do Código Civil Brasileiro;</li>
+            <li>Fornecer informações verdadeiras, atuais e precisas em seu cadastro.</li>
+          </ul>
+
+          <!-- 2 -->
+          <h2 id="servico" class="legal-h2">2. O que é o SoulMates</h2>
+          <p>O SoulMates é uma plataforma online que permite ao Usuário criar páginas digitais personalizadas — homenagens — para presentear pessoas queridas, contendo fotos, mensagens, contador de tempo, player de música (via integração com YouTube) e outros elementos. Cada página gera um link único e um QR Code para compartilhamento.</p>
+          <p>O serviço é oferecido nas modalidades descritas na seção 4 (Planos e pagamento) e está sujeito a disponibilidade técnica.</p>
+
+          <!-- 3 -->
+          <h2 id="cadastro" class="legal-h2">3. Cadastro e conta</h2>
+          <p>Para criar uma homenagem, é necessário criar uma conta gratuita fornecendo nome, e-mail e senha. Você é o único responsável por:</p>
+          <ul class="legal-list">
+            <li>Manter a confidencialidade da sua senha;</li>
+            <li>Todas as atividades realizadas a partir da sua conta;</li>
+            <li>Notificar-nos imediatamente em caso de uso não autorizado, pelo e-mail <a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a>.</li>
+          </ul>
+          <p>É vedada a criação de contas falsas, em nome de terceiros sem autorização, ou a utilização de robôs/scripts automatizados para cadastro.</p>
+
+          <!-- 4 -->
+          <h2 id="planos" class="legal-h2">4. Planos e pagamento</h2>
+          <p>O SoulMates oferece dois planos com pagamento único, sem mensalidade:</p>
+
+          <div class="legal-table-wrap">
+            <table class="legal-table">
+              <thead>
+                <tr>
+                  <th>Plano</th>
+                  <th>Preço</th>
+                  <th>Duração</th>
+                  <th>Edição</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>24 Horas</strong></td>
+                  <td>R$ 19,90</td>
+                  <td>24 horas a partir da ativação</td>
+                  <td>Não permitida</td>
+                </tr>
+                <tr>
+                  <td><strong>Vitalício</strong></td>
+                  <td>R$ 29,90</td>
+                  <td>Acesso permanente enquanto a conta estiver ativa</td>
+                  <td>Ilimitada</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Os pagamentos são processados por gateways parceiros (Stripe, Mercado Pago, ou similares) e podem ser feitos via Pix, cartão de crédito ou outras formas disponíveis no checkout. Após confirmação do pagamento, a homenagem fica imediatamente disponível.</p>
+          <p>Reservamo-nos o direito de alterar preços e condições a qualquer momento. Mudanças não afetam compras já realizadas.</p>
+
+          <!-- 5 -->
+          <h2 id="arrependimento" class="legal-h2">5. Direito de arrependimento</h2>
+          <p>Conforme o <strong>artigo 49 do Código de Defesa do Consumidor</strong>, você tem o direito de desistir da compra em até <strong>7 (sete) dias corridos</strong> a contar da data do pagamento, sem necessidade de justificativa, desde que:</p>
+          <ul class="legal-list">
+            <li>A homenagem ainda não tenha sido ativada / compartilhada / acessada por terceiros;</li>
+            <li>Você solicite o cancelamento por escrito ao e-mail <a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a>.</li>
+          </ul>
+
+          <div class="legal-callout">
+            <strong>Importante:</strong> uma vez que a homenagem tenha sido ativada e o link/QR Code já tenha sido acessado por terceiros, considera-se que o serviço foi <em>integralmente prestado</em> e o direito de arrependimento previsto no art. 49 do CDC pode ser limitado, conforme jurisprudência aplicável a serviços digitais personalizados.
+          </div>
+
+          <!-- 6 -->
+          <h2 id="reembolso" class="legal-h2">6. Cancelamento e política de reembolso</h2>
+          <p>Esta seção detalha as regras de cancelamento, reembolso e estorno aplicáveis às compras realizadas no SoulMates. Ela complementa o <a href="#arrependimento">direito de arrependimento</a> previsto na seção 5.</p>
+
+          <h3 class="legal-h3">6.1 Quando o reembolso é garantido</h3>
+          <p>Você tem direito a <strong>reembolso integral</strong> nas seguintes situações:</p>
+          <ul class="legal-list">
+            <li><strong>Arrependimento em até 7 dias</strong> (CDC Art. 49), desde que a homenagem ainda não tenha sido ativada nem acessada por terceiros;</li>
+            <li><strong>Falha técnica grave</strong> de nossa responsabilidade que impeça a entrega ou o funcionamento da homenagem por mais de 72 horas, sem solução;</li>
+            <li><strong>Cobrança duplicada</strong> ou em valor diferente do contratado;</li>
+            <li><strong>Pagamento confirmado, mas homenagem não disponibilizada</strong> em até 24 horas, sem justificativa técnica.</li>
+          </ul>
+
+          <h3 class="legal-h3">6.2 Quando o reembolso pode ser negado</h3>
+          <p>O reembolso pode ser parcial ou integralmente negado nas seguintes hipóteses:</p>
+          <ul class="legal-list">
+            <li>A homenagem já foi <strong>ativada e acessada por terceiros</strong> (link/QR Code aberto), caracterizando o serviço como integralmente prestado;</li>
+            <li>O Plano 24 Horas já <strong>expirou</strong>;</li>
+            <li>Solicitação feita <strong>após o prazo de 7 dias corridos</strong> da compra, salvo nas hipóteses da seção 6.1;</li>
+            <li>Conta excluída por <strong>violação destes Termos</strong> (ex: conteúdo proibido, fraude);</li>
+            <li>Mudança de ideia sobre o conteúdo enviado (fotos erradas, mensagem indesejada) — nesses casos, o Plano Vitalício permite edição livre;</li>
+            <li>Solicitação por terceiro não autorizado.</li>
+          </ul>
+
+          <h3 class="legal-h3">6.3 Como solicitar o reembolso</h3>
+          <p>Para pedir reembolso, envie e-mail para <a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a> contendo:</p>
+          <ul class="legal-list">
+            <li>Nome completo e CPF do titular da compra;</li>
+            <li>E-mail utilizado no cadastro;</li>
+            <li>Data e valor da compra;</li>
+            <li>Identificador da homenagem (link ou ID);</li>
+            <li>Motivo da solicitação.</li>
+          </ul>
+
+          <h3 class="legal-h3">6.4 Prazos de processamento</h3>
+          <div class="legal-table-wrap">
+            <table class="legal-table">
+              <thead>
+                <tr>
+                  <th>Forma de pagamento</th>
+                  <th>Prazo para análise</th>
+                  <th>Prazo de devolução</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Pix</strong></td>
+                  <td>Até 5 dias úteis</td>
+                  <td>Até 5 dias úteis após aprovação</td>
+                </tr>
+                <tr>
+                  <td><strong>Cartão de crédito</strong></td>
+                  <td>Até 5 dias úteis</td>
+                  <td>Estorno na próxima fatura ou em até 2 ciclos (regra do emissor)</td>
+                </tr>
+                <tr>
+                  <td><strong>Boleto</strong></td>
+                  <td>Até 5 dias úteis</td>
+                  <td>Até 10 dias úteis após aprovação (depósito em conta)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="legal-h3">6.5 Chargeback e estorno indevido</h3>
+          <p>Antes de abrir contestação ou chargeback junto à operadora do cartão, recomendamos sempre tentar a resolução diretamente conosco — é mais rápido e simples. Chargebacks indevidos, comprovadamente abusivos ou fraudulentos podem implicar:</p>
+          <ul class="legal-list">
+            <li>Suspensão imediata da conta;</li>
+            <li>Cobrança das taxas operacionais incidentes;</li>
+            <li>Inclusão em listas restritivas de fraude antichargeback;</li>
+            <li>Adoção de medidas judiciais cabíveis.</li>
+          </ul>
+
+          <div class="legal-callout">
+            <strong>Boa-fé sempre vale:</strong> nossa prioridade é resolver. Se algo deu errado, fale com a gente — em quase todos os casos chegamos a uma solução amigável antes de qualquer formalização.
+          </div>
+
+          <!-- 7 -->
+          <h2 id="conteudo-usuario" class="legal-h2">7. Conteúdo do usuário</h2>
+          <p>Você é o único responsável pelos conteúdos que envia ao SoulMates — fotos, textos, mensagens, links de música e demais elementos da homenagem ("<strong>Conteúdo do Usuário</strong>"). Ao enviar conteúdo, você declara e garante que:</p>
+          <ul class="legal-list">
+            <li>É o titular dos direitos autorais ou possui autorização válida para usá-lo;</li>
+            <li>O conteúdo não viola direitos de terceiros (imagem, autoria, marca registrada, privacidade);</li>
+            <li>O conteúdo não infringe leis aplicáveis nem estes Termos.</li>
+          </ul>
+          <p>Apesar de armazenarmos seu conteúdo, <strong>não somos responsáveis</strong> pelas informações por você inseridas. Recomendamos que você mantenha cópias próprias de fotos e mensagens importantes.</p>
+
+          <!-- 8 -->
+          <h2 id="conteudo-proibido" class="legal-h2">8. Conteúdo proibido</h2>
+          <p>É expressamente proibido enviar, hospedar ou compartilhar pelo SoulMates qualquer conteúdo que:</p>
+          <ul class="legal-list">
+            <li>Seja ilegal, fraudulento, difamatório, calunioso ou ameaçador;</li>
+            <li>Contenha nudez, pornografia, ato sexual explícito ou material erótico;</li>
+            <li>Envolva crianças ou adolescentes em situações inadequadas;</li>
+            <li>Promova violência, ódio, discriminação racial, de gênero, religião ou orientação sexual;</li>
+            <li>Viole direitos autorais, marcas registradas ou outros direitos de propriedade intelectual;</li>
+            <li>Contenha vírus, malware, scripts maliciosos ou qualquer código que prejudique o serviço;</li>
+            <li>Vise spam, phishing, golpes ou prática de qualquer atividade ilícita;</li>
+            <li>Contenha dados pessoais sensíveis de terceiros sem consentimento expresso.</li>
+          </ul>
+
+          <p>Reservamo-nos o direito de <strong>remover qualquer conteúdo</strong> que viole estas regras, a qualquer tempo, sem aviso prévio, e <strong>suspender ou excluir contas</strong> reincidentes, sem direito a reembolso.</p>
+
+          <!-- 9 -->
+          <h2 id="propriedade" class="legal-h2">9. Propriedade intelectual</h2>
+          <p>O Conteúdo do Usuário pertence exclusivamente a você. Não reivindicamos qualquer titularidade sobre suas fotos, textos ou mensagens.</p>
+          <p>Por outro lado, todos os elementos da plataforma — incluindo nome "SoulMates", logotipo, design, layout, código-fonte, textos institucionais, ilustrações e demais materiais — são de propriedade exclusiva do SoulMates ou de seus licenciadores e estão protegidos pela <strong>Lei nº 9.610/1998 (Direitos Autorais)</strong> e pela <strong>Lei nº 9.279/1996 (Propriedade Industrial)</strong>.</p>
+          <p>É vedado copiar, reproduzir, modificar, fazer engenharia reversa ou usar nossa marca sem autorização prévia e por escrito.</p>
+
+          <!-- 10 -->
+          <h2 id="licencas" class="legal-h2">10. Licenças</h2>
+          <h3 class="legal-h3">10.1 Licença que você nos concede</h3>
+          <p>Ao enviar Conteúdo do Usuário, você nos concede uma licença <strong>não exclusiva, mundial, gratuita e revogável</strong> para hospedar, armazenar, exibir e tornar acessível esse conteúdo, exclusivamente para a finalidade de prestação do serviço (entrega da sua homenagem).</p>
+          <p>Essa licença termina automaticamente quando você excluir o conteúdo ou cancelar sua conta, ressalvada a manutenção de cópias em backups por prazo razoável e por exigências legais.</p>
+
+          <h3 class="legal-h3">10.2 Licença que concedemos a você</h3>
+          <p>Concedemos a você uma licença <strong>limitada, pessoal, intransferível e não exclusiva</strong> para usar a plataforma de acordo com estes Termos, exclusivamente para criar e compartilhar suas próprias homenagens.</p>
+
+          <!-- 11 -->
+          <h2 id="musica" class="legal-h2">11. Música e integração com YouTube</h2>
+          <p>O player de música utiliza a <strong>API pública do YouTube</strong>. Ao colar um link, você é responsável por garantir que possui direitos para usá-lo no contexto de uma homenagem privada. O SoulMates não hospeda arquivos de áudio próprios e não detém qualquer direito sobre as músicas reproduzidas.</p>
+          <p>Caso a faixa selecionada se torne indisponível, restrita ou seja removida pelo YouTube, a reprodução pode falhar — sem que isso configure inadimplemento contratual de nossa parte.</p>
+
+          <!-- 12 -->
+          <h2 id="disponibilidade" class="legal-h2">12. Disponibilidade do serviço</h2>
+          <p>Empenhamo-nos para manter a plataforma disponível 24 horas por dia, 7 dias por semana. No entanto, <strong>não garantimos uptime de 100%</strong>. O serviço pode ficar temporariamente indisponível por razões como:</p>
+          <ul class="legal-list">
+            <li>Manutenção programada (sempre que possível, aviso prévio);</li>
+            <li>Falhas de provedores de hospedagem ou infraestrutura;</li>
+            <li>Ataques cibernéticos ou eventos de força maior;</li>
+            <li>Atualizações urgentes de segurança.</li>
+          </ul>
+          <p>Em caso de indisponibilidade prolongada de homenagens em plano vitalício, avaliaremos compensações caso a caso.</p>
+
+          <!-- 13 -->
+          <h2 id="responsabilidade" class="legal-h2">13. Limitação de responsabilidade</h2>
+          <p>Na máxima extensão permitida pela legislação brasileira, o SoulMates não se responsabiliza por:</p>
+          <ul class="legal-list">
+            <li>Conteúdo enviado pelos Usuários — você é o único responsável;</li>
+            <li>Uso indevido da homenagem por terceiros após o compartilhamento do link/QR Code;</li>
+            <li>Falhas de serviços de terceiros (gateways, YouTube, provedores de e-mail);</li>
+            <li>Perda de fotos ou conteúdo decorrente de exclusão pelo próprio usuário ou por expiração de plano;</li>
+            <li>Danos indiretos, lucros cessantes ou perda de oportunidade.</li>
+          </ul>
+          <p>Em qualquer hipótese, nossa responsabilidade total fica limitada ao valor efetivamente pago pelo plano contratado nos últimos 12 meses.</p>
+
+          <div class="legal-callout">
+            <strong>Importante:</strong> nada nestes Termos exclui ou limita responsabilidades que não possam ser excluídas pela legislação brasileira aplicável, em especial pelo Código de Defesa do Consumidor (Lei nº 8.078/1990).
+          </div>
+
+          <!-- 14 -->
+          <h2 id="suspensao" class="legal-h2">14. Suspensão e exclusão de contas</h2>
+          <p>Podemos suspender ou excluir sua conta, com ou sem aviso prévio, nas seguintes hipóteses:</p>
+          <ul class="legal-list">
+            <li>Violação destes Termos ou da Política de Privacidade;</li>
+            <li>Envio de conteúdo proibido (Seção 8);</li>
+            <li>Tentativa de fraude, chargeback indevido ou estorno injustificado;</li>
+            <li>Uso da plataforma para finalidades ilícitas ou prejudiciais a terceiros;</li>
+            <li>Determinação judicial ou de autoridade competente.</li>
+          </ul>
+          <p>Você também pode encerrar sua conta a qualquer momento, solicitando exclusão pelo e-mail <a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a>. A exclusão será processada em até 30 dias, observadas as obrigações legais de retenção descritas em nossa <a href="./politica-de-privacidade.html">Política de Privacidade</a>.</p>
+
+          <!-- 15 -->
+          <h2 id="modificacoes" class="legal-h2">15. Modificações destes termos</h2>
+          <p>Podemos atualizar estes Termos a qualquer momento para refletir mudanças no serviço, na legislação ou em nossas práticas. A versão vigente sempre estará disponível nesta página, com a data de "Última atualização" no topo.</p>
+          <p>Mudanças significativas serão comunicadas por e-mail ou aviso destacado no site, com antecedência mínima de <strong>15 dias</strong>. O uso contínuo da plataforma após a entrada em vigor dos novos Termos constitui aceite. Se você não concordar com as alterações, pode encerrar sua conta antes da vigência.</p>
+
+          <!-- 16 -->
+          <h2 id="legislacao" class="legal-h2">16. Lei aplicável e foro</h2>
+          <p>Estes Termos são regidos pelas leis da <strong>República Federativa do Brasil</strong>, em especial:</p>
+          <ul class="legal-list">
+            <li>Código de Defesa do Consumidor (Lei nº 8.078/1990);</li>
+            <li>Marco Civil da Internet (Lei nº 12.965/2014);</li>
+            <li>Lei Geral de Proteção de Dados — LGPD (Lei nº 13.709/2018);</li>
+            <li>Lei dos Direitos Autorais (Lei nº 9.610/1998);</li>
+            <li>Decreto do Comércio Eletrônico (Decreto nº 7.962/2013).</li>
+          </ul>
+          <p>Fica eleito o foro da Comarca de <strong>São Paulo/SP</strong> para dirimir quaisquer controvérsias decorrentes destes Termos, ressalvado o direito do consumidor de propor ação no foro de seu domicílio, conforme o art. 101, I, do CDC.</p>
+
+          <!-- 17 -->
+          <h2 id="contato" class="legal-h2">17. Contato</h2>
+          <p>Em caso de dúvidas, sugestões ou solicitações sobre estes Termos, fale com a gente:</p>
+          <ul class="legal-list legal-list-clean">
+            <li>📧 <a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a></li>
+            <li>🏢 SoulMates · Eduardo Sturião MEI · CNPJ 56.789.012/0001-34 · Rua das Flores, 123, São Paulo, SP, CEP 01310-100</li>
+          </ul>
+
+          <div class="legal-footer-nav">
+            <a href="./index.html" class="legal-back">← Voltar para a Home</a>
+          </div>
+
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <section>
+    <div id="footer-container">
+      <footer class="sm-footer">
+        <div class="container">
+
+          <div class="sm-footer-grid">
+
+            <div class="sm-footer-brand">
+              <a class="sm-footer-logo" href="./index.html" aria-label="SoulMates">
+                <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+                  <defs>
+                    <clipPath id="sm-foot-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+                    <clipPath id="sm-foot-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+                  </defs>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-bot)"/>
+                  <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-top)"/>
+                </svg>
+                <span class="sm-footer-logo-name">SoulMates</span>
+              </a>
+              <p class="sm-footer-tagline">Presentes digitais únicos, entregues por QR Code, para emocionar quem você ama.</p>
+              <div class="sm-footer-proof">
+                <span class="sm-footer-proof-stars">⭐⭐⭐⭐⭐</span>
+                <span class="sm-footer-proof-text">+1.000 casais emocionados</span>
+              </div>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Produto</h4>
+              <ul>
+                <li><a href="./index.html#about">Como funciona</a></li>
+                <li><a href="./index.html#service">Planos</a></li>
+                <li><a href="./index.html#depoimentos">Depoimentos</a></li>
+                <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+                <li><a href="./criar/index.html">Criar homenagem</a></li>
+              </ul>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Suporte</h4>
+              <ul>
+                <li><a href="./index.html#team">Dúvidas frequentes</a></li>
+                <li><a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a></li>
+                <li><a href="#">Central de ajuda</a></li>
+              </ul>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Legal</h4>
+              <ul>
+                <li><a href="./termos-de-uso.html">Termos de Uso</a></li>
+                <li><a href="./politica-de-privacidade.html">Política de Privacidade</a></li>
+                <li><a href="./politica-de-cookies.html">Política de Cookies</a></li>
+                <li><a href="#">Política de Reembolso</a></li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div class="sm-footer-trust">
+            <div class="sm-footer-payments">
+              <span class="sm-footer-trust-label">Formas de pagamento</span>
+              <div class="sm-footer-pay-icons">
+                <span class="sm-pay-badge sm-pay-pix" aria-label="Pix">Pix</span>
+                <span class="sm-pay-badge" aria-label="Visa">VISA</span>
+                <span class="sm-pay-badge" aria-label="Mastercard">Mastercard</span>
+                <span class="sm-pay-badge" aria-label="Elo">Elo</span>
+                <span class="sm-pay-badge" aria-label="American Express">Amex</span>
+              </div>
+            </div>
+            <div class="sm-footer-secure">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>Site seguro · SSL 256-bit</span>
+            </div>
+          </div>
+
+          <div class="sm-footer-bottom">
+            <div class="sm-footer-company">
+              <p><strong>SoulMates</strong> <span class="sm-footer-legal">· Eduardo Sturião MEI · CNPJ 56.789.012/0001-34</span></p>
+              <p class="sm-footer-legal">São Paulo, SP · CEP 01310-100</p>
+            </div>
+
+            <div class="sm-footer-social">
+              <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+              <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+              <a href="#" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+            </div>
+
+            <div class="sm-footer-copyright">
+              <p>© 2026 SoulMates. Todos os direitos reservados.</p>
+            </div>
+          </div>
+
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <!-- Cookie Consent Banner -->
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/cookies.js"></script>
+
+</body>
+
+</html>

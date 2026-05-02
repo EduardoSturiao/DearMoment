@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/cookies.css">
+  <link rel="stylesheet" href="assets/css/legal.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <title>Política de Cookies — SoulMates</title>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <header class="sm-pill-nav" id="smPillNav">
+    <nav class="sm-pill">
+      <a class="sm-pill-logo" href="./index.html">
+        <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+          <defs>
+            <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+        </svg>
+        <span class="sm-pill-logo-name">SoulMates</span>
+      </a>
+
+      <ul class="sm-pill-links">
+        <li><a href="./index.html#home">Home</a></li>
+        <li><a href="./index.html#about">Como funciona</a></li>
+        <li><a href="./index.html#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="./index.html#team">FAQ</a></li>
+      </ul>
+
+      <div class="sm-pill-right">
+        <a href="./login.html" class="sm-pill-login">Login</a>
+        <button class="sm-pill-burger" id="smBurger" aria-label="Menu">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+            <rect y="0" width="16" height="2" rx="1"/>
+            <rect y="5" width="16" height="2" rx="1"/>
+            <rect y="10" width="16" height="2" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sm-pill-mobile" id="smMobileMenu">
+      <ul>
+        <li><a href="./index.html#home">Home</a></li>
+        <li><a href="./index.html#about">Como funciona</a></li>
+        <li><a href="./index.html#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="./index.html#team">FAQ</a></li>
+        <li><a href="./login.html" class="sm-pill-mobile-login">Login</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <script>
+    (function () {
+      const burger = document.getElementById('smBurger');
+      const menu   = document.getElementById('smMobileMenu');
+      const nav    = document.getElementById('smPillNav');
+      if (!burger || !menu) return;
+      burger.addEventListener('click', () => menu.classList.toggle('open'));
+      document.addEventListener('click', e => {
+        if (!nav.contains(e.target)) menu.classList.remove('open');
+      });
+      menu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => menu.classList.remove('open'));
+      });
+    })();
+  </script>
+
+  <!-- HERO LEGAL -->
+  <section class="legal-hero">
+    <div class="legal-hero-bg" aria-hidden="true"></div>
+    <div class="container">
+      <nav class="legal-breadcrumb" aria-label="breadcrumb">
+        <a href="./index.html">Home</a>
+        <span>›</span>
+        <span>Legal</span>
+        <span>›</span>
+        <span class="legal-breadcrumb-current">Política de Cookies</span>
+      </nav>
+      <span class="features-pill">🍪 Política</span>
+      <h1 class="legal-title">Política de <span class="legal-title-accent">Cookies</span></h1>
+      <p class="legal-subtitle">Entenda como o SoulMates utiliza cookies para tornar a sua experiência mais simples, segura e personalizada.</p>
+      <p class="legal-meta">Última atualização: <strong>02 de maio de 2026</strong></p>
+    </div>
+  </section>
+
+  <!-- CONTEÚDO -->
+  <section class="legal-section">
+    <div class="container">
+      <div class="legal-layout">
+
+        <!-- Sumário lateral -->
+        <aside class="legal-toc" aria-label="Sumário">
+          <p class="legal-toc-label">Nesta página</p>
+          <ul>
+            <li><a href="#o-que-sao">1. O que são cookies</a></li>
+            <li><a href="#por-que-usamos">2. Por que usamos cookies</a></li>
+            <li><a href="#tipos">3. Tipos de cookies utilizados</a></li>
+            <li><a href="#terceiros">4. Cookies de terceiros</a></li>
+            <li><a href="#gerenciamento">5. Gerenciamento de cookies</a></li>
+            <li><a href="#consentimento">6. Consentimento</a></li>
+            <li><a href="#atualizacoes">7. Atualizações desta política</a></li>
+            <li><a href="#contato">8. Fale com a gente</a></li>
+          </ul>
+        </aside>
+
+        <!-- Texto principal -->
+        <article class="legal-content">
+
+          <p class="legal-intro">Esta Política de Cookies explica o que são cookies, como o <strong>SoulMates</strong> os utiliza no domínio <em>soulmates.com.br</em> e como você pode controlar o uso deles. Ao continuar navegando, você concorda com o uso de cookies conforme descrito abaixo. Você pode revisar suas preferências a qualquer momento.</p>
+
+          <!-- 1 -->
+          <h2 id="o-que-sao" class="legal-h2">1. O que são cookies?</h2>
+          <p>Cookies são pequenos arquivos de texto que sites armazenam no seu navegador (Chrome, Safari, Firefox, Edge etc.) quando você acessa uma página. Eles servem para lembrar informações entre visitas — como suas preferências, o estado do seu carrinho, ou se você já aceitou um aviso — e permitem que o site funcione corretamente e ofereça uma experiência mais fluida.</p>
+          <p>Apesar do nome, cookies <strong>não são programas executáveis</strong> e não conseguem instalar vírus, ler arquivos do seu computador ou acessar dados sensíveis fora daquilo que o próprio site grava neles.</p>
+
+          <!-- 2 -->
+          <h2 id="por-que-usamos" class="legal-h2">2. Por que usamos cookies?</h2>
+          <p>No SoulMates, usamos cookies por motivos pontuais e justificáveis. Em resumo, eles nos ajudam a:</p>
+          <ul class="legal-list">
+            <li>Manter você logado durante a criação da sua homenagem;</li>
+            <li>Salvar o progresso do seu presente em andamento (etapas do criador);</li>
+            <li>Lembrar sua escolha sobre o aviso de cookies (para não exibi-lo a cada visita);</li>
+            <li>Garantir o funcionamento seguro da plataforma e do checkout;</li>
+            <li>Entender, de forma agregada e anônima, como as pessoas usam o site, para que possamos melhorá-lo.</li>
+          </ul>
+          <p>Não usamos cookies para criar perfis comportamentais detalhados, nem para vender dados a terceiros.</p>
+
+          <!-- 3 -->
+          <h2 id="tipos" class="legal-h2">3. Tipos de cookies utilizados</h2>
+          <p>Classificamos nossos cookies em quatro categorias, de acordo com a finalidade de cada um:</p>
+
+          <div class="legal-table-wrap">
+            <table class="legal-table">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Para que serve</th>
+                  <th>Pode ser desativado?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Essenciais</strong></td>
+                  <td>Necessários para o site funcionar: login, sessão, segurança e checkout.</td>
+                  <td><span class="legal-tag legal-tag-no">Não</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Funcionais</strong></td>
+                  <td>Lembram preferências como idioma, progresso de criação e aviso de cookies já aceito.</td>
+                  <td><span class="legal-tag legal-tag-yes">Sim</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Analíticos</strong></td>
+                  <td>Coletam dados agregados sobre páginas visitadas e tempo de navegação para nos ajudar a melhorar o produto.</td>
+                  <td><span class="legal-tag legal-tag-yes">Sim</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Marketing</strong></td>
+                  <td>Mensuram a eficácia de campanhas e podem personalizar anúncios em outras plataformas.</td>
+                  <td><span class="legal-tag legal-tag-yes">Sim</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Os cookies essenciais são necessários para que o site simplesmente funcione — sem eles, você não consegue criar sua homenagem nem finalizar a compra. Os demais dependem do seu consentimento.</p>
+
+          <!-- 4 -->
+          <h2 id="terceiros" class="legal-h2">4. Cookies de terceiros</h2>
+          <p>Algumas funcionalidades do SoulMates dependem de serviços externos confiáveis, que também podem definir cookies no seu navegador. Atualmente, podemos utilizar:</p>
+          <ul class="legal-list">
+            <li><strong>Gateways de pagamento</strong> (ex: Stripe, Mercado Pago) — para processar pagamentos com segurança;</li>
+            <li><strong>Google Analytics</strong> — para análise de tráfego e comportamento agregado;</li>
+            <li><strong>Meta Pixel / TikTok Pixel</strong> — para mensurar campanhas (apenas se você consentir);</li>
+            <li><strong>YouTube</strong> — quando exibimos o player de música escolhido pelo usuário;</li>
+            <li><strong>Fontes Google e CDNs</strong> — para carregar recursos visuais do site.</li>
+          </ul>
+          <p>Cada um desses serviços tem sua própria política de privacidade. Recomendamos que você consulte os respectivos sites para entender como eles tratam seus dados.</p>
+
+          <!-- 5 -->
+          <h2 id="gerenciamento" class="legal-h2">5. Como gerenciar seus cookies</h2>
+          <p>Você tem total controle sobre os cookies armazenados no seu dispositivo. Existem duas formas de gerenciá-los:</p>
+
+          <h3 class="legal-h3">5.1 Pelo banner de consentimento</h3>
+          <p>Ao acessar o site pela primeira vez, exibimos um banner onde você pode <strong>aceitar</strong> ou <strong>recusar</strong> cookies não essenciais. Sua escolha é registrada e respeitada nas próximas visitas.</p>
+
+          <h3 class="legal-h3">5.2 Pelo seu navegador</h3>
+          <p>Todos os navegadores modernos permitem visualizar, bloquear e apagar cookies a qualquer momento. Veja como nos principais:</p>
+          <ul class="legal-list">
+            <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">Google Chrome</a></li>
+            <li><a href="https://support.mozilla.org/pt-BR/kb/cookies-informacoes-sites-armazenam-no-computador" target="_blank" rel="noopener">Mozilla Firefox</a></li>
+            <li><a href="https://support.apple.com/pt-br/guide/safari/sfri11471/mac" target="_blank" rel="noopener">Safari</a></li>
+            <li><a href="https://support.microsoft.com/pt-br/microsoft-edge" target="_blank" rel="noopener">Microsoft Edge</a></li>
+          </ul>
+
+          <div class="legal-callout">
+            <strong>Atenção:</strong> bloquear cookies essenciais pode impedir que o site funcione corretamente — incluindo login, criação da homenagem e finalização do pagamento.
+          </div>
+
+          <!-- 6 -->
+          <h2 id="consentimento" class="legal-h2">6. Consentimento</h2>
+          <p>Em conformidade com a <strong>Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)</strong> e o <strong>Marco Civil da Internet</strong>, somente utilizamos cookies não essenciais com o seu consentimento prévio, livre e informado.</p>
+          <p>Você pode revogar seu consentimento a qualquer momento limpando os dados do navegador ou clicando no botão abaixo, que reabrirá o banner de preferências:</p>
+
+          <button id="reset-consent-btn" class="legal-btn">Revisar minhas preferências de cookies</button>
+          <p class="legal-note">Ao clicar, suas preferências serão limpas e o banner de consentimento aparecerá novamente na próxima navegação.</p>
+
+          <!-- 7 -->
+          <h2 id="atualizacoes" class="legal-h2">7. Atualizações desta política</h2>
+          <p>Esta política pode ser atualizada periodicamente para refletir mudanças na legislação, em nossas práticas ou nos serviços que utilizamos. Quando isso acontecer, atualizaremos a data de "Última atualização" no topo desta página.</p>
+          <p>Mudanças significativas serão comunicadas de forma destacada — por banner no site ou e-mail aos usuários cadastrados, conforme apropriado. Recomendamos que você revise esta página de tempos em tempos.</p>
+
+          <!-- 8 -->
+          <h2 id="contato" class="legal-h2">8. Fale com a gente</h2>
+          <p>Em caso de dúvidas sobre esta política ou sobre o tratamento de seus dados pessoais, fale com nosso encarregado de dados (DPO):</p>
+          <ul class="legal-list legal-list-clean">
+            <li>📧 <a href="mailto:privacidade@soulmates.com.br">privacidade@soulmates.com.br</a></li>
+            <li>🏢 SoulMates · Eduardo Sturião MEI · CNPJ 56.789.012/0001-34 · Rua das Flores, 123, São Paulo, SP, CEP 01310-100</li>
+          </ul>
+
+          <div class="legal-footer-nav">
+            <a href="./index.html" class="legal-back">← Voltar para a Home</a>
+          </div>
+
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <section>
+    <div id="footer-container">
+      <footer class="sm-footer">
+        <div class="container">
+
+          <div class="sm-footer-grid">
+
+            <div class="sm-footer-brand">
+              <a class="sm-footer-logo" href="./index.html" aria-label="SoulMates">
+                <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+                  <defs>
+                    <clipPath id="sm-foot-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+                    <clipPath id="sm-foot-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+                  </defs>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-bot)"/>
+                  <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-top)"/>
+                </svg>
+                <span class="sm-footer-logo-name">SoulMates</span>
+              </a>
+              <p class="sm-footer-tagline">Presentes digitais únicos, entregues por QR Code, para emocionar quem você ama.</p>
+              <div class="sm-footer-proof">
+                <span class="sm-footer-proof-stars">⭐⭐⭐⭐⭐</span>
+                <span class="sm-footer-proof-text">+1.000 casais emocionados</span>
+              </div>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Produto</h4>
+              <ul>
+                <li><a href="./index.html#about">Como funciona</a></li>
+                <li><a href="./index.html#service">Planos</a></li>
+                <li><a href="./index.html#depoimentos">Depoimentos</a></li>
+                <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+                <li><a href="./criar/index.html">Criar homenagem</a></li>
+              </ul>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Suporte</h4>
+              <ul>
+                <li><a href="./index.html#team">Dúvidas frequentes</a></li>
+                <li><a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a></li>
+                <li><a href="#">Central de ajuda</a></li>
+              </ul>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Legal</h4>
+              <ul>
+                <li><a href="./termos-de-uso.html">Termos de Uso</a></li>
+                <li><a href="./politica-de-privacidade.html">Política de Privacidade</a></li>
+                <li><a href="./politica-de-cookies.html">Política de Cookies</a></li>
+                <li><a href="./termos-de-uso.html#reembolso">Política de Reembolso</a></li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div class="sm-footer-trust">
+            <div class="sm-footer-payments">
+              <span class="sm-footer-trust-label">Formas de pagamento</span>
+              <div class="sm-footer-pay-icons">
+                <span class="sm-pay-badge sm-pay-pix" aria-label="Pix">Pix</span>
+                <span class="sm-pay-badge" aria-label="Visa">VISA</span>
+                <span class="sm-pay-badge" aria-label="Mastercard">Mastercard</span>
+                <span class="sm-pay-badge" aria-label="Elo">Elo</span>
+                <span class="sm-pay-badge" aria-label="American Express">Amex</span>
+              </div>
+            </div>
+            <div class="sm-footer-secure">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>Site seguro · SSL 256-bit</span>
+            </div>
+          </div>
+
+          <div class="sm-footer-bottom">
+            <div class="sm-footer-company">
+              <p><strong>SoulMates</strong> <span class="sm-footer-legal">· Eduardo Sturião MEI · CNPJ 56.789.012/0001-34</span></p>
+              <p class="sm-footer-legal">São Paulo, SP · CEP 01310-100</p>
+            </div>
+
+            <div class="sm-footer-social">
+              <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+              <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+              <a href="#" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+            </div>
+
+            <div class="sm-footer-copyright">
+              <p>© 2026 SoulMates. Todos os direitos reservados.</p>
+            </div>
+          </div>
+
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <!-- Cookie Consent Banner -->
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/cookies.js"></script>
+
+  <script>
+    (function () {
+      const btn = document.getElementById('reset-consent-btn');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        localStorage.removeItem('sm_cookie_consent');
+        btn.textContent = '✓ Preferências resetadas — recarregando...';
+        btn.classList.add('legal-btn-success');
+        setTimeout(function () { window.location.reload(); }, 900);
+      });
+    })();
+  </script>
+
+</body>
+
+</html>

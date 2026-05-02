@@ -940,33 +940,110 @@
 
   <section>
     <div id="footer-container">
-      <div class="footer">
+      <footer class="sm-footer">
         <div class="container">
-          <div class="row text-center">
-            <div class="col-lg-12 col-sm-12 col-xs-12">
-              <div class="footer_menu">
-                <ul>
-                  <li><a href="#">Home</a></li>
-                  <li><a href="#">Sobre Nós</a></li>
-                  <li><a href="#">Como Funciona</a></li>
-                  <li><a href="#">Planos</a></li>
-                  <li><a href="#">Contato</a></li>
-                </ul>
-              </div>
-              <div class="footer_copyright">
-                <p>© 2026 SoulMates. All Rights Reserved.</p>
-              </div>
-              <div class="footer_profile"> 
-                <ul>
-                  <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
-                  <li><a href="#"><i class="fa-brands fa-twitter"></i></a></li>
-                  <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
-                </ul>
+
+          <!-- Topo: 4 colunas (marca + 3 grupos de links) -->
+          <div class="sm-footer-grid">
+
+            <!-- Coluna 1 — Marca -->
+            <div class="sm-footer-brand">
+              <a class="sm-footer-logo" href="./index.html" aria-label="SoulMates">
+                <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+                  <defs>
+                    <clipPath id="sm-foot-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+                    <clipPath id="sm-foot-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+                  </defs>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-bot)"/>
+                  <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-top)"/>
+                </svg>
+                <span class="sm-footer-logo-name">SoulMates</span>
+              </a>
+              <p class="sm-footer-tagline">Presentes digitais únicos, entregues por QR Code, para emocionar quem você ama.</p>
+              <div class="sm-footer-proof">
+                <span class="sm-footer-proof-stars">⭐⭐⭐⭐⭐</span>
+                <span class="sm-footer-proof-text">+1.000 casais emocionados</span>
               </div>
             </div>
+
+            <!-- Coluna 2 — Produto -->
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Produto</h4>
+              <ul>
+                <li><a href="#about">Como funciona</a></li>
+                <li><a href="#service">Planos</a></li>
+                <li><a href="#depoimentos">Depoimentos</a></li>
+                <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+                <li><a href="./criar/index.html">Criar homenagem</a></li>
+              </ul>
+            </div>
+
+            <!-- Coluna 3 — Suporte -->
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Suporte</h4>
+              <ul>
+                <li><a href="#team">Dúvidas frequentes</a></li>
+                <li><a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a></li>
+                <li><a href="#">Central de ajuda</a></li>
+              </ul>
+            </div>
+
+            <!-- Coluna 4 — Legal -->
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Legal</h4>
+              <ul>
+                <li><a href="./termos-de-uso.html">Termos de Uso</a></li>
+                <li><a href="./politica-de-privacidade.html">Política de Privacidade</a></li>
+                <li><a href="./politica-de-cookies.html">Política de Cookies</a></li>
+                <li><a href="./termos-de-uso.html#reembolso">Política de Reembolso</a></li>
+              </ul>
+            </div>
+
           </div>
+
+          <!-- Selos de pagamento e segurança -->
+          <div class="sm-footer-trust">
+            <div class="sm-footer-payments">
+              <span class="sm-footer-trust-label">Formas de pagamento</span>
+              <div class="sm-footer-pay-icons">
+                <span class="sm-pay-badge sm-pay-pix" aria-label="Pix">Pix</span>
+                <span class="sm-pay-badge" aria-label="Visa">VISA</span>
+                <span class="sm-pay-badge" aria-label="Mastercard">Mastercard</span>
+                <span class="sm-pay-badge" aria-label="Elo">Elo</span>
+                <span class="sm-pay-badge" aria-label="American Express">Amex</span>
+              </div>
+            </div>
+            <div class="sm-footer-secure">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>Site seguro · SSL 256-bit</span>
+            </div>
+          </div>
+
+          <!-- Linha base: empresa + social + copyright -->
+          <div class="sm-footer-bottom">
+            <div class="sm-footer-company">
+              <p><strong>SoulMates</strong> <span class="sm-footer-legal">· Eduardo Sturião MEI · CNPJ 56.789.012/0001-34</span></p>
+              <p class="sm-footer-legal">São Paulo, SP · CEP 01310-100</p>
+            </div>
+
+            <div class="sm-footer-social">
+              <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+              <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+              <a href="#" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+            </div>
+
+            <div class="sm-footer-copyright">
+              <p>© 2026 SoulMates. Todos os direitos reservados.</p>
+            </div>
+          </div>
+
         </div>
-      </div>
+      </footer>
     </div>
   </section>
 

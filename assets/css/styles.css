@@ -1751,6 +1751,230 @@ h2 {
     color: #fff;
   }
 
+/* ── NOVO FOOTER (sm-footer) ──────────────────────────────────── */
+
+.sm-footer {
+  background: #0e1117;
+  padding: 70px 0 30px;
+  color: #c8cdd6;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.sm-footer .container { max-width: 1200px; }
+
+/* Grid principal — 4 colunas */
+.sm-footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.2fr 1fr;
+  gap: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Coluna marca */
+.sm-footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  margin-bottom: 14px;
+}
+.sm-footer-logo-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+.sm-footer-tagline {
+  color: #9ba3b1;
+  font-size: 13.5px;
+  margin: 0 0 18px;
+  max-width: 320px;
+}
+.sm-footer-proof {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,109,186,0.08);
+  border: 1px solid rgba(255,109,186,0.18);
+  padding: 8px 12px;
+  border-radius: 100px;
+  width: fit-content;
+}
+.sm-footer-proof-stars { font-size: 11px; }
+.sm-footer-proof-text {
+  font-size: 12.5px;
+  color: #ffb6d9;
+  font-weight: 500;
+}
+
+/* Colunas de links */
+.sm-footer-title {
+  font-family: 'Syne', sans-serif;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 16px;
+}
+.sm-footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sm-footer-col ul li { margin-bottom: 10px; }
+.sm-footer-col ul li a {
+  color: #9ba3b1;
+  text-decoration: none;
+  font-size: 13.5px;
+  transition: color 0.2s ease;
+}
+.sm-footer-col ul li a:hover { color: #ff6dba; }
+
+/* Selos de pagamento e segurança */
+.sm-footer-trust {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sm-footer-trust-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #6b7281;
+  margin-bottom: 8px;
+}
+.sm-footer-pay-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sm-pay-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  background: #fff;
+  color: #0e1117;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+  font-family: 'Sora', sans-serif;
+  min-width: 44px;
+}
+.sm-pay-pix {
+  background: #00b8a9;
+  color: #fff;
+}
+.sm-footer-secure {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9ba3b1;
+  font-size: 13px;
+}
+
+/* Linha de base */
+.sm-footer-bottom {
+  display: grid;
+  grid-template-columns: 1.5fr auto 1fr;
+  gap: 24px;
+  align-items: center;
+  padding-top: 24px;
+}
+.sm-footer-company p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6b7281;
+  line-height: 1.7;
+}
+.sm-footer-company p strong { color: #c8cdd6; font-weight: 600; font-size: 13px; }
+.sm-footer-legal {
+  font-size: 10.5px;
+  color: #4a4f5a;
+  letter-spacing: 0.1px;
+}
+
+.sm-footer-social {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.sm-footer-social a {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,109,186,0.12);
+  color: #ff6dba;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+.sm-footer-social a:hover {
+  background: #ff6dba;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.sm-footer-copyright p {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7281;
+  text-align: right;
+  font-family: 'Sora', sans-serif;
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Responsivo */
+@media (max-width: 991px) {
+  .sm-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .sm-footer-brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 767px) {
+  .sm-footer { padding: 50px 0 24px; }
+  .sm-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-bottom: 28px;
+  }
+  .sm-footer-trust {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .sm-footer-bottom {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 16px;
+  }
+  .sm-footer-company p,
+  .sm-footer-copyright p { text-align: center; }
+  .sm-footer-social { justify-content: center; }
+  .sm-footer-proof { margin: 0 auto; }
+  .sm-footer-tagline { margin-left: auto; margin-right: auto; }
+  .sm-footer-brand { text-align: center; }
+  .sm-footer-logo { margin-left: auto; margin-right: auto; }
+}
+
 /* ══════════════════════════════════════════════════════════════
    RESPONSIVO — HERO & SEÇÕES (index.html)
 ══════════════════════════════════════════════════════════════ */

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/cookies.css">
+  <link rel="stylesheet" href="assets/css/legal.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <title>Política de Privacidade — SoulMates</title>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <header class="sm-pill-nav" id="smPillNav">
+    <nav class="sm-pill">
+      <a class="sm-pill-logo" href="./index.html">
+        <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+          <defs>
+            <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+        </svg>
+        <span class="sm-pill-logo-name">SoulMates</span>
+      </a>
+
+      <ul class="sm-pill-links">
+        <li><a href="./index.html#home">Home</a></li>
+        <li><a href="./index.html#about">Como funciona</a></li>
+        <li><a href="./index.html#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="./index.html#team">FAQ</a></li>
+      </ul>
+
+      <div class="sm-pill-right">
+        <a href="./login.html" class="sm-pill-login">Login</a>
+        <button class="sm-pill-burger" id="smBurger" aria-label="Menu">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+            <rect y="0" width="16" height="2" rx="1"/>
+            <rect y="5" width="16" height="2" rx="1"/>
+            <rect y="10" width="16" height="2" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sm-pill-mobile" id="smMobileMenu">
+      <ul>
+        <li><a href="./index.html#home">Home</a></li>
+        <li><a href="./index.html#about">Como funciona</a></li>
+        <li><a href="./index.html#service">Planos</a></li>
+        <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+        <li><a href="./index.html#team">FAQ</a></li>
+        <li><a href="./login.html" class="sm-pill-mobile-login">Login</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <script>
+    (function () {
+      const burger = document.getElementById('smBurger');
+      const menu   = document.getElementById('smMobileMenu');
+      const nav    = document.getElementById('smPillNav');
+      if (!burger || !menu) return;
+      burger.addEventListener('click', () => menu.classList.toggle('open'));
+      document.addEventListener('click', e => {
+        if (!nav.contains(e.target)) menu.classList.remove('open');
+      });
+      menu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => menu.classList.remove('open'));
+      });
+    })();
+  </script>
+
+  <!-- HERO LEGAL -->
+  <section class="legal-hero">
+    <div class="legal-hero-bg" aria-hidden="true"></div>
+    <div class="container">
+      <nav class="legal-breadcrumb" aria-label="breadcrumb">
+        <a href="./index.html">Home</a>
+        <span>›</span>
+        <span>Legal</span>
+        <span>›</span>
+        <span class="legal-breadcrumb-current">Política de Privacidade</span>
+      </nav>
+      <span class="features-pill">🔒 Privacidade</span>
+      <h1 class="legal-title">Política de <span class="legal-title-accent">Privacidade</span></h1>
+      <p class="legal-subtitle">Sua privacidade é prioridade. Aqui explicamos, sem juridiquês, quais dados coletamos, por que coletamos e como você pode controlá-los.</p>
+      <p class="legal-meta">Última atualização: <strong>02 de maio de 2026</strong></p>
+    </div>
+  </section>
+
+  <!-- CONTEÚDO -->
+  <section class="legal-section">
+    <div class="container">
+      <div class="legal-layout">
+
+        <!-- Sumário lateral -->
+        <aside class="legal-toc" aria-label="Sumário">
+          <p class="legal-toc-label">Nesta página</p>
+          <ul>
+            <li><a href="#quem-somos">1. Quem somos</a></li>
+            <li><a href="#dados">2. Dados que coletamos</a></li>
+            <li><a href="#como-coletamos">3. Como coletamos</a></li>
+            <li><a href="#finalidades">4. Para que usamos</a></li>
+            <li><a href="#base-legal">5. Base legal (LGPD)</a></li>
+            <li><a href="#compartilhamento">6. Compartilhamento</a></li>
+            <li><a href="#seguranca">7. Armazenamento e segurança</a></li>
+            <li><a href="#retencao">8. Tempo de retenção</a></li>
+            <li><a href="#direitos">9. Seus direitos</a></li>
+            <li><a href="#cookies">10. Cookies</a></li>
+            <li><a href="#criancas">11. Crianças e adolescentes</a></li>
+            <li><a href="#internacional">12. Transferências internacionais</a></li>
+            <li><a href="#atualizacoes">13. Atualizações</a></li>
+            <li><a href="#contato">14. Fale com nosso DPO</a></li>
+          </ul>
+        </aside>
+
+        <!-- Texto principal -->
+        <article class="legal-content">
+
+          <p class="legal-intro">O <strong>SoulMates</strong> respeita sua privacidade e está comprometido em proteger seus dados pessoais. Esta Política de Privacidade descreve, de forma clara e transparente, como coletamos, usamos, armazenamos e compartilhamos suas informações ao usar nossa plataforma <em>soulmates.com.br</em>, em conformidade com a <strong>Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)</strong>.</p>
+
+          <!-- 1 -->
+          <h2 id="quem-somos" class="legal-h2">1. Quem somos</h2>
+          <p>O SoulMates é uma plataforma para criação de homenagens digitais personalizadas para casais e pessoas queridas, entregues via link ou QR Code. Operamos sob:</p>
+          <ul class="legal-list legal-list-clean">
+            <li><strong>SoulMates</strong> · Eduardo Sturião MEI</li>
+            <li>CNPJ: 56.789.012/0001-34</li>
+            <li>Endereço: Rua das Flores, 123 — São Paulo, SP, CEP 01310-100</li>
+            <li>Contato: <a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a></li>
+          </ul>
+          <p>Para os fins desta política, somos o <strong>Controlador</strong> dos seus dados pessoais — ou seja, quem decide como e por que esses dados são tratados.</p>
+
+          <!-- 2 -->
+          <h2 id="dados" class="legal-h2">2. Quais dados coletamos</h2>
+          <p>Coletamos apenas os dados necessários para que você crie sua homenagem, finalize seu pagamento e acesse o que comprou. Esses dados se dividem em quatro grupos:</p>
+
+          <div class="legal-table-wrap">
+            <table class="legal-table">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Exemplos</th>
+                  <th>Quando coletamos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Cadastrais</strong></td>
+                  <td>Nome, e-mail, senha (criptografada), telefone (opcional)</td>
+                  <td>No cadastro / login</td>
+                </tr>
+                <tr>
+                  <td><strong>Conteúdo da homenagem</strong></td>
+                  <td>Fotos, mensagem, nomes do casal, data de início, cidade, link da música</td>
+                  <td>Durante a criação da homenagem</td>
+                </tr>
+                <tr>
+                  <td><strong>Pagamento</strong></td>
+                  <td>CPF, dados de cobrança, status da transação (não armazenamos número de cartão)</td>
+                  <td>No checkout</td>
+                </tr>
+                <tr>
+                  <td><strong>Navegação</strong></td>
+                  <td>Endereço IP, tipo de dispositivo, navegador, páginas visitadas, cookies</td>
+                  <td>Automaticamente, ao usar o site</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p><strong>Não coletamos</strong> dados pessoais sensíveis (origem racial, religião, opinião política, saúde, biometria etc.), exceto quando você voluntariamente os inclui no conteúdo da homenagem (ex: foto sua).</p>
+
+          <!-- 3 -->
+          <h2 id="como-coletamos" class="legal-h2">3. Como coletamos</h2>
+          <p>Coletamos seus dados de três formas principais:</p>
+          <ul class="legal-list">
+            <li><strong>Diretamente de você</strong>, quando preenche formulários (cadastro, criador de homenagem, checkout, contato);</li>
+            <li><strong>Automaticamente</strong>, por meio de cookies e tecnologias similares enquanto você navega (ver Seção 10);</li>
+            <li><strong>De terceiros</strong>, quando você usa login social (Google, Apple) ou quando o gateway de pagamento confirma uma transação.</li>
+          </ul>
+
+          <!-- 4 -->
+          <h2 id="finalidades" class="legal-h2">4. Para que usamos seus dados</h2>
+          <p>Usamos seus dados apenas para finalidades específicas e legítimas:</p>
+          <ul class="legal-list">
+            <li><strong>Prestação do serviço</strong> — criar, hospedar e exibir sua homenagem; permitir login e edição;</li>
+            <li><strong>Processamento de pagamentos</strong> — viabilizar o checkout e emitir comprovantes;</li>
+            <li><strong>Suporte ao cliente</strong> — responder dúvidas, resolver problemas, processar reembolsos;</li>
+            <li><strong>Comunicação transacional</strong> — confirmar compra, enviar QR Code, avisar sobre expiração;</li>
+            <li><strong>Marketing</strong> — enviar novidades e promoções (apenas com seu consentimento, com opt-out a qualquer momento);</li>
+            <li><strong>Segurança e prevenção a fraude</strong> — detectar atividade suspeita e proteger usuários;</li>
+            <li><strong>Cumprimento legal</strong> — atender obrigações fiscais, contábeis e regulatórias.</li>
+          </ul>
+
+          <!-- 5 -->
+          <h2 id="base-legal" class="legal-h2">5. Base legal para o tratamento (LGPD)</h2>
+          <p>A LGPD exige que todo tratamento de dados tenha uma base legal. Usamos as seguintes:</p>
+
+          <div class="legal-table-wrap">
+            <table class="legal-table">
+              <thead>
+                <tr>
+                  <th>Base legal (Art. 7º LGPD)</th>
+                  <th>Quando aplicamos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Execução de contrato</strong></td>
+                  <td>Para entregar o serviço que você contratou (criar e hospedar a homenagem)</td>
+                </tr>
+                <tr>
+                  <td><strong>Consentimento</strong></td>
+                  <td>Marketing por e-mail, cookies não essenciais, integrações opcionais</td>
+                </tr>
+                <tr>
+                  <td><strong>Obrigação legal</strong></td>
+                  <td>Emissão de notas fiscais, retenção fiscal, atendimento a autoridades</td>
+                </tr>
+                <tr>
+                  <td><strong>Legítimo interesse</strong></td>
+                  <td>Segurança da plataforma, prevenção a fraude, melhoria do produto (sempre balanceado com seus direitos)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 6 -->
+          <h2 id="compartilhamento" class="legal-h2">6. Compartilhamento com terceiros</h2>
+          <p>Não vendemos seus dados. Compartilhamos apenas com parceiros essenciais para a operação do serviço, sob contrato e cláusulas de proteção de dados:</p>
+          <ul class="legal-list">
+            <li><strong>Gateways de pagamento</strong> (Stripe, Mercado Pago) — para processar transações;</li>
+            <li><strong>Provedores de hospedagem em nuvem</strong> (AWS, Vercel, Cloudflare) — onde sua homenagem fica armazenada;</li>
+            <li><strong>Ferramentas de e-mail transacional</strong> (Resend, SendGrid) — para envio de confirmações;</li>
+            <li><strong>Serviços de análise</strong> (Google Analytics) — em modo agregado e anonimizado;</li>
+            <li><strong>Autoridades públicas</strong> — quando exigido por lei, ordem judicial ou requisição legítima.</li>
+          </ul>
+          <p>Cada um desses parceiros possui sua própria política de privacidade e adota medidas de segurança equivalentes ou superiores às nossas.</p>
+
+          <!-- 7 -->
+          <h2 id="seguranca" class="legal-h2">7. Armazenamento e segurança</h2>
+          <p>Levamos a segurança dos seus dados a sério. Aplicamos medidas técnicas e organizacionais como:</p>
+          <ul class="legal-list">
+            <li>Criptografia em trânsito (HTTPS/TLS 1.3) e em repouso;</li>
+            <li>Hash seguro de senhas (bcrypt);</li>
+            <li>Controle de acesso por permissões e autenticação multifator interna;</li>
+            <li>Backups regulares e redundância de armazenamento;</li>
+            <li>Monitoramento contínuo contra acessos não autorizados.</li>
+          </ul>
+
+          <div class="legal-callout">
+            <strong>Importante:</strong> nenhuma transmissão pela internet é 100% segura. Apesar dos nossos esforços, não podemos garantir segurança absoluta. Em caso de incidente de segurança que afete seus dados, notificaremos você e a ANPD (Autoridade Nacional de Proteção de Dados) conforme exige a LGPD.
+          </div>
+
+          <!-- 8 -->
+          <h2 id="retencao" class="legal-h2">8. Por quanto tempo guardamos seus dados</h2>
+          <p>Mantemos seus dados apenas pelo tempo necessário para as finalidades acima ou conforme exigido por lei:</p>
+          <ul class="legal-list">
+            <li><strong>Conta ativa</strong> — enquanto sua conta existir;</li>
+            <li><strong>Plano 24 horas</strong> — conteúdo da homenagem é apagado após o vencimento, salvo se você renovar;</li>
+            <li><strong>Plano Vitalício</strong> — conteúdo permanece enquanto sua conta estiver ativa;</li>
+            <li><strong>Dados de pagamento e fiscais</strong> — mínimo de 5 anos (exigência fiscal e contábil);</li>
+            <li><strong>Logs de segurança</strong> — até 6 meses (Marco Civil da Internet);</li>
+            <li><strong>Após exclusão da conta</strong> — apagamos seus dados em até 30 dias, exceto onde a lei exigir retenção maior.</li>
+          </ul>
+
+          <!-- 9 -->
+          <h2 id="direitos" class="legal-h2">9. Seus direitos como titular dos dados</h2>
+          <p>A LGPD garante a você uma série de direitos sobre seus dados pessoais. Você pode, a qualquer momento:</p>
+          <ul class="legal-list">
+            <li><strong>Confirmar</strong> se tratamos seus dados pessoais;</li>
+            <li><strong>Acessar</strong> os dados que temos sobre você;</li>
+            <li><strong>Corrigir</strong> dados incompletos, inexatos ou desatualizados;</li>
+            <li><strong>Anonimizar, bloquear ou eliminar</strong> dados desnecessários ou tratados em desconformidade com a LGPD;</li>
+            <li><strong>Solicitar a portabilidade</strong> dos seus dados a outro fornecedor;</li>
+            <li><strong>Revogar o consentimento</strong> dado anteriormente;</li>
+            <li><strong>Eliminar</strong> seus dados tratados com base no consentimento;</li>
+            <li><strong>Ser informado</strong> sobre com quem compartilhamos seus dados;</li>
+            <li><strong>Opor-se</strong> a tratamento que considere ilegal ou abusivo;</li>
+            <li><strong>Reclamar</strong> à ANPD em <a href="https://www.gov.br/anpd/" target="_blank" rel="noopener">gov.br/anpd</a>.</li>
+          </ul>
+          <p>Para exercer qualquer um desses direitos, basta nos enviar um e-mail para <a href="mailto:privacidade@soulmates.com.br">privacidade@soulmates.com.br</a>. Respondemos em até <strong>15 dias</strong>, conforme exige a LGPD.</p>
+
+          <!-- 10 -->
+          <h2 id="cookies" class="legal-h2">10. Cookies e tecnologias similares</h2>
+          <p>Utilizamos cookies e tecnologias parecidas para melhorar sua experiência, lembrar suas preferências e analisar o uso do site. O detalhamento completo está em nossa <a href="./politica-de-cookies.html">Política de Cookies</a>, onde você também pode gerenciar suas preferências.</p>
+
+          <!-- 11 -->
+          <h2 id="criancas" class="legal-h2">11. Crianças e adolescentes</h2>
+          <p>O SoulMates não é destinado a menores de <strong>18 anos</strong>. Não coletamos intencionalmente dados de crianças ou adolescentes. Caso identifiquemos um cadastro feito por menor de idade sem consentimento dos responsáveis, a conta será excluída e os dados, eliminados.</p>
+          <p>Se você é responsável por um menor e acredita que ele forneceu dados ao SoulMates, entre em contato pelo e-mail <a href="mailto:privacidade@soulmates.com.br">privacidade@soulmates.com.br</a> e tomaremos as providências.</p>
+
+          <!-- 12 -->
+          <h2 id="internacional" class="legal-h2">12. Transferências internacionais</h2>
+          <p>Alguns de nossos parceiros (provedores de nuvem, gateways, ferramentas de e-mail) operam fora do Brasil. Quando ocorrem transferências internacionais de dados, garantimos que o destinatário oferece <strong>nível de proteção adequado</strong> ou aplica salvaguardas como cláusulas contratuais padrão, conforme permite a LGPD (Art. 33).</p>
+
+          <!-- 13 -->
+          <h2 id="atualizacoes" class="legal-h2">13. Atualizações desta política</h2>
+          <p>Esta política pode ser atualizada periodicamente para refletir mudanças na legislação, em nossas práticas ou nos serviços que utilizamos. Quando isso acontecer, atualizaremos a data de "Última atualização" no topo desta página.</p>
+          <p>Mudanças significativas serão comunicadas de forma destacada — por banner no site ou e-mail aos usuários cadastrados, conforme apropriado.</p>
+
+          <!-- 14 -->
+          <h2 id="contato" class="legal-h2">14. Fale com nosso DPO</h2>
+          <p>Para qualquer dúvida sobre esta política, exercício de direitos ou tratamento dos seus dados, fale com nosso Encarregado de Proteção de Dados (DPO):</p>
+          <ul class="legal-list legal-list-clean">
+            <li>📧 <a href="mailto:privacidade@soulmates.com.br">privacidade@soulmates.com.br</a></li>
+            <li>🏢 SoulMates · Eduardo Sturião MEI · CNPJ 56.789.012/0001-34 · Rua das Flores, 123, São Paulo, SP, CEP 01310-100</li>
+          </ul>
+
+          <div class="legal-footer-nav">
+            <a href="./index.html" class="legal-back">← Voltar para a Home</a>
+          </div>
+
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <section>
+    <div id="footer-container">
+      <footer class="sm-footer">
+        <div class="container">
+
+          <div class="sm-footer-grid">
+
+            <div class="sm-footer-brand">
+              <a class="sm-footer-logo" href="./index.html" aria-label="SoulMates">
+                <svg class="sm-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+                  <defs>
+                    <clipPath id="sm-foot-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+                    <clipPath id="sm-foot-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+                  </defs>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-bot)"/>
+                  <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+                  <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-foot-clip-top)"/>
+                </svg>
+                <span class="sm-footer-logo-name">SoulMates</span>
+              </a>
+              <p class="sm-footer-tagline">Presentes digitais únicos, entregues por QR Code, para emocionar quem você ama.</p>
+              <div class="sm-footer-proof">
+                <span class="sm-footer-proof-stars">⭐⭐⭐⭐⭐</span>
+                <span class="sm-footer-proof-text">+1.000 casais emocionados</span>
+              </div>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Produto</h4>
+              <ul>
+                <li><a href="./index.html#about">Como funciona</a></li>
+                <li><a href="./index.html#service">Planos</a></li>
+                <li><a href="./index.html#depoimentos">Depoimentos</a></li>
+                <li><a href="./meus-presentes.html">Meus Presentes</a></li>
+                <li><a href="./criar/index.html">Criar homenagem</a></li>
+              </ul>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Suporte</h4>
+              <ul>
+                <li><a href="./index.html#team">Dúvidas frequentes</a></li>
+                <li><a href="mailto:contato@soulmates.com.br">contato@soulmates.com.br</a></li>
+                <li><a href="#">Central de ajuda</a></li>
+              </ul>
+            </div>
+
+            <div class="sm-footer-col">
+              <h4 class="sm-footer-title">Legal</h4>
+              <ul>
+                <li><a href="./termos-de-uso.html">Termos de Uso</a></li>
+                <li><a href="./politica-de-privacidade.html">Política de Privacidade</a></li>
+                <li><a href="./politica-de-cookies.html">Política de Cookies</a></li>
+                <li><a href="./termos-de-uso.html#reembolso">Política de Reembolso</a></li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div class="sm-footer-trust">
+            <div class="sm-footer-payments">
+              <span class="sm-footer-trust-label">Formas de pagamento</span>
+              <div class="sm-footer-pay-icons">
+                <span class="sm-pay-badge sm-pay-pix" aria-label="Pix">Pix</span>
+                <span class="sm-pay-badge" aria-label="Visa">VISA</span>
+                <span class="sm-pay-badge" aria-label="Mastercard">Mastercard</span>
+                <span class="sm-pay-badge" aria-label="Elo">Elo</span>
+                <span class="sm-pay-badge" aria-label="American Express">Amex</span>
+              </div>
+            </div>
+            <div class="sm-footer-secure">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>Site seguro · SSL 256-bit</span>
+            </div>
+          </div>
+
+          <div class="sm-footer-bottom">
+            <div class="sm-footer-company">
+              <p><strong>SoulMates</strong> <span class="sm-footer-legal">· Eduardo Sturião MEI · CNPJ 56.789.012/0001-34</span></p>
+              <p class="sm-footer-legal">São Paulo, SP · CEP 01310-100</p>
+            </div>
+
+            <div class="sm-footer-social">
+              <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+              <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+              <a href="#" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+            </div>
+
+            <div class="sm-footer-copyright">
+              <p>© 2026 SoulMates. Todos os direitos reservados.</p>
+            </div>
+          </div>
+
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <!-- Cookie Consent Banner -->
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/cookies.js"></script>
+
+</body>
+
+</html>
