@@ -904,6 +904,8 @@
     const modalTitle   = document.getElementById('gcModalTitle');
     const modalText    = document.getElementById('gcModalText');
 
+    let capsulaOcupada = false;
+
     function openCapsulaModal(index) {
       if (!modalOverlay) return;
       modalEmoji.textContent = capsulaEmojisLocal[index] || '💌';
@@ -920,6 +922,7 @@
       modalOverlay.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
       capsulas.forEach(c => c.classList.remove('gc-aberta'));
+      capsulaOcupada = false;
     }
     if (modalClose) modalClose.addEventListener('click', closeCapsulaModal);
     if (modalCta)   modalCta.addEventListener('click',   closeCapsulaModal);
@@ -931,7 +934,9 @@
 
     capsulas.forEach(c => {
       c.addEventListener('click', () => {
-        if (c.classList.contains('gc-aberta')) return; /* já abrindo, ignora double-click */
+        if (capsulaOcupada) return;
+        if (c.classList.contains('gc-aberta')) return;
+        capsulaOcupada = true;
         const isFirst = c.dataset.wasOpened !== 'true';
         const idx = parseInt(c.dataset.index, 10);
         c.classList.add('gc-aberta');
