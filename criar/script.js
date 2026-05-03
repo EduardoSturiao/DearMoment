@@ -1650,7 +1650,10 @@ function setupMusicSearch() {
 
   function getPlayablePreviewStart() {
     const previewDuration = getMusicPreviewDuration(audioEl);
-    return state.musicMoment <= previewDuration ? state.musicMoment : 0;
+    if (state.musicMoment <= previewDuration) return state.musicMoment;
+    const fullDuration = getSelectedTrackDuration(audioEl);
+    if (fullDuration <= 0) return 0;
+    return (state.musicMoment / fullDuration) * previewDuration;
   }
 
   function getPreviewTimelineCurrent() {
@@ -1694,7 +1697,7 @@ function setupMusicSearch() {
   let dragStartEnd = 0;
 
   function onDragMove(e) {
-    const duration = getMusicPreviewDuration(audioEl);
+    const duration = getSelectedTrackDuration(audioEl);
     if (!duration || !dragType) return;
     const trackWidth = momentTrack.getBoundingClientRect().width;
     const deltaSeconds = ((e.clientX - dragStartX) / trackWidth) * duration;
@@ -1766,7 +1769,7 @@ function setupMusicSearch() {
   const HANDLE_HIT_INNER = 12; /* px de tolerância em torno de cada borda da seleção */
   momentTrack.addEventListener('pointerdown', e => {
     if (momentPicker.classList.contains('is-disabled')) return;
-    const duration = getMusicPreviewDuration(audioEl);
+    const duration = getSelectedTrackDuration(audioEl);
     if (!duration) return;
     const trackRect = momentTrack.getBoundingClientRect();
     const x = e.clientX - trackRect.left;
@@ -1789,7 +1792,7 @@ function setupMusicSearch() {
   });
 
   audioEl.addEventListener('loadedmetadata', () => {
-    const dur = getMusicPreviewDuration(audioEl);
+    const dur = getSelectedTrackDuration(audioEl);
     state.musicMoment    = Math.max(0, Math.min(state.musicMoment, dur));
     state.musicMomentEnd = Math.max(state.musicMoment + 1, Math.min(state.musicMomentEnd, dur));
     updateMomentPicker();
@@ -1842,7 +1845,7 @@ function setupMusicSearch() {
   }
 
   function updateMomentPicker() {
-    const duration   = getMusicPreviewDuration(audioEl);
+    const duration   = getSelectedTrackDuration(audioEl);
     const hasPreview = Boolean(state.previewUrl);
 
     // Clamp ambos os valores dentro da música
