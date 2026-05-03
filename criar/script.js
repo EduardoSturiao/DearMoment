@@ -1694,7 +1694,7 @@ function setupMusicSearch() {
   let dragStartEnd = 0;
 
   function onDragMove(e) {
-    const duration = getSelectedTrackDuration(audioEl);
+    const duration = getMusicPreviewDuration(audioEl);
     if (!duration || !dragType) return;
     const trackWidth = momentTrack.getBoundingClientRect().width;
     const deltaSeconds = ((e.clientX - dragStartX) / trackWidth) * duration;
@@ -1740,6 +1740,7 @@ function setupMusicSearch() {
     dragStartMoment = state.musicMoment;
     dragStartEnd    = state.musicMomentEnd;
     momentPicker.classList.add('is-dragging');
+    try { momentTrack.setPointerCapture(e.pointerId); } catch (_) {}
     document.addEventListener('pointermove',   onDragMove);
     document.addEventListener('pointerup',     onDragEnd);
     document.addEventListener('pointercancel', onDragEnd); /* iOS pode cancelar com pointercancel */
@@ -1765,7 +1766,7 @@ function setupMusicSearch() {
   const HANDLE_HIT_INNER = 12; /* px de tolerância em torno de cada borda da seleção */
   momentTrack.addEventListener('pointerdown', e => {
     if (momentPicker.classList.contains('is-disabled')) return;
-    const duration = getSelectedTrackDuration(audioEl);
+    const duration = getMusicPreviewDuration(audioEl);
     if (!duration) return;
     const trackRect = momentTrack.getBoundingClientRect();
     const x = e.clientX - trackRect.left;
@@ -1788,7 +1789,7 @@ function setupMusicSearch() {
   });
 
   audioEl.addEventListener('loadedmetadata', () => {
-    const dur = getSelectedTrackDuration(audioEl);
+    const dur = getMusicPreviewDuration(audioEl);
     state.musicMoment    = Math.max(0, Math.min(state.musicMoment, dur));
     state.musicMomentEnd = Math.max(state.musicMoment + 1, Math.min(state.musicMomentEnd, dur));
     updateMomentPicker();
@@ -1841,7 +1842,7 @@ function setupMusicSearch() {
   }
 
   function updateMomentPicker() {
-    const duration   = getSelectedTrackDuration(audioEl);
+    const duration   = getMusicPreviewDuration(audioEl);
     const hasPreview = Boolean(state.previewUrl);
 
     // Clamp ambos os valores dentro da música
