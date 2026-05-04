@@ -1690,20 +1690,43 @@ function setupMusicSearch() {
   btnPlay.addEventListener('click', togglePreviewPlayback);
   btnPreviewMoment.addEventListener('click', togglePreviewPlayback);
 
-  // ── Drag pan (seleção fixa, só desloca) ─────────────────────
-  let isDragging = false;
-  let dragStartX = 0;
+  // ── Drag pan (mouse + touch, listeners no document) ─────────
+  let isDragging    = false;
+  let dragStartX    = 0;
   let dragStartMoment = 0;
 
-  function onDragMove(e) {
+  function applyDragStart(clientX) {
+    const duration = getSelectedTrackDuration(audioEl);
+    if (!duration) return false;
+    const rect    = momentTrack.getBoundingClientRect();
+    const x       = clientX - rect.left;
+    const tapTime = (x / rect.width) * duration;
+    const clipDur = state.musicMomentEnd - state.musicMoment;
+
+    if (tapTime < state.musicMoment || tapTime > state.musicMomentEnd) {
+      let s = tapTime - clipDur / 2;
+      s = Math.max(0, Math.min(duration - clipDur, s));
+      state.musicMoment    = s;
+      state.musicMomentEnd = s + clipDur;
+      updateMomentPicker();
+    }
+
+    isDragging      = true;
+    dragStartX      = clientX;
+    dragStartMoment = state.musicMoment;
+    momentPicker.classList.add('is-dragging');
+    return true;
+  }
+
+  function applyDragMove(clientX) {
     if (!isDragging) return;
     const duration = getSelectedTrackDuration(audioEl);
     if (!duration) return;
     const trackWidth = momentTrack.getBoundingClientRect().width;
-    const clipDur = state.musicMomentEnd - state.musicMoment;
-    const deltaSeconds = ((e.clientX - dragStartX) / trackWidth) * duration;
-    let s = dragStartMoment + deltaSeconds;
-    s = Math.max(0, Math.min(s, duration - clipDur));
+    const clipDur    = state.musicMomentEnd - state.musicMoment;
+    const deltaSec   = ((clientX - dragStartX) / trackWidth) * duration;
+    let s = dragStartMoment + deltaSec;
+    s = Math.max(0, Math.min(duration - clipDur, s));
     state.musicMoment    = s;
     state.musicMomentEnd = s + clipDur;
     updateMomentPicker();
@@ -1712,48 +1735,46 @@ function setupMusicSearch() {
     }
   }
 
-  function onDragEnd() {
+  function applyDragEnd() {
     if (!isDragging) return;
     isDragging = false;
     momentPicker.classList.remove('is-dragging');
-    momentTrack.removeEventListener('pointermove',   onDragMove);
-    momentTrack.removeEventListener('pointerup',     onDragEnd);
-    momentTrack.removeEventListener('pointercancel', onDragEnd);
     clearTimeout(debounceTimer);
     saveState();
     updatePreview();
   }
 
-  momentTrack.addEventListener('pointerdown', e => {
+  // Mouse
+  momentTrack.addEventListener('mousedown', e => {
     if (momentPicker.classList.contains('is-disabled')) return;
-    const duration = getSelectedTrackDuration(audioEl);
-    if (!duration) return;
     e.preventDefault();
-    const trackRect = momentTrack.getBoundingClientRect();
-    const x = e.clientX - trackRect.left;
-    const tapTime = (x / trackRect.width) * duration;
-    const clipDur = state.musicMomentEnd - state.musicMoment;
-
-    if (tapTime < state.musicMoment || tapTime > state.musicMomentEnd) {
-      let newStart = tapTime - clipDur / 2;
-      newStart = Math.max(0, Math.min(duration - clipDur, newStart));
-      state.musicMoment    = newStart;
-      state.musicMomentEnd = newStart + clipDur;
-      updateMomentPicker();
+    if (!applyDragStart(e.clientX)) return;
+    function onMouseMove(ev) { applyDragMove(ev.clientX); }
+    function onMouseUp() {
+      applyDragEnd();
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup',   onMouseUp);
     }
-
-    isDragging = true;
-    dragStartX      = e.clientX;
-    dragStartMoment = state.musicMoment;
-    momentPicker.classList.add('is-dragging');
-    try { momentTrack.setPointerCapture(e.pointerId); } catch (_) {}
-    momentTrack.removeEventListener('pointermove',   onDragMove);
-    momentTrack.removeEventListener('pointerup',     onDragEnd);
-    momentTrack.removeEventListener('pointercancel', onDragEnd);
-    momentTrack.addEventListener('pointermove',   onDragMove);
-    momentTrack.addEventListener('pointerup',     onDragEnd);
-    momentTrack.addEventListener('pointercancel', onDragEnd);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
   });
+
+  // Touch
+  momentTrack.addEventListener('touchstart', e => {
+    if (momentPicker.classList.contains('is-disabled')) return;
+    e.preventDefault();
+    if (!applyDragStart(e.touches[0].clientX)) return;
+    function onTouchMove(ev) { ev.preventDefault(); applyDragMove(ev.changedTouches[0].clientX); }
+    function onTouchEnd() {
+      applyDragEnd();
+      document.removeEventListener('touchmove',   onTouchMove);
+      document.removeEventListener('touchend',    onTouchEnd);
+      document.removeEventListener('touchcancel', onTouchEnd);
+    }
+    document.addEventListener('touchmove',   onTouchMove,  { passive: false });
+    document.addEventListener('touchend',    onTouchEnd);
+    document.addEventListener('touchcancel', onTouchEnd);
+  }, { passive: false });
 
   audioEl.addEventListener('loadedmetadata', () => {
     const dur = getSelectedTrackDuration(audioEl);
