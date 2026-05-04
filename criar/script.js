@@ -1690,97 +1690,50 @@ function setupMusicSearch() {
   btnPlay.addEventListener('click', togglePreviewPlayback);
   btnPreviewMoment.addEventListener('click', togglePreviewPlayback);
 
-  // ── Drag de dois handles ────────────────────────────────────
-  let dragType = null;
+  // ── Drag pan (seleção fixa, só desloca) ─────────────────────
+  let isDragging = false;
   let dragStartX = 0;
   let dragStartMoment = 0;
-  let dragStartEnd = 0;
 
   function onDragMove(e) {
+    if (!isDragging) return;
     const duration = getSelectedTrackDuration(audioEl);
-    if (!duration || !dragType) return;
+    if (!duration) return;
     const trackWidth = momentTrack.getBoundingClientRect().width;
+    const clipDur = state.musicMomentEnd - state.musicMoment;
     const deltaSeconds = ((e.clientX - dragStartX) / trackWidth) * duration;
-
-    if (dragType === 'start') {
-      let s = dragStartMoment + deltaSeconds;
-      s = Math.max(0, Math.min(s, state.musicMomentEnd - MIN_CLIP));
-      if (state.musicMomentEnd - s > MAX_CLIP) s = state.musicMomentEnd - MAX_CLIP;
-      state.musicMoment = s;
-    } else if (dragType === 'end') {
-      let end = dragStartEnd + deltaSeconds;
-      end = Math.min(duration, Math.max(end, state.musicMoment + MIN_CLIP));
-      if (end - state.musicMoment > MAX_CLIP) end = state.musicMoment + MAX_CLIP;
-      state.musicMomentEnd = end;
-    } else {
-      const clipDur = dragStartEnd - dragStartMoment;
-      let s = dragStartMoment + deltaSeconds;
-      s = Math.max(0, Math.min(s, duration - clipDur));
-      state.musicMoment    = s;
-      state.musicMomentEnd = s + clipDur;
-    }
+    let s = dragStartMoment + deltaSeconds;
+    s = Math.max(0, Math.min(s, duration - clipDur));
+    state.musicMoment    = s;
+    state.musicMomentEnd = s + clipDur;
     updateMomentPicker();
-  }
-
-  function onDragEnd(e) {
-    if (!dragType) return;
-    dragType = null;
-    momentPicker.classList.remove('is-dragging');
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup',     onDragEnd);
-    document.removeEventListener('pointercancel', onDragEnd); /* limpa se iOS cancelar o gesto */
     if (!audioEl.paused) {
       try { audioEl.currentTime = getPlayablePreviewStart(); } catch (_) {}
     }
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    momentPicker.classList.remove('is-dragging');
+    momentTrack.removeEventListener('pointermove',   onDragMove);
+    momentTrack.removeEventListener('pointerup',     onDragEnd);
+    momentTrack.removeEventListener('pointercancel', onDragEnd);
     clearTimeout(debounceTimer);
     saveState();
     updatePreview();
   }
 
-  function startDrag(e, type) {
-    dragType        = type;
-    dragStartX      = e.clientX;
-    dragStartMoment = state.musicMoment;
-    dragStartEnd    = state.musicMomentEnd;
-    momentPicker.classList.add('is-dragging');
-    try { momentTrack.setPointerCapture(e.pointerId); } catch (_) {}
-    document.addEventListener('pointermove',   onDragMove);
-    document.addEventListener('pointerup',     onDragEnd);
-    document.addEventListener('pointercancel', onDragEnd); /* iOS pode cancelar com pointercancel */
-    e.preventDefault();
-  }
-
-  /* ATENÇÃO — NÃO voltar a bindar pointerdown nos elementos .music-moment-handle
-     ou em #musicMomentSelection. Aprendido na marra:
-
-     Os handles têm 28px de largura cada e ficam posicionados em left/right -6px
-     dentro da seleção. Quando o trecho selecionado é pequeno (ex.: 30s clip
-     dentro de uma música de 3min ≈ 16% do track ≈ 45px), os dois handles
-     somados cobrem 100% da seleção — não sobra UM pixel sequer pro usuário
-     tocar e arrastar o conjunto. Resultado: pan vira impossível no mobile.
-
-     Por isso o roteamento é POR POSIÇÃO (clientX vs. selLeftPx/selRightPx),
-     num único listener no pai (#musicMomentTrack), e não por target/element.
-     Tap dentro de HANDLE_HIT_INNER de uma das bordas → resize daquele handle.
-     Qualquer outro tap → pan (com salto se for fora da seleção).
-
-     Se for mexer aqui no futuro, rode o caso "trecho de 30s numa música de 3min"
-     no DevTools mobile antes de fazer commit. */
-  const HANDLE_HIT_INNER = 12; /* px de tolerância em torno de cada borda da seleção */
   momentTrack.addEventListener('pointerdown', e => {
     if (momentPicker.classList.contains('is-disabled')) return;
     const duration = getSelectedTrackDuration(audioEl);
     if (!duration) return;
+    e.preventDefault();
     const trackRect = momentTrack.getBoundingClientRect();
     const x = e.clientX - trackRect.left;
-    const selLeftPx  = (state.musicMoment    / duration) * trackRect.width;
-    const selRightPx = (state.musicMomentEnd / duration) * trackRect.width;
-
-    if (Math.abs(x - selLeftPx) <= HANDLE_HIT_INNER)  { startDrag(e, 'start'); return; }
-    if (Math.abs(x - selRightPx) <= HANDLE_HIT_INNER) { startDrag(e, 'end');   return; }
-
     const tapTime = (x / trackRect.width) * duration;
     const clipDur = state.musicMomentEnd - state.musicMoment;
+
     if (tapTime < state.musicMoment || tapTime > state.musicMomentEnd) {
       let newStart = tapTime - clipDur / 2;
       newStart = Math.max(0, Math.min(duration - clipDur, newStart));
@@ -1788,7 +1741,18 @@ function setupMusicSearch() {
       state.musicMomentEnd = newStart + clipDur;
       updateMomentPicker();
     }
-    startDrag(e, 'pan');
+
+    isDragging = true;
+    dragStartX      = e.clientX;
+    dragStartMoment = state.musicMoment;
+    momentPicker.classList.add('is-dragging');
+    try { momentTrack.setPointerCapture(e.pointerId); } catch (_) {}
+    momentTrack.removeEventListener('pointermove',   onDragMove);
+    momentTrack.removeEventListener('pointerup',     onDragEnd);
+    momentTrack.removeEventListener('pointercancel', onDragEnd);
+    momentTrack.addEventListener('pointermove',   onDragMove);
+    momentTrack.addEventListener('pointerup',     onDragEnd);
+    momentTrack.addEventListener('pointercancel', onDragEnd);
   });
 
   audioEl.addEventListener('loadedmetadata', () => {
