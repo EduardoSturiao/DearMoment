@@ -759,12 +759,14 @@ function bindInputs() {
   /* Etapa 3 — data */
   const dateInput = document.getElementById('startDate');
   if (state.startDate) dateInput.value = state.startDate;
-  dateInput.addEventListener('input', () => {
+  const handleDateChange = () => {
     state.startDate = dateInput.value;
     saveState();
     startCounter(state.startDate);
     updatePreview();
-  });
+  };
+  dateInput.addEventListener('input', handleDateChange);
+  dateInput.addEventListener('change', handleDateChange);
 
   /* Etapa 4 — título */
   const titleInput = document.getElementById('titleInput');
