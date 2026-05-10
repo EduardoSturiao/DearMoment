@@ -28,11 +28,6 @@
 
   <div id="giftRoot"></div>
 
-  <div class="yt-overlay" id="ytOverlay">
-    <iframe id="ytFrame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-    <button class="yt-close-btn" id="btnYtClose">✕ Fechar player</button>
-  </div>
-
   <div class="stories-overlay" id="storiesOverlay">
     <div class="stories-bars" id="storiesBars"></div>
     <button class="stories-close" id="storiesClose">✕</button>
@@ -238,7 +233,7 @@
         id: savedLastGiftId || requestedId || 'wizard-preview',
         name1: wizard.name1 || '', name2: wizard.name2 || '',
         startDate: wizard.startDate || '', city: wizard.city || '',
-        title: wizard.title || '', youtubeId: wizard.youtubeId || '',
+        title: wizard.title || '', youtubeId: wizard.youtubeId || '', youtubeQuery: wizard.youtubeQuery || '',
         previewUrl: wizard.previewUrl || '',
         musicMoment: Math.max(0, Number(wizard.musicMoment) || 0),
         songName: wizard.songName || '', artistName: wizard.artistName || '',
@@ -438,7 +433,6 @@
           </div>
 
           <div class="cp-glass-caption" id="cpGlassCaption">
-            <span class="cp-glass-quote" aria-hidden="true">"</span>
             <span class="cp-glass-text" id="cpGlassText">${escHtml(captionFor(0))}</span>
           </div>
 
@@ -797,9 +791,6 @@
   /* ── 5. Player de música ────────────────────────────── */
   function setupPlayer(gift) {
     const btn          = document.getElementById('btnGiftPlay');
-    const overlay      = document.getElementById('ytOverlay');
-    const frame        = document.getElementById('ytFrame');
-    const closeBtn     = document.getElementById('btnYtClose');
     const audio        = document.getElementById('giftAudio');
     const barFill      = document.getElementById('giftPlayerBarFill');
     const currentLabel = document.getElementById('giftPlayerCurrent');
@@ -807,22 +798,12 @@
     const playIcon     = document.getElementById('spPlayIcon');
     const pauseIcon    = document.getElementById('spPauseIcon');
     const previewUrl   = gift.previewUrl || '';
-    const youtubeId    = gift.youtubeId  || '';
-    const desiredStart = Math.max(0, Number(gift.musicMoment) || 0);
 
     if (!btn) return;
 
     function formatAudioTime(s) {
       const safe = Math.max(0, Number(s) || 0);
       return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2,'0')}`;
-    }
-
-    function getPreviewStart() {
-      const dur = Number(audio.duration);
-      if (Number.isFinite(dur) && dur > 0) {
-        return desiredStart > dur ? 0 : Math.min(desiredStart, Math.max(0, dur - 0.35));
-      }
-      return desiredStart;
     }
 
     function syncUI() {
@@ -838,41 +819,30 @@
       }
     }
 
-    function closeYT() { overlay.classList.remove('open'); frame.src = ''; }
-
     if (previewUrl && audio) {
       audio.src  = previewUrl;
       audio.loop = true;
-      audio.addEventListener('loadedmetadata', () => {
-        try { audio.currentTime = getPreviewStart(); } catch (_) {}
-        syncUI();
-      });
       audio._readyToPlay = false;
-      audio.addEventListener('canplay',    () => { audio._readyToPlay = true; });
-      audio.addEventListener('timeupdate', syncUI);
-      audio.addEventListener('play',       syncUI);
-      audio.addEventListener('pause',      syncUI);
-      audio.addEventListener('seeked',     syncUI);
+      audio.addEventListener('canplay',       () => { audio._readyToPlay = true; });
+      audio.addEventListener('loadedmetadata', syncUI);
+      audio.addEventListener('timeupdate',     syncUI);
+      audio.addEventListener('play',           syncUI);
+      audio.addEventListener('pause',          syncUI);
+      audio.addEventListener('seeked',         syncUI);
+
       btn.addEventListener('click', () => {
-        if (overlay.classList.contains('open')) closeYT();
         if (audio.paused) {
           audio.volume = musicDuck.baseline();
-          if (audio.currentTime <= 0.05) { try { audio.currentTime = getPreviewStart(); } catch (_) {} }
-          audio.play().catch(()=>{});
-        } else { audio.pause(); }
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
       });
-      syncUI();
-      return;
+    } else {
+      btn.disabled = true;
     }
 
-    if (!youtubeId) { btn.disabled = true; return; }
-
-    btn.addEventListener('click', () => {
-      frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`;
-      overlay.classList.add('open');
-    });
-    closeBtn.addEventListener('click', closeYT);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeYT(); });
+    syncUI();
   }
 
   /* ── 6. Cápsulas + Carta ────────────────────────────── */

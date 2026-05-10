@@ -31,29 +31,21 @@
       <main class="steps-container" id="stepsContainer">
       <div class="steps-inner">
 
-        <!-- ── ETAPA 1: Tipo de presente ── -->
+        <!-- ── ETAPA 1: Boas-vindas ── -->
         <div class="step active" id="step-1">
-          <div class="step-header">
-            <div class="step-num">01</div>
-            <h2 class="step-title">Para quem é esse presente?</h2>
-            <p class="step-sub">Escolha o tipo de presente que deseja criar</p>
-          </div>
-          <div class="gift-options">
-            <button class="gift-card" data-value="amoroso">
-              <span class="gift-emoji">❤️</span>
-              <strong>Presente amoroso</strong>
-              <small>Para seu parceiro(a)</small>
-            </button>
-            <button class="gift-card" data-value="amigo">
-              <span class="gift-emoji">🎁</span>
-              <strong>Presente para amigo(a)</strong>
-              <small>Amizade especial</small>
-            </button>
+          <div class="step-welcome">
+            <div class="step-welcome-icon">💝</div>
+            <h2 class="step-welcome-title">Você está criando um<br>presente amoroso</h2>
+            <p class="step-welcome-sub">Em poucos passos, você monta algo único e inesquecível para quem você ama.</p>
+            <button class="btn-welcome-start" id="btnWelcomeStart">Começar a criar →</button>
           </div>
         </div>
 
         <!-- ── ETAPA 2: Nomes ── -->
         <div class="step" id="step-2">
+          <div class="step-hero">
+            <div class="step-hero-icon">💕</div>
+          </div>
           <div class="step-header">
             <div class="step-num">02</div>
             <h2 class="step-title">Como vocês se chamam? 💕</h2>
@@ -66,6 +58,10 @@
           <div class="form-group">
             <label for="name2">E o nome do seu parceiro(a)?</label>
             <input type="text" id="name2" placeholder="Nome do parceiro(a)..." maxlength="30" />
+          </div>
+          <div class="step-tip">
+            <span class="step-tip-icon">✨</span>
+            <span class="step-tip-text">Seus nomes aparecem na <strong>tela de abertura</strong> e ao longo de todo o presente.</span>
           </div>
         </div>
 
@@ -86,6 +82,11 @@
             <ul class="autocomplete-list hidden" id="autocompleteList"></ul>
           </div>
 
+          <div class="step-tip">
+            <span class="step-tip-icon">🌌</span>
+            <span class="step-tip-text">Com essa data, geramos o <strong>mapa do céu estrelado</strong> exato do dia em que vocês se conheceram.</span>
+          </div>
+
           <!-- Contador em tempo real -->
           <div class="counter-box" id="counterBox">
             <div class="counter-label">Juntos há</div>
@@ -102,6 +103,9 @@
 
         <!-- ── ETAPA 4: Título ── -->
         <div class="step" id="step-4">
+          <div class="step-hero">
+            <div class="step-hero-icon">✨</div>
+          </div>
           <div class="step-header">
             <div class="step-num">04</div>
             <h2 class="step-title">Dê um título ao presente ✨</h2>
@@ -115,6 +119,10 @@
           <button class="btn-random" id="btnRandomTitle">
             <span>🎲</span> Gerar título aleatório
           </button>
+          <div class="step-tip">
+            <span class="step-tip-icon">🎵</span>
+            <span class="step-tip-text">O título aparece no <strong>topo do player de música</strong>, junto com a foto de capa que você vai escolher.</span>
+          </div>
         </div>
 
         <!-- ── ETAPA 5: Música ── -->
@@ -137,34 +145,9 @@
             <label for="artistName">Nome do artista (editável)</label>
             <input type="text" id="artistName" placeholder="Preenchido automaticamente ao selecionar" />
           </div>
-          <div class="music-moment-picker is-disabled" id="musicMomentPicker">
-            <div class="music-moment-head">
-              <div class="music-moment-copy">
-                <span class="music-moment-kicker">Momento da música</span>
-                <strong class="music-moment-title">Escolha o trecho que vai abrir o presente</strong>
-                <p class="music-moment-sub">Arraste a janela para definir de onde a trilha começa.</p>
-              </div>
-              <button class="music-moment-preview-btn" id="btnPreviewMoment" type="button" disabled>Ouvir trecho</button>
-            </div>
-            <div class="music-moment-track-shell" id="musicMomentTrack">
-              <div class="music-moment-wave" aria-hidden="true"></div>
-              <div class="music-moment-selection" id="musicMomentSelection">
-                <div class="music-moment-handle music-moment-handle--start" id="momentHandleStart" aria-label="Mover início do trecho">
-                  <span class="music-moment-handle-label" id="momentLabelStart">0:00</span>
-                </div>
-                <div class="music-moment-handle music-moment-handle--end" id="momentHandleEnd" aria-label="Mover fim do trecho">
-                  <span class="music-moment-handle-label" id="momentLabelEnd">0:30</span>
-                </div>
-              </div>
-            </div>
-            <div class="music-moment-scale">
-              <span>0:00</span>
-              <span id="musicMomentTotalDuration"></span>
-            </div>
-            <div class="music-moment-meta">
-              <span id="musicMomentValue">Selecione uma música para escolher o momento</span>
-              <span id="musicMomentSpan">A janela acompanha a duração estimada do presente</span>
-            </div>
+          <div class="step-tip">
+            <span class="step-tip-icon">▶️</span>
+            <span class="step-tip-text">A música <strong>toca automaticamente</strong> quando o presente é aberto, com um fade-in suave.</span>
           </div>
         </div>
 
@@ -185,10 +168,17 @@
           </div>
           <div class="photos-grid" id="photosGrid"></div>
           <div class="photos-count"><span id="photosCountNum">0</span>/6 fotos adicionadas</div>
+          <div class="step-tip">
+            <span class="step-tip-icon">👆</span>
+            <span class="step-tip-text">As fotos formam uma <strong>galeria deslizante</strong>. Quem recebe pode tocar em qualquer foto para ver em tela cheia.</span>
+          </div>
         </div>
 
         <!-- ── ETAPA 7: Mensagem ── -->
         <div class="step" id="step-7">
+          <div class="step-hero">
+            <div class="step-hero-icon">💌</div>
+          </div>
           <div class="step-header">
             <div class="step-num">07</div>
             <h2 class="step-title">Escreva uma mensagem especial 💌</h2>
@@ -202,6 +192,10 @@
           <button class="btn-random" id="btnRandomMsg">
             <span>💌</span> Gerar mensagem aleatória
           </button>
+          <div class="step-tip">
+            <span class="step-tip-icon">⌨️</span>
+            <span class="step-tip-text">Sua mensagem aparece com <strong>efeito de máquina de escrever</strong> — letra por letra, no final do presente.</span>
+          </div>
         </div>
 
         <!-- ── ETAPA 8: Foto de destaque ── -->
@@ -221,6 +215,10 @@
               <img id="extraPhotoImg" src="" alt="Foto de capa" />
               <button class="btn-remove-extra" id="btnRemoveExtra" title="Remover foto">✕</button>
             </div>
+          </div>
+          <div class="step-tip">
+            <span class="step-tip-icon">🎵</span>
+            <span class="step-tip-text">Essa foto aparece como <strong>capa do álbum</strong> no player de música — o primeiro visual que a pessoa vê ao abrir o presente.</span>
           </div>
         </div>
 
@@ -281,6 +279,10 @@
               <small class="char-hint"><span id="capsulaCount4">0</span>/150</small>
             </div>
 
+          </div>
+          <div class="step-tip">
+            <span class="step-tip-icon">💌</span>
+            <span class="step-tip-text">Cada cápsula é um envelope digital. A pessoa abre <strong>uma a uma</strong>, com animação, antes de ler a sua carta completa.</span>
           </div>
         </div>
 
@@ -372,243 +374,10 @@
     </div><!-- /steps-panel -->
 
 
-    <!-- ═══════════════════════════════════════
-         PAINEL DIREITO — PREVIEW EM TEMPO REAL
-    ════════════════════════════════════════════ -->
-    <aside class="preview-panel" id="previewPanel">
-      <div class="preview-header">
-        <div class="preview-header-copy">
-          <span class="preview-badge">👁 Preview ao vivo</span>
-          <strong class="preview-template-name" id="previewTemplateName">Spotify</strong>
-        </div>
-        <!-- botão para abrir/fechar no mobile -->
-        <button class="btn-toggle-preview" id="btnTogglePreview">Ver preview</button>
-      </div>
-
-      <!-- Mockup de celular -->
-      <div class="preview-body" id="previewBody">
-      <div class="phone-mockup" id="phoneMockup" data-template="spotify">
-        <div class="phone-frame">
-          <!-- Barra de status simulada -->
-          <div class="phone-status-bar preview-chrome-spotify">
-            <span class="status-time" id="statusTime">00:00</span>
-            <div class="status-icons">
-              <svg class="status-icon" viewBox="0 0 17 11" width="13" height="9">
-                <rect x="0"    y="8"   width="3" height="3"  rx="0.6" fill="currentColor"/>
-                <rect x="4.5"  y="5.5" width="3" height="5.5" rx="0.6" fill="currentColor"/>
-                <rect x="9"    y="3"   width="3" height="8"  rx="0.6" fill="currentColor"/>
-                <rect x="13.5" y="0"   width="3" height="11" rx="0.6" fill="currentColor"/>
-              </svg>
-              <svg class="status-icon" viewBox="0 0 16 11" width="13" height="9" fill="none" stroke="currentColor" stroke-linecap="round">
-                <path d="M1 3.8C3.8 1 12.2 1 15 3.8" stroke-width="1.4"/>
-                <path d="M3.4 6.3C5.2 4.4 10.8 4.4 12.6 6.3" stroke-width="1.4"/>
-                <path d="M5.8 8.8C6.8 7.8 9.2 7.8 10.2 8.8" stroke-width="1.4"/>
-                <circle cx="8" cy="11" r="0.9" fill="currentColor" stroke="none"/>
-              </svg>
-              <svg class="status-icon" viewBox="0 0 26 12" width="21" height="10">
-                <rect x="0.5" y="1" width="21" height="10" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                <rect x="22.5" y="4" width="3" height="4" rx="1" fill="currentColor" opacity="0.4"/>
-                <rect x="2" y="2.5" width="16" height="7" rx="1.5" fill="currentColor"/>
-              </svg>
-            </div>
-          </div>
-          <div class="phone-notch preview-chrome-spotify"></div>
-          <div class="phone-screen" id="phoneScreen">
-            <div class="preview-template-view preview-template-spotify" id="spotifyPreviewView">
-            <!-- Player estilo Spotify -->
-            <div class="player-section">
-              <!-- Partículas decorativas -->
-              <div class="player-particles" aria-hidden="true">
-                <span>♡</span><span>♡</span><span>♡</span>
-                <span>♡</span><span>♡</span><span>♡</span>
-              </div>
-              <!-- Capa do casal -->
-              <div class="player-cover-wrap">
-                <div class="player-cover-placeholder" id="coverPlaceholder">❤️</div>
-                <img class="player-cover-img hidden" id="coverImg" src="" alt="Capa" />
-              </div>
-              <!-- Infos da música -->
-              <div class="player-meta">
-                <div class="player-song-name" id="prevSong">Nossa Música</div>
-                <div class="player-artist-name" id="prevArtist">Artista</div>
-              </div>
-              <!-- Controles -->
-              <div class="player-controls">
-                <button class="ctrl-btn">⏮</button>
-                <button class="ctrl-btn play" id="btnPlay">▶</button>
-                <button class="ctrl-btn">⏭</button>
-              </div>
-              <!-- Barra de progresso fake -->
-              <div class="player-bar">
-                <div class="player-bar-fill" id="playerBarFill"></div>
-              </div>
-              <div class="player-times"><span id="fakeCurrent">0:00</span><span id="fakeDuration">0:30</span></div>
-            </div>
-
-            <!-- Seção "Sobre o casal" -->
-            <div class="about-section">
-              <div class="about-names" id="prevNames">Nome1 & Nome2</div>
-              <div class="about-title" id="prevTitle">Nosso presente especial</div>
-              <div class="about-since">
-                <span>juntos desde</span>
-                <strong id="prevYear">—</strong>
-              </div>
-              <div class="about-counter" id="miniCounter">
-                <div class="mc-card">
-                  <div class="mc-num" id="mcYears">—</div>
-                  <div class="mc-unit">anos</div>
-                </div>
-                <div class="mc-card">
-                  <div class="mc-num" id="mcMonths">—</div>
-                  <div class="mc-unit">meses</div>
-                </div>
-                <div class="mc-card">
-                  <div class="mc-num" id="mcDays">—</div>
-                  <div class="mc-unit">dias</div>
-                </div>
-                <div class="mc-card">
-                  <div class="mc-num" id="mcHours">—</div>
-                  <div class="mc-unit">horas</div>
-                </div>
-              </div>
-              <div class="about-city" id="prevCity">📍 —</div>
-            </div>
-
-            <!-- Cápsulas + Carta (preview) -->
-            <div class="prev-capsulas-section" id="msgSectionPreview">
-              <div class="msg-section-label">💌 cápsulas &amp; carta</div>
-              <div class="prev-capsulas-grid">
-                <div class="prev-capsula">💌<span>01</span></div>
-                <div class="prev-capsula">🎵<span>02</span></div>
-                <div class="prev-capsula">📍<span>03</span></div>
-                <div class="prev-capsula">🔮<span>04</span></div>
-              </div>
-              <div class="prev-carta-mini">
-                <div class="prev-carta-mini-linha"></div>
-                <p class="prev-carta-mini-texto" id="prevMessage">Sua carta aparecerá aqui...</p>
-              </div>
-            </div>
-
-            <!-- Timeline Nossa história -->
-            <div class="timeline-section" id="timelineSectionPreview">
-              <div class="timeline-label">🕊️ nossa história</div>
-              <div class="timeline">
-                <div class="timeline-item">
-                  <div class="tl-dot"></div>
-                  <div class="tl-date" id="prevTlDate">—</div>
-                  <div class="tl-text">primeiro encontro em <span id="prevTlCity">—</span></div>
-                </div>
-                <div class="timeline-item">
-                  <div class="tl-dot tl-dot-heart">❤</div>
-                  <div class="tl-date">hoje</div>
-                  <div class="tl-text">e a história continua...</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Galeria de fotos -->
-            <div class="gallery-section" id="gallerySectionPreview">
-              <div class="gallery-label">📸 nossa galeria</div>
-              <div class="gallery-strip" id="galleryStrip">
-                <div class="gallery-empty" id="galleryEmpty">Suas fotos aparecerão aqui</div>
-              </div>
-            </div>
-
-            <!-- Barra de compartilhamento -->
-            <div class="share-bar">
-              <button class="share-btn share-wpp">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                </svg>
-                WhatsApp
-              </button>
-              <button class="share-btn share-copy">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                </svg>
-                Copiar link
-              </button>
-            </div>
-            </div>
-
-            <div class="preview-template-view preview-template-stories hidden" id="storiesPreviewView">
-              <section class="stories-preview-cover" id="storiesPreviewCover">
-                <div class="stories-preview-cover-media" id="storiesPreviewCoverMedia">
-                  <div class="stories-preview-cover-placeholder" id="storiesPreviewCoverPlaceholder">❤</div>
-                  <img class="stories-preview-cover-image hidden" id="storiesPreviewCoverImage" src="" alt="Foto de capa do preview Stories" />
-                </div>
-                <div class="stories-preview-cover-overlay"></div>
-                <div class="stories-preview-cover-content">
-                  <div class="stories-preview-cover-header">
-                    <h3 class="stories-preview-cover-title" id="storiesPreviewCoverTitle">Um presente aguardando por você.</h3>
-                    <p class="stories-preview-cover-copy" id="storiesPreviewCoverCopy">Clique abaixo para abrir</p>
-                  </div>
-
-                  <div class="stories-preview-cover-cta">
-                    <button class="stories-preview-cover-button" id="storiesPreviewStartButton" type="button" aria-label="Abrir presente">
-                      <span class="stories-preview-cover-button-icon" aria-hidden="true"></span>
-                      <span class="stories-preview-cover-button-text">Abrir presente</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <section class="stories-preview-player hidden" id="storiesPreviewPlayer" aria-live="polite">
-                <header class="stories-preview-topbar">
-                  <div class="stories-preview-progress" id="storiesPreviewProgress"></div>
-                </header>
-
-                <div class="stories-preview-pause-indicator" id="storiesPreviewPauseIndicator" aria-hidden="true"></div>
-
-                <div class="stories-preview-slides" id="storiesPreviewSlides"></div>
-
-                <button class="stories-preview-zone stories-preview-zone-left" id="storiesPreviewPrevZone" type="button" aria-label="Slide anterior"></button>
-                <button class="stories-preview-zone stories-preview-zone-center" id="storiesPreviewPauseZone" type="button" aria-label="Pausar ou retomar"></button>
-                <button class="stories-preview-zone stories-preview-zone-right" id="storiesPreviewNextZone" type="button" aria-label="Próximo slide"></button>
-
-                <footer class="stories-preview-footer">
-                  <div class="stories-preview-track" id="storiesPreviewTrack">Sem trilha sonora</div>
-                  <button class="stories-preview-replay hidden" id="storiesPreviewReplayButton" type="button">Rever</button>
-                </footer>
-              </section>
-            </div>
-          </div><!-- /phone-screen -->
-
-          <!-- Barra de endereço + navegação inferior estilo Safari iOS -->
-          <div class="phone-browser-bar preview-chrome-spotify">
-            <svg class="browser-bar-icon" viewBox="0 0 12 16" width="9" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
-              <rect x="1" y="7" width="10" height="8" rx="1.5"/>
-              <path d="M3.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
-            </svg>
-            <span class="browser-bar-url">soulmates.com.br</span>
-            <svg class="browser-bar-icon browser-bar-reload" viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12.5 2.5A6 6 0 1 0 13 8"/>
-              <polyline points="10,0.5 12.5,2.5 10.5,5"/>
-            </svg>
-          </div>
-          <div class="phone-browser-nav preview-chrome-spotify">
-            <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8,2 2,8 8,14"/></svg>
-            <svg viewBox="0 0 10 16" width="9" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><polyline points="2,2 8,8 2,14"/></svg>
-            <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,12 9,2"/><polyline points="5,6 9,2 13,6"/><rect x="2" y="10" width="14" height="7" rx="2"/></svg>
-            <svg viewBox="0 0 18 16" width="16" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 2h12a1.5 1.5 0 0 1 0 3H3a1.5 1.5 0 0 1 0-3z"/><line x1="3" y1="8" x2="15" y2="8"/><line x1="3" y1="13" x2="11" y2="13"/></svg>
-            <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="12" height="12" rx="2"/><path d="M5 5V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/></svg>
-          </div>
-
-        </div><!-- /phone-frame -->
-      </div><!-- /phone-mockup -->
-      </div><!-- /preview-body -->
-
-    </aside><!-- /preview-panel -->
-
   </div><!-- /app-wrapper -->
 
   <!-- Toast de notificação -->
   <div class="toast" id="toast"></div>
-
-  <!-- Áudio oculto para preview da música (iTunes 30s) -->
-  <audio id="audioPreview" preload="none" style="display:none"></audio>
-  <audio id="storiesPreviewAudio" preload="none" style="display:none"></audio>
 
   <script src="script.js"></script>
 

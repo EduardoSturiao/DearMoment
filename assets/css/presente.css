@@ -3494,10 +3494,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 18px;
-  padding: 14px 18px 14px 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  padding: 14px 18px;
   box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -3509,16 +3506,6 @@ body {
   transform: translateY(6px);
 }
 
-.cp-glass-quote {
-  font-size: 28px;
-  line-height: 0.85;
-  font-family: Georgia, serif;
-  color: var(--pink);
-  opacity: 0.7;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
 .cp-glass-text {
   font-family: var(--font-b);
   font-size: 14px;
@@ -3526,6 +3513,28 @@ body {
   color: rgba(255, 255, 255, 0.88);
   line-height: 1.55;
   letter-spacing: 0.01em;
+}
+
+.cp-glass-text::before {
+  content: '\201C';
+  font-family: Georgia, serif;
+  font-size: 1em;
+  font-style: normal;
+  color: var(--pink);
+  opacity: 0.75;
+  margin-right: 3px;
+  vertical-align: 0.05em;
+}
+
+.cp-glass-text::after {
+  content: '\201D';
+  font-family: Georgia, serif;
+  font-size: 1em;
+  font-style: normal;
+  color: var(--pink);
+  opacity: 0.75;
+  margin-left: 3px;
+  vertical-align: 0.05em;
 }
 
 .cp-tap-hint {
