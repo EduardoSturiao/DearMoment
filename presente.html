@@ -686,21 +686,8 @@
         transitionTo('screenReveal', 'screenPlayer');
         const aud = document.getElementById('giftAudio');
         if (aud && aud.src) {
-          const startWithFade = () => {
-            musicDuck.fadeIn();
-            aud.play().catch(() => {});
-          };
-          setTimeout(() => {
-            if (aud._readyToPlay) {
-              startWithFade();
-            } else {
-              aud.addEventListener('canplay', function once() {
-                aud.removeEventListener('canplay', once);
-                startWithFade();
-              });
-              aud._readyToPlay = false;
-            }
-          }, 950);
+          musicDuck.fadeIn();
+          aud.play().catch(() => {});
         }
       });
     }
@@ -922,8 +909,8 @@
             setTimeout(() => btnWrap.classList.add('gc-visivel'), 500 + 800);
           }
         }
-        /* Espera o flip avançar antes de abrir o modal — combina com o sparkle whoosh */
-        setTimeout(() => openCapsulaModal(idx), 750);
+        /* Abre o modal após o flip completar (1250ms) + pausa para o verso ser lido */
+        setTimeout(() => openCapsulaModal(idx), 1500);
       });
     });
 

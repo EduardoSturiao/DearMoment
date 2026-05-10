@@ -1805,10 +1805,13 @@ body {
   width: 100%;
   padding-top: 108%;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transition: transform 1.25s cubic-bezier(0.34, 1.06, 0.5, 1);
+  -webkit-transition: -webkit-transform 1.25s cubic-bezier(0.34, 1.06, 0.5, 1);
 }
 .gc-capsula.gc-aberta .gc-capsula-inner {
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 .gc-capsula-frente,
