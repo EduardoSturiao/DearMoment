@@ -5,7 +5,13 @@
 .mp-main {
   min-height: calc(100vh - 80px);
   background: var(--secondary_color);
-  padding: 60px 0 80px;
+  padding: 100px 0 80px;
+}
+
+@media (min-width: 992px) {
+  .mp-main {
+    padding-top: 130px;
+  }
 }
 
 /* Cabeçalho */

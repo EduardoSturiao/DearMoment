@@ -41,7 +41,6 @@ const state = {
   capsulas:        ['', '', '', ''],
   extraPhoto:      null,
   selectedPlan:    '',
-  wrappedSelected: false,
 };
 
 function loadState() {
@@ -670,25 +669,6 @@ function setupFaq() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   12. UPGRADE BANNER
-═══════════════════════════════════════════════════════════════ */
-function setupUpgrade() {
-  const btn = document.getElementById('btnUpgrade');
-  if (!btn) return;
-
-  btn.classList.toggle('added', !!state.wrappedSelected);
-  btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
-
-  btn.addEventListener('click', () => {
-    state.wrappedSelected = !state.wrappedSelected;
-    btn.classList.toggle('added', !!state.wrappedSelected);
-    btn.textContent = state.wrappedSelected ? 'OK Adicionado' : 'Adicionar';
-    saveState();
-    showToast(state.wrappedSelected ? 'Wrapped adicionado ao presente!' : 'Wrapped removido');
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════
    13. BOTÕES DE PLANO
 ═══════════════════════════════════════════════════════════════ */
 function setupPlanButtons() {
@@ -723,12 +703,6 @@ function setupPlanSelection() {
     });
   }
 
-  const btnPreviewTest = document.getElementById('btnPreviewTest');
-  if (btnPreviewTest) {
-    btnPreviewTest.addEventListener('click', () => {
-      window.location.href = getTemplateMeta(getFinalTemplate()).finalUrl;
-    });
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -902,7 +876,6 @@ function saveGift() {
       capsulas:        state.capsulas.slice(),
       extraPhoto:      state.extraPhoto,
       giftType:        state.giftType,
-      wrappedSelected: state.wrappedSelected,
       createdAt:       new Date().toISOString(),
     };
     gifts.push(gift);
@@ -950,7 +923,6 @@ function init() {
   setupMusicSearch();
   setupFaq();
   setupNavigation();
-  setupUpgrade();
   setupPlanSelection();
   setupPlanButtons();
 

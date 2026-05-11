@@ -184,97 +184,10 @@
               </div>
               <div class="hero-phone-notch"></div>
               <div class="hero-phone-screen">
-
-                <!-- Player estilo Spotify -->
-                <div class="lp-player-section">
-                  <div class="lp-player-particles" aria-hidden="true">
-                    <span>♡</span><span>♡</span><span>♡</span>
-                    <span>♡</span><span>♡</span><span>♡</span>
-                  </div>
-                  <div class="lp-player-cover-wrap">
-                    <img src="./assets/images/casal_soulmates.png" alt="Capa do casal">
-                  </div>
-                  <div class="lp-player-meta">
-                    <div class="lp-player-song-name">Perfect</div>
-                    <div class="lp-player-artist-name">Ed Sheeran</div>
-                  </div>
-                  <div class="lp-player-controls">
-                    <button class="lp-ctrl-btn">⏮</button>
-                    <button class="lp-ctrl-btn lp-play">▶</button>
-                    <button class="lp-ctrl-btn">⏭</button>
-                  </div>
-                  <div class="lp-player-bar">
-                    <div class="lp-player-bar-fill"></div>
-                  </div>
-                  <div class="lp-player-times"><span>1:23</span><span>4:23</span></div>
-                </div>
-
-                <!-- Sobre o casal -->
-                <div class="lp-about-section">
-                  <div class="lp-about-names">Ana & Lucas</div>
-                  <div class="lp-about-title">Para sempre o nosso momento ✨</div>
-                  <div class="lp-about-since">
-                    <span>juntos desde</span>
-                    <strong>2022</strong>
-                  </div>
-                  <div class="lp-about-counter">
-                    <div class="lp-mc-card"><div class="lp-mc-num">3</div><div class="lp-mc-unit">anos</div></div>
-                    <div class="lp-mc-card"><div class="lp-mc-num">1</div><div class="lp-mc-unit">meses</div></div>
-                    <div class="lp-mc-card"><div class="lp-mc-num">18</div><div class="lp-mc-unit">dias</div></div>
-                    <div class="lp-mc-card"><div class="lp-mc-num">07</div><div class="lp-mc-unit">horas</div></div>
-                  </div>
-                  <div class="lp-about-city">📍 São Paulo, SP</div>
-                </div>
-
-                <!-- Mensagem especial -->
-                <div class="lp-message-section">
-                  <div class="lp-section-label">💌 mensagem especial</div>
-                  <div class="lp-msg-cover-wrap">
-                    <img src="./assets/images/casal_soulmates2.png" alt="Foto do casal">
-                  </div>
-                  <p class="lp-msg-body">Desde o dia em que você entrou na minha vida, tudo ficou mais colorido. Obrigado por ser meu maior presente.</p>
-                </div>
-
-                <!-- Nossa história (timeline) -->
-                <div class="lp-timeline-section">
-                  <div class="lp-section-label">🕊️ nossa história</div>
-                  <div class="lp-timeline">
-                    <div class="lp-tl-item">
-                      <div class="lp-tl-dot"></div>
-                      <div class="lp-tl-date">14/02/2022</div>
-                      <div class="lp-tl-text">primeiro encontro em São Paulo</div>
-                    </div>
-                    <div class="lp-tl-item">
-                      <div class="lp-tl-dot lp-tl-dot-heart">❤</div>
-                      <div class="lp-tl-date">hoje</div>
-                      <div class="lp-tl-text">e a história continua...</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Galeria de fotos -->
-                <div class="lp-gallery-section">
-                  <div class="lp-section-label">📸 nossa galeria</div>
-                  <div class="lp-gallery-strip">
-                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g1/120/120" alt=""></div>
-                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g2/120/120" alt=""></div>
-                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g3/120/120" alt=""></div>
-                    <div class="lp-gallery-thumb"><img src="https://picsum.photos/seed/g4/120/120" alt=""></div>
-                  </div>
-                </div>
-
-                <!-- Share bar -->
-                <div class="lp-share-bar">
-                  <button class="lp-share-btn lp-share-wpp">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-                    WhatsApp
-                  </button>
-                  <button class="lp-share-btn lp-share-copy">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    Copiar link
-                  </button>
-                </div>
-
+                <video id="mockupVideo"
+                       src="./assets/videos/demo.mp4"
+                       autoplay muted playsinline preload="auto">
+                </video>
               </div>
 
               <!-- Barra de endereço + navegação inferior estilo Safari iOS -->
@@ -311,8 +224,7 @@
             <span class="hero-rating-text">+1.000 casais e amigos emocionados</span>
           </div>
           <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-            <a href="./criar/index.html" class="btn btn-primary btn-lg px-4 me-md-2 d2c_btn_hero">Criar Homenagem Agora</a>
-            <button type="button" class="btn btn-outline-secondary btn-lg px-4 d2c_btn_hero">Ver Exemplos</button>
+            <a href="./criar/index.html" class="btn btn-primary btn-lg d2c_btn_hero">Criar Homenagem Agora</a>
           </div>
         </div>
       </div>
@@ -1098,6 +1010,31 @@
     </div>
   </div>
   <script src="./assets/js/cookies.js"></script>
+  <script>
+    (function () {
+      const video = document.getElementById('mockupVideo');
+      if (!video) return;
+      const FADE = 0.9; // segundos de fade — igual à transition do CSS
+      let fading = false;
+
+      video.addEventListener('timeupdate', () => {
+        if (!video.duration || fading) return;
+        if (video.currentTime >= video.duration - FADE) {
+          fading = true;
+          video.style.opacity = '0';
+        }
+      });
+
+      video.addEventListener('ended', () => {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+        setTimeout(() => {
+          video.style.opacity = '1';
+          fading = false;
+        }, 150);
+      });
+    })();
+  </script>
   <script>
     (function () {
       const el = document.getElementById('heroStatusTime');

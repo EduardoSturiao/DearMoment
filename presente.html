@@ -684,13 +684,28 @@
     if (btnReveal) {
       btnReveal.addEventListener('click', () => {
         transitionTo('screenReveal', 'screenPlayer');
-        const aud = document.getElementById('giftAudio');
-        if (aud && aud.src) {
-          musicDuck.fadeIn();
-          aud.play().catch(() => {});
+        if (g.previewUrl) {
+          const aud = document.getElementById('giftAudio');
+          if (aud) {
+            musicDuck.fadeIn();
+            aud.play().catch(() => {});
+          }
         }
       });
     }
+
+    /* Pausa quando o usuário sai da aba/app, retoma quando volta */
+    let _audioWasPlaying = false;
+    document.addEventListener('visibilitychange', () => {
+      const aud = document.getElementById('giftAudio');
+      if (!aud) return;
+      if (document.hidden) {
+        _audioWasPlaying = !aud.paused;
+        if (_audioWasPlaying) aud.pause();
+      } else {
+        if (_audioWasPlaying) aud.play().catch(() => {});
+      }
+    });
 
     document.querySelectorAll('.pg-next-btn[data-to]').forEach(btn => {
       btn.addEventListener('click', () => {

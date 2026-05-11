@@ -1952,6 +1952,12 @@ body {
   overflow: hidden;
 }
 
+/* Garante que a face frontal some no meio do flip — fallback para backface-visibility em iOS */
+.gc-capsula.gc-aberta .gc-capsula-frente {
+  opacity: 0;
+  transition: opacity 0s 0.625s; /* snap ao ponto médio da animação de 1250ms */
+}
+
 /* Hover na cápsula fechada */
 .gc-capsula:not(.gc-aberta):hover .gc-capsula-frente {
   border-color: rgba(255,109,186,0.35);
