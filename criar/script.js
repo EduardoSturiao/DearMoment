@@ -876,6 +876,7 @@ function saveGift() {
       capsulas:        state.capsulas.slice(),
       extraPhoto:      state.extraPhoto,
       giftType:        state.giftType,
+      paid:            false,
       createdAt:       new Date().toISOString(),
     };
     gifts.push(gift);

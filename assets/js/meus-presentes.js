@@ -10,7 +10,7 @@
   function loadGifts() {
     try {
       const raw = localStorage.getItem(GIFTS_KEY);
-      return raw ? JSON.parse(raw) : [];
+      return raw ? JSON.parse(raw).filter(g => g.paid) : [];
     } catch (_) {
       return [];
     }

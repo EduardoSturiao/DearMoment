@@ -233,6 +233,13 @@
 
       if (!id) return; // nenhum presente encontrado de forma alguma
 
+      // Marca o presente como pago
+      const giftIndex = gifts.findIndex(g => g.id === id);
+      if (giftIndex !== -1) {
+        gifts[giftIndex].paid = true;
+        localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
+      }
+
       const base    = window.location.href.replace(/pagamento\.html.*$/, '');
       const giftUrl = base + 'presente.html?id=' + id;
 
