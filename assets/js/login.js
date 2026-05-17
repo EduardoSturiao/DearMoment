@@ -48,10 +48,10 @@ form.addEventListener('submit', (e) => {
     if (hasError) return;
 
     // Login bem-sucedido — persiste sessão simulada até integração com backend
-    localStorage.setItem('soulmates_session', JSON.stringify({ loggedIn: true, email: nameValue }));
+    localStorage.setItem('DearMoment_session', JSON.stringify({ loggedIn: true, email: nameValue }));
 
     // Redireciona: se vier do wizard, vai para pagamento; senão, vai para home
-    const pendingPlan = localStorage.getItem('soulmates_pending_plan');
+    const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
     document.body.style.opacity = '0';
     document.body.style.transition = 'opacity 0.4s ease';
     setTimeout(() => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seed de teste | SoulMates</title>
+  <title>Seed de teste | DearMoment</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -64,7 +64,7 @@
     'https://picsum.photos/seed/casal5/600/800',
   ];
 
-  const TEST_ID = 'soulmates-test-001';
+  const TEST_ID = 'DearMoment-test-001';
 
   document.getElementById('btnSeed').addEventListener('click', async () => {
     const statusEl = document.getElementById('status');
@@ -107,10 +107,10 @@
     };
 
     try {
-      const gifts = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]')
+      const gifts = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]')
         .filter(g => g.id !== TEST_ID);
       gifts.push(gift);
-      localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
+      localStorage.setItem('DearMoment_gifts', JSON.stringify(gifts));
       statusEl.textContent += ' · Redirecionando...';
       setTimeout(() => {
         window.location.href = `./presente.html?id=${TEST_ID}`;
@@ -121,9 +121,9 @@
   });
 
   document.getElementById('btnClear').addEventListener('click', () => {
-    const gifts = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]')
+    const gifts = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]')
       .filter(g => g.id !== TEST_ID);
-    localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
+    localStorage.setItem('DearMoment_gifts', JSON.stringify(gifts));
     document.getElementById('status').textContent = '✓ Dados de teste removidos.';
   });
   </script>

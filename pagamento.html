@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pagamento | SoulMates</title>
+  <title>Pagamento | DearMoment</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/pagamento.css">
   <link rel="stylesheet" href="./assets/css/cookies.css">
@@ -25,7 +25,7 @@
           <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
           <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
         </svg>
-        <span>SoulMates</span>
+        <span>DearMoment</span>
       </a>
       <span class="pay-secure">🔒 Pagamento seguro</span>
     </div>
@@ -137,10 +137,10 @@
       '24h':     { label: 'Plano 24 Horas',  price: 19.90, badge: '24h' },
     };
 
-    const plan       = localStorage.getItem('soulmates_pending_plan') || 'vitalicio';
-    const hasWrapped = localStorage.getItem('soulmates_pending_wrapped') === '1';
+    const plan       = localStorage.getItem('DearMoment_pending_plan') || 'vitalicio';
+    const hasWrapped = localStorage.getItem('DearMoment_pending_wrapped') === '1';
     // Lê metadados do presente (salvos antes da limpeza do wizard state)
-    const metaRaw = localStorage.getItem('soulmates_last_gift_meta');
+    const metaRaw = localStorage.getItem('DearMoment_last_gift_meta');
     const meta    = metaRaw ? JSON.parse(metaRaw) : {};
 
     const planData = PLAN_DATA[plan] || PLAN_DATA.vitalicio;
@@ -218,16 +218,16 @@
     /* ── Exibe tela de sucesso e gera QR Code ───────────── */
     function showSuccess() {
       // Limpa flags de pendência
-      localStorage.removeItem('soulmates_pending_plan');
-      localStorage.removeItem('soulmates_pending_wrapped');
+      localStorage.removeItem('DearMoment_pending_plan');
+      localStorage.removeItem('DearMoment_pending_wrapped');
 
       // Esconde formulário, mostra sucesso
       document.getElementById('payForm').style.display = 'none';
       document.getElementById('paySuccess').classList.add('visible');
 
       // Resolve o ID do presente — fallback em camadas para robustez
-      const lastGiftId  = localStorage.getItem('soulmates_last_gift_id');
-      const gifts       = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
+      const lastGiftId  = localStorage.getItem('DearMoment_last_gift_id');
+      const gifts       = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
       const lastGift    = gifts.find(g => g.id === lastGiftId) || gifts[gifts.length - 1];
       const id          = (lastGift && lastGift.id) || lastGiftId;
 
@@ -237,7 +237,7 @@
       const giftIndex = gifts.findIndex(g => g.id === id);
       if (giftIndex !== -1) {
         gifts[giftIndex].paid = true;
-        localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
+        localStorage.setItem('DearMoment_gifts', JSON.stringify(gifts));
       }
 
       const base    = window.location.href.replace(/pagamento\.html.*$/, '');
@@ -254,7 +254,7 @@
         const canvas = qrContainer.querySelector('canvas');
         if (!canvas) return;
         const link    = document.createElement('a');
-        link.download = 'qrcode-soulmates.png';
+        link.download = 'qrcode-DearMoment.png';
         link.href     = canvas.toDataURL('image/png');
         link.click();
       });

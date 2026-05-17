@@ -1,11 +1,11 @@
 /* ================================================================
    MEUS PRESENTES — lógica de exibição
-   Os presentes são lidos de localStorage['soulmates_gifts'],
+   Os presentes são lidos de localStorage['DearMoment_gifts'],
    um array de objetos salvos ao concluir o wizard.
 ================================================================ */
 
 (function () {
-  const GIFTS_KEY = 'soulmates_gifts';
+  const GIFTS_KEY = 'DearMoment_gifts';
 
   function loadGifts() {
     try {

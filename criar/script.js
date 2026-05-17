@@ -1,5 +1,5 @@
 /* ================================================================
-   SOULMATES — GIFT CREATOR WIZARD
+   DearMoment — GIFT CREATOR WIZARD
    script.js
    Arquitetura: estado global → localStorage → formulário multi-etapa
 ================================================================ */
@@ -9,7 +9,7 @@
 /* ═══════════════════════════════════════════════════════════════
    1. ESTADO GLOBAL
 ═══════════════════════════════════════════════════════════════ */
-const STORAGE_KEY = 'soulmates_wizard_state';
+const STORAGE_KEY = 'DearMoment_wizard_state';
 const TOTAL_STEPS = 9;
 const FLOW_VERSION = 2;
 const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
@@ -297,7 +297,7 @@ function openFinalGift(planId) {
   const templateMeta = getTemplateMeta(template);
 
   if (template === 'spotify') {
-    const giftId = localStorage.getItem('soulmates_last_gift_id');
+    const giftId = localStorage.getItem('DearMoment_last_gift_id');
     if (giftId) {
       window.location.href = `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`;
       return;
@@ -675,8 +675,8 @@ function setupPlanButtons() {
   document.querySelectorAll('.btn-plan:not([data-plan])').forEach(btn => {
     btn.addEventListener('click', () => {
       const plan = btn.closest('.plan-card').classList.contains('featured') ? 'vitalicio' : '24h';
-      localStorage.setItem('soulmates_pending_plan', plan);
-      const loggedIn = localStorage.getItem('soulmates_session');
+      localStorage.setItem('DearMoment_pending_plan', plan);
+      const loggedIn = localStorage.getItem('DearMoment_session');
       document.body.style.opacity = '0';
       document.body.style.transition = 'opacity 0.4s ease';
       setTimeout(() => {
@@ -694,7 +694,7 @@ function setupPlanSelection() {
   const btnPreview = document.getElementById('btnPreviewGift');
   if (btnPreview) {
     btnPreview.addEventListener('click', () => {
-      const giftId       = localStorage.getItem('soulmates_last_gift_id');
+      const giftId       = localStorage.getItem('DearMoment_last_gift_id');
       const templateMeta = getTemplateMeta(getFinalTemplate());
       const url = giftId
         ? `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`
@@ -839,7 +839,7 @@ function restoreInputValues() {
 /* ═══════════════════════════════════════════════════════════════
    15. SALVAR PRESENTE CONCLUÍDO
 ═══════════════════════════════════════════════════════════════ */
-const GIFTS_KEY = 'soulmates_gifts';
+const GIFTS_KEY = 'DearMoment_gifts';
 
 function generateId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -849,8 +849,8 @@ function generateId() {
 function saveGift() {
   const id = generateId();
 
-  localStorage.setItem('soulmates_last_gift_id', id);
-  localStorage.setItem('soulmates_last_gift_meta', JSON.stringify({
+  localStorage.setItem('DearMoment_last_gift_id', id);
+  localStorage.setItem('DearMoment_last_gift_meta', JSON.stringify({
     id, name1: state.name1, name2: state.name2, title: state.title, template: getFinalTemplate(),
   }));
 

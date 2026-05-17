@@ -1,6 +1,6 @@
 'use strict';
 
-const STORAGE_KEY = 'soulmates_wizard_state';
+const STORAGE_KEY = 'DearMoment_wizard_state';
 const STORY_INTERVAL_MS = 60;
 const PHOTO_DURATION_MS = 1500;
 const BASE_SLIDE_DURATION_MS = 4200;
@@ -19,7 +19,7 @@ const PLAN_META = {
     copy: 'Mesmo em uma entrega mais curta, a intenção continua grande e memorável.'
   },
   default: {
-    label: 'Presente SoulMates',
+    label: 'Presente DearMoment',
     title: 'Um presente para ser revisitado sempre que bater saudade.',
     copy: 'Criado com cuidado para transformar música, imagem e palavras em uma única lembrança.'
   }

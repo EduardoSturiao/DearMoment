@@ -1,5 +1,5 @@
 /**
- * SoulMates — Cookie Consent
+ * DearMoment — Cookie Consent
  * Gerencia o consentimento do usuário (LGPD).
  * Chave: 'sm_cookie_consent' → 'accepted' | 'rejected'
  *

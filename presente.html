@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presente SoulMates</title>
+  <title>Presente DearMoment</title>
 
   <meta property="og:title"       content="Você recebeu um presente especial ❤️">
   <meta property="og:description" content="Abra e descubra uma homenagem criada só para você.">
@@ -22,7 +22,7 @@
   </div>
 
   <header class="gift-header">
-    <span class="gift-logo">❤ SoulMates</span>
+    <span class="gift-logo">❤ DearMoment</span>
     <span class="gift-tag">Presente exclusivo</span>
   </header>
 
@@ -48,7 +48,7 @@
   ================================================================ */
 
   let counterInterval = null;
-  const WIZARD_STORAGE_KEY = 'soulmates_wizard_state';
+  const WIZARD_STORAGE_KEY = 'DearMoment_wizard_state';
 
   /* ── SFX (Web Audio API — sem arquivos extras) ─────── */
   const sfx = (() => {
@@ -185,8 +185,8 @@
   })();
   const params   = new URLSearchParams(window.location.search);
   const giftId   = params.get('id');
-  const gifts    = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
-  const lastGiftId = localStorage.getItem('soulmates_last_gift_id');
+  const gifts    = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
+  const lastGiftId = localStorage.getItem('DearMoment_last_gift_id');
   let gift = gifts.find(g => g.id === giftId);
   const root = document.getElementById('giftRoot');
 
@@ -251,7 +251,7 @@
   /* ── 2. Render principal ────────────────────────────── */
   function renderGift(g) {
     const names = g.name1 && g.name2 ? `${g.name1} & ${g.name2}` : (g.name1 || 'Presente especial');
-    document.title = names + ' | SoulMates';
+    document.title = names + ' | DearMoment';
     document.querySelector('meta[property="og:title"]').content =
       `${names} — Um presente feito com amor ❤️`;
 
@@ -593,7 +593,7 @@
         <div class="gc-page-wrap">
           <div class="gc-hero">
             <div class="gc-hero-glow"></div>
-            <div class="gc-hero-badge">✦ SoulMates · Presente Especial</div>
+            <div class="gc-hero-badge">✦ DearMoment · Presente Especial</div>
             <h1 class="gc-hero-title">Guardei<br>tudo isso<br>para você</h1>
             <p class="gc-hero-sub">Abra cada cápsula com calma.<br>Cada uma guarda um pedaço do que sinto.</p>
             <div class="gc-hero-divider"><span></span><em>💌</em><span></span></div>
@@ -628,7 +628,7 @@
           </div>
 
           <footer class="gift-footer gift-footer-final" id="gcFinalFooter" style="margin-top:16px;position:relative;z-index:1">
-            <p>Criado com ❤ no SoulMates</p>
+            <p>Criado com ❤ no DearMoment</p>
             <a href="./index.html">Criar o meu presente →</a>
           </footer>
         </div>
