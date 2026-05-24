@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>DearMoment — Logo Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #121820;
+    font-family: 'Sora', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 60px;
+    padding: 48px 24px;
+  }
+
+  h2 {
+    color: #888;
+    font-family: 'Sora', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ── Comparativo ── */
+  .compare {
+    display: flex;
+    gap: 64px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .label {
+    color: #555;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── Pill logo (navbar style) ── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 999px;
+    padding: 8px 18px 8px 12px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .pill-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+    color: #fff;
+  }
+
+  /* SoulMates = pink */
+  .pill-sm .pill-icon { filter: drop-shadow(0 0 6px rgba(255,109,186,0.5)); }
+
+  /* DearMoment = mesmo rosa do SoulMates */
+  .pill-dm .pill-icon { filter: drop-shadow(0 0 6px rgba(255,109,186,0.5)); }
+
+  /* ── Variações DearMoment ── */
+  .variants {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .section-title {
+    color: #666;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #1f2730;
+    padding-bottom: 12px;
+  }
+
+  .row {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* tamanhos */
+  .sz-sm  .pill-name { font-size: 13px; }
+  .sz-sm  { padding: 5px 14px 5px 9px; gap: 7px; }
+
+  .sz-md  .pill-name { font-size: 17px; }
+
+  .sz-lg  .pill-name { font-size: 22px; }
+  .sz-lg  { padding: 11px 22px 11px 15px; }
+
+  /* hero / hero dark */
+  .hero-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-logo .pill { background: transparent; border-color: transparent; padding: 0; gap: 14px; }
+  .hero-logo .pill-name { font-size: 32px; letter-spacing: -1px; }
+  .hero-logo .tagline {
+    color: #667;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  /* color swatches */
+  .swatch-row { display: flex; gap: 16px; align-items: center; }
+  .swatch { width: 36px; height: 36px; border-radius: 50%; }
+  .swatch-label { color: #555; font-size: 10px; }
+
+  /* divider */
+  .divider {
+    width: 1px;
+    height: 60px;
+    background: #1f2730;
+  }
+</style>
+</head>
+<body>
+
+  <h2>Logo Preview · SoulMates → DearMoment</h2>
+
+  <!-- COMPARATIVO DIRETO -->
+  <div class="compare">
+
+    <!-- Original SoulMates -->
+    <div class="card">
+      <div class="label">Original — SoulMates</div>
+      <a class="pill pill-sm">
+        <svg class="pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+          <defs>
+            <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+        </svg>
+        <span class="pill-name">SoulMates</span>
+      </a>
+    </div>
+
+    <div class="divider" style="height:auto; width:1px; background:#1f2730;"></div>
+
+    <!-- DearMoment — mesma estrutura, nova paleta -->
+    <div class="card">
+      <div class="label">Proposta — DearMoment</div>
+      <a class="pill pill-dm">
+        <svg class="pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+          <defs>
+            <clipPath id="dm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="dm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm-clip-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm-clip-top)"/>
+        </svg>
+        <span class="pill-name">DearMoment</span>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- VARIAÇÕES -->
+  <div class="variants">
+    <div class="section-title">Variações de tamanho · DearMoment</div>
+
+    <div class="row">
+      <!-- Small (mobile nav) -->
+      <div class="card">
+        <a class="pill pill-dm sz-sm">
+          <svg class="pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="28" height="20">
+            <defs>
+              <clipPath id="dm2-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+              <clipPath id="dm2-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+            </defs>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm2-bot)"/>
+            <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm2-top)"/>
+          </svg>
+          <span class="pill-name">DearMoment</span>
+        </a>
+        <div class="label">Small · navbar</div>
+      </div>
+
+      <!-- Medium (padrão) -->
+      <div class="card">
+        <a class="pill pill-dm sz-md">
+          <svg class="pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="36" height="25">
+            <defs>
+              <clipPath id="dm3-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+              <clipPath id="dm3-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+            </defs>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm3-bot)"/>
+            <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm3-top)"/>
+          </svg>
+          <span class="pill-name">DearMoment</span>
+        </a>
+        <div class="label">Médio · padrão</div>
+      </div>
+
+      <!-- Large (hero) -->
+      <div class="card">
+        <a class="pill pill-dm sz-lg">
+          <svg class="pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="48" height="33">
+            <defs>
+              <clipPath id="dm4-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+              <clipPath id="dm4-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+            </defs>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm4-bot)"/>
+            <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+            <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm4-top)"/>
+          </svg>
+          <span class="pill-name">DearMoment</span>
+        </a>
+        <div class="label">Grande · hero</div>
+      </div>
+    </div>
+
+    <!-- Hero standalone -->
+    <div class="section-title" style="margin-top:8px;">Uso em hero / splash</div>
+    <div class="hero-logo">
+      <a class="pill pill-dm">
+        <svg class="pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="56" height="39">
+          <defs>
+            <clipPath id="dm5-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+            <clipPath id="dm5-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+          </defs>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm5-bot)"/>
+          <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+          <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#dm5-top)"/>
+        </svg>
+        <span class="pill-name">DearMoment</span>
+      </a>
+      <div class="tagline">Presentes digitais que ficam para sempre</div>
+    </div>
+
+    <!-- Paleta de cores -->
+    <div class="section-title" style="margin-top:8px;">Paleta de cores proposta</div>
+    <div class="swatch-row">
+      <div style="text-align:center">
+        <div class="swatch" style="background:#ff6dba; box-shadow: 0 0 12px rgba(255,109,186,0.5);"></div>
+        <div class="swatch-label" style="margin-top:6px;">#ff6dba<br>Rosa primário</div>
+      </div>
+      <div style="text-align:center">
+        <div class="swatch" style="background:#ffb6d9; box-shadow: 0 0 12px rgba(255,182,217,0.4);"></div>
+        <div class="swatch-label" style="margin-top:6px;">#ffb6d9<br>Rosa claro</div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
