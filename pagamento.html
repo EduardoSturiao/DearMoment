@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./assets/css/pagamento.css">
   <link rel="stylesheet" href="./assets/css/cookies.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -182,8 +183,22 @@
       cardCvv.value = cardCvv.value.replace(/\D/g, '').slice(0, 4);
     });
 
+    /* ── Cliente Supabase ────────────────────────────────── */
+    const SUPABASE_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const BUCKET = 'gift-images';
+
+    /* ── Exige login: sem sessão, volta para o login ─────── */
+    (async () => {
+      const { data } = await db.auth.getSession();
+      if (!data || !data.session) {
+        window.location.href = './login.html';
+      }
+    })();
+
     /* ── Submissão do formulário ─────────────────────────── */
-    document.getElementById('payForm').addEventListener('submit', e => {
+    document.getElementById('payForm').addEventListener('submit', async e => {
       e.preventDefault();
 
       const name   = document.getElementById('cardName').value.trim();
@@ -207,13 +222,98 @@
       if (hasError) return;
 
       const btn = document.getElementById('btnPay');
-      btn.textContent = 'Processando...';
+      btn.textContent = 'Processando pagamento...';
       btn.disabled = true;
 
-      setTimeout(() => {
+      // Simula processamento de pagamento
+      await new Promise(r => setTimeout(r, 1800));
+
+      btn.textContent = 'Publicando presente...';
+      try {
+        await finalizeGiftInSupabase(plan);
         showSuccess();
-      }, 1800);
+      } catch (err) {
+        console.error('Falha ao publicar presente:', err);
+        btn.textContent = 'Erro — tente novamente';
+        btn.disabled = false;
+      }
     });
+
+    /* ── Sobe fotos para o Storage e persiste o gift no banco ── */
+    async function finalizeGiftInSupabase(planChosen) {
+      const lastGiftId = localStorage.getItem('soulmates_last_gift_id');
+      const gifts      = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
+      const gift       = gifts.find(g => g.id === lastGiftId) || gifts[gifts.length - 1];
+      if (!gift) throw new Error('Presente não encontrado no localStorage');
+
+      // Usuário logado — dono do presente (necessário para o RLS aceitar o insert)
+      const { data: userData } = await db.auth.getUser();
+      const userId = userData && userData.user ? userData.user.id : null;
+      if (!userId) throw new Error('Sessão expirada. Faça login novamente.');
+
+      const giftId = gift.id;
+      const photoRows = [];
+
+      // 1. Upload das fotos da galeria
+      for (let i = 0; i < (gift.photos || []).length; i++) {
+        const src = gift.photos[i];
+        if (!src || !src.startsWith('data:')) continue;
+        const blob = await (await fetch(src)).blob();
+        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const path = `${userId}/${giftId}/photo-${i}.${ext}`;
+        const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+        if (error) throw error;
+        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+      }
+
+      // 2. Upload da foto de capa (extra)
+      if (gift.extraPhoto && gift.extraPhoto.startsWith('data:')) {
+        const blob = await (await fetch(gift.extraPhoto)).blob();
+        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const path = `${userId}/${giftId}/cover.${ext}`;
+        const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+        if (error) throw error;
+        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+      }
+
+      // 3. INSERT na tabela gifts
+      const giftRow = {
+        id:              giftId,
+        user_id:         userId,
+        name1:           gift.name1 || null,
+        name2:           gift.name2 || null,
+        start_date:      gift.startDate || null,
+        city:            gift.city || null,
+        title:           gift.title || null,
+        template:        gift.selectedTemplate || null,
+        youtube_id:      gift.youtubeId || null,
+        song_name:       gift.songName || null,
+        artist_name:     gift.artistName || null,
+        preview_url:     gift.previewUrl || null,
+        music_duration:  gift.musicDuration || null,
+        photo_captions:  Array.isArray(gift.photoCaptions) ? gift.photoCaptions : [],
+        message:         gift.message || null,
+        capsulas:        Array.isArray(gift.capsulas) ? gift.capsulas : [],
+        gift_type:       gift.giftType || 'amoroso',
+        plan:            planChosen || 'vitalicio',
+        paid:            true,
+      };
+      const { error: giftErr } = await db.from('gifts').insert(giftRow);
+      if (giftErr) throw giftErr;
+
+      // 4. INSERT na tabela gift_photos
+      if (photoRows.length) {
+        const { error: photoErr } = await db.from('gift_photos').insert(photoRows);
+        if (photoErr) throw photoErr;
+      }
+
+      // 5. Limpa o gift do localStorage (mantém os demais e a sessão)
+      const remaining = gifts.filter(g => g.id !== giftId);
+      localStorage.setItem('soulmates_gifts', JSON.stringify(remaining));
+      localStorage.removeItem('soulmates_wizard_state');
+
+      return giftId;
+    }
 
     /* ── Exibe tela de sucesso e gera QR Code ───────────── */
     function showSuccess() {
@@ -225,20 +325,8 @@
       document.getElementById('payForm').style.display = 'none';
       document.getElementById('paySuccess').classList.add('visible');
 
-      // Resolve o ID do presente — fallback em camadas para robustez
-      const lastGiftId  = localStorage.getItem('soulmates_last_gift_id');
-      const gifts       = JSON.parse(localStorage.getItem('soulmates_gifts') || '[]');
-      const lastGift    = gifts.find(g => g.id === lastGiftId) || gifts[gifts.length - 1];
-      const id          = (lastGift && lastGift.id) || lastGiftId;
-
-      if (!id) return; // nenhum presente encontrado de forma alguma
-
-      // Marca o presente como pago
-      const giftIndex = gifts.findIndex(g => g.id === id);
-      if (giftIndex !== -1) {
-        gifts[giftIndex].paid = true;
-        localStorage.setItem('soulmates_gifts', JSON.stringify(gifts));
-      }
+      const id = localStorage.getItem('soulmates_last_gift_id');
+      if (!id) return;
 
       const base    = window.location.href.replace(/pagamento\.html.*$/, '');
       const giftUrl = base + 'presente.html?id=' + id;

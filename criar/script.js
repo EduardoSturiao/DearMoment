@@ -271,9 +271,6 @@ function validateStep(n) {
     case 4:
       if (!state.title.trim()) { showToast('Adicione um título'); return false; }
       break;
-    case 9:
-      if (!state.selectedTemplate) { showToast('Escolha o template do presente ✨'); return false; }
-      break;
   }
   return true;
 }
@@ -289,22 +286,23 @@ function getTemplateMeta(templateId = getFinalTemplate()) {
   return TEMPLATE_META[templateId] || TEMPLATE_META.spotify;
 }
 
-function openFinalGift(planId) {
+async function openFinalGift(planId) {
   state.selectedPlan = planId;
   saveState();
+  localStorage.setItem('soulmates_pending_plan', planId);
 
-  const template     = getFinalTemplate();
-  const templateMeta = getTemplateMeta(template);
-
-  if (template === 'spotify') {
-    const giftId = localStorage.getItem('soulmates_last_gift_id');
-    if (giftId) {
-      window.location.href = `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`;
-      return;
-    }
+  // Checa sessão real do Supabase: logado vai pro pagamento, senão pro login
+  let loggedIn = false;
+  if (window.sb) {
+    const { data } = await window.sb.auth.getSession();
+    loggedIn = !!(data && data.session);
   }
 
-  window.location.href = templateMeta.finalUrl;
+  document.body.style.opacity = '0';
+  document.body.style.transition = 'opacity 0.4s ease';
+  setTimeout(() => {
+    window.location.href = loggedIn ? '../pagamento.html' : '../login.html';
+  }, 400);
 }
 
 /* Stub — mantido para não quebrar chamadas em bindInputs/setupAutocomplete/etc. */
@@ -673,10 +671,17 @@ function setupFaq() {
 ═══════════════════════════════════════════════════════════════ */
 function setupPlanButtons() {
   document.querySelectorAll('.btn-plan:not([data-plan])').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const plan = btn.closest('.plan-card').classList.contains('featured') ? 'vitalicio' : '24h';
       localStorage.setItem('soulmates_pending_plan', plan);
-      const loggedIn = localStorage.getItem('soulmates_session');
+
+      // Checa sessão real do Supabase Auth
+      let loggedIn = false;
+      if (window.sb) {
+        const { data } = await window.sb.auth.getSession();
+        loggedIn = !!(data && data.session);
+      }
+
       document.body.style.opacity = '0';
       document.body.style.transition = 'opacity 0.4s ease';
       setTimeout(() => {
@@ -714,17 +719,6 @@ function bindInputs() {
   if (btnWelcomeStart) {
     btnWelcomeStart.addEventListener('click', navigateNext);
   }
-
-  /* Etapa 9 — template */
-  document.querySelectorAll('.template-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      state.selectedTemplate = card.dataset.template;
-      saveState();
-    });
-    if (card.dataset.template === state.selectedTemplate) card.classList.add('selected');
-  });
 
   /* Etapa 2 — nomes */
   bindText('name1', 'name1');
@@ -870,7 +864,7 @@ function saveGift() {
       musicDuration:   state.musicDuration,
       songName:        state.songName,
       artistName:      state.artistName,
-      photos:          state.photos,
+      photos:          state.photos.slice(),
       photoCaptions:   Array.isArray(state.photoCaptions) ? state.photoCaptions.slice() : [],
       message:         state.message,
       capsulas:        state.capsulas.slice(),
@@ -881,7 +875,6 @@ function saveGift() {
     };
     gifts.push(gift);
     localStorage.setItem(GIFTS_KEY, JSON.stringify(gifts));
-    localStorage.removeItem(STORAGE_KEY);
   } catch (_) {}
 }
 

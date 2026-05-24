@@ -1,3 +1,42 @@
+# Claude Code
 CLAUDE.md
+.claude/
+
+# Editor / IDE
 .vscode/
-docs'
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+build/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

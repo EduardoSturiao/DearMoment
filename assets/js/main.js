@@ -1,5 +1,3 @@
-
-
 //transiçao pro login
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,7 +32,7 @@ const form = document.querySelector('#form');
 
 if (form) { // não executa em páginas sem formulário
 
-form.addEventListener('submit', function (e) {
+form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const fields = [
@@ -69,8 +67,9 @@ form.addEventListener('submit', function (e) {
             validator: passwordMatch
         }
     ]
-    
+
     const errorIcon = '<i class="fa-solid fa-circle-exclamation"></i>';
+    let hasError = false;
 
     fields.forEach(function (field) {
         const input = document.getElementById(field.id);
@@ -89,8 +88,8 @@ form.addEventListener('submit', function (e) {
             errorSpan.innerHTML = `${errorIcon} ${fieldValidator.errorMessage}`;
             inputBox.classList.add('invalid');
             inputBox.classList.remove('valid');
-            return;
-        } 
+            hasError = true;
+        }
     })
 
     const genders = document.getElementsByName('gender');
@@ -98,16 +97,70 @@ form.addEventListener('submit', function (e) {
     const genderErrorSpan = radioContainer.querySelector('.error');
 
     const selectedGender =  [...genders].find(input => input.checked);
-    radioContainer.classList.add('invalid');
-    radioContainer.classList.remove('valid');
-    genderErrorSpan.innerHTML = `${errorIcon} Selecione um gênero!`;
 
     if (selectedGender) {
         radioContainer.classList.add('valid');
         radioContainer.classList.remove('invalid');
         genderErrorSpan.innerHTML = '';
+    } else {
+        radioContainer.classList.add('invalid');
+        radioContainer.classList.remove('valid');
+        genderErrorSpan.innerHTML = `${errorIcon} Selecione um gênero!`;
+        hasError = true;
+    }
+
+    if (hasError) return;
+
+    /* ── Criação de conta no Supabase Auth ────────────────── */
+    if (!window.sb) {
+        alert('Erro de conexão com o servidor. Recarregue a página e tente de novo.');
         return;
     }
+
+    const email     = document.getElementById('email').value.trim();
+    const password  = document.getElementById('password').value;
+    const firstName = document.getElementById('name').value.trim();
+    const lastName  = document.getElementById('last_name').value.trim();
+    const birthdate = document.getElementById('birthdate').value;
+    const gender    = selectedGender.value;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Criando conta...';
+
+    const emailErrorSpan = document.getElementById('email').closest('.input-box').querySelector('.error');
+
+    const { data, error } = await window.sb.auth.signUp({
+        email,
+        password,
+        options: {
+            data: { first_name: firstName, last_name: lastName, birthdate, gender }
+        }
+    });
+
+    if (error) {
+        const msg = /already registered|already exists|User already/i.test(error.message)
+            ? 'Este e-mail já possui uma conta. Faça login.'
+            : `Não foi possível criar a conta: ${error.message}`;
+        emailErrorSpan.innerHTML = `${errorIcon} ${msg}`;
+        document.getElementById('email').closest('.input-box').classList.add('invalid');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+        return;
+    }
+
+    // Com confirmação de e-mail DESLIGADA, signUp já devolve sessão → loga direto.
+    const pendingPlan = localStorage.getItem('soulmates_pending_plan');
+    document.body.classList.add('fade-out');
+    setTimeout(() => {
+        if (data.session) {
+            window.location.href = pendingPlan ? './pagamento.html' : './index.html';
+        } else {
+            // Confirmação de e-mail LIGADA → precisa confirmar antes de logar.
+            window.location.href = './login.html?verifique=1';
+        }
+    }, 500);
 })
 
 } // fim do if (form)

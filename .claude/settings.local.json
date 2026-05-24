@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Gabriel\\\\Desktop\\\\workspace\\\\SoulMates\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__execute_sql",
+      "Bash(python -m http.server 8000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/index.html)"
     ]
   }
 }
