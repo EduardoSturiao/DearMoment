@@ -42,6 +42,7 @@
   <audio id="sparkleAudio"  src="./assets/audio/sparkle-whoosh.mp3"   preload="auto"></audio>
   <audio id="sparkleAudio2" src="./assets/audio/sparkle-whoosh-2.mp3" preload="auto"></audio>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
   /* ================================================================
      PRESENTE.HTML — v2 multi-páginas
@@ -183,18 +184,82 @@
       baseline() { return target; }
     };
   })();
+<<<<<<< HEAD
   const params   = new URLSearchParams(window.location.search);
   const giftId   = params.get('id');
   const gifts    = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
   const lastGiftId = localStorage.getItem('DearMoment_last_gift_id');
   let gift = gifts.find(g => g.id === giftId);
   const root = document.getElementById('giftRoot');
+=======
+  const params     = new URLSearchParams(window.location.search);
+  const giftId     = params.get('id');
+  const lastGiftId = localStorage.getItem('soulmates_last_gift_id');
+  const root       = document.getElementById('giftRoot');
+>>>>>>> 06de5011a601ae9740bc3e7d0e5a7f66eb91b4a6
 
-  if (!gift) gift = getGiftFromWizardState(giftId, lastGiftId);
+  /* ── Cliente Supabase ────────────────────────────────── */
+  const _SB_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
+  const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
+  const _sbClient = window.supabase ? window.supabase.createClient(_SB_URL, _SB_ANON) : null;
+  const BUCKET = 'gift-images';
 
-  /* ── Demo mode: sem gift real → cria gift demo completo ── */
-  if (!gift) {
-    gift = {
+  /* ── Busca o gift por ID na tabela `gifts` + JOIN com `gift_photos` ── */
+  async function loadGiftFromSupabase(id) {
+    if (!_sbClient || !id) return null;
+    const { data, error } = await _sbClient
+      .from('gifts')
+      .select('*, gift_photos(storage_path, is_extra, position)')
+      .eq('id', id)
+      .eq('paid', true)
+      .maybeSingle();
+    if (error || !data) return null;
+
+    const photoRows = Array.isArray(data.gift_photos) ? data.gift_photos : [];
+    const gallery   = photoRows
+      .filter(p => !p.is_extra)
+      .sort((a, b) => a.position - b.position)
+      .map(p => _sbClient.storage.from(BUCKET).getPublicUrl(p.storage_path).data.publicUrl);
+    const coverRow  = photoRows.find(p => p.is_extra);
+    const coverUrl  = coverRow
+      ? _sbClient.storage.from(BUCKET).getPublicUrl(coverRow.storage_path).data.publicUrl
+      : '';
+
+    return {
+      id:               data.id,
+      name1:            data.name1 || '',
+      name2:            data.name2 || '',
+      startDate:        data.start_date || '',
+      city:             data.city || '',
+      title:            data.title || '',
+      selectedTemplate: data.template || '',
+      youtubeId:        data.youtube_id || '',
+      previewUrl:       data.preview_url || '',
+      musicDuration:    data.music_duration || 0,
+      songName:         data.song_name || '',
+      artistName:       data.artist_name || '',
+      photos:           gallery,
+      photoCaptions:    Array.isArray(data.photo_captions) ? data.photo_captions : [],
+      message:          data.message || '',
+      capsulas:         Array.isArray(data.capsulas) ? data.capsulas : ['', '', '', ''],
+      extraPhoto:       coverUrl,
+      giftType:         data.gift_type || 'amoroso',
+      createdAt:        new Date().toISOString(),
+    };
+  }
+
+  /* ── Resolve gift por todas as fontes (Supabase → wizard state → demo) ── */
+  async function resolveGift() {
+    // 1. Supabase (gift pago)
+    const fromDb = await loadGiftFromSupabase(giftId);
+    if (fromDb) return fromDb;
+
+    // 2. Wizard state (preview antes do pagamento)
+    const fromWizard = getGiftFromWizardState(giftId, lastGiftId);
+    if (fromWizard) return suplementaDemo(fromWizard);
+
+    // 3. Demo fallback
+    return {
       id: 'demo',
       name1: 'Ana', name2: 'Pedro',
       startDate: '2021-06-14', city: 'São Paulo',
@@ -211,13 +276,15 @@
     };
   }
 
-  /* ── Suplementa fotos ausentes com demos (wizard incompleto) ── */
-  if (!gift.extraPhoto) gift.extraPhoto = './assets/images/demo-cover.jpg';
-  if (!Array.isArray(gift.photos) || !gift.photos.length) {
-    gift.photos = ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'];
+  function suplementaDemo(gift) {
+    if (!gift.extraPhoto) gift.extraPhoto = './assets/images/demo-cover.jpg';
+    if (!Array.isArray(gift.photos) || !gift.photos.length) {
+      gift.photos = ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'];
+    }
+    return gift;
   }
 
-  renderGift(gift);
+  resolveGift().then(renderGift);
 
   /* ── 1. Wizard state fallback ───────────────────────── */
   function getGiftFromWizardState(requestedId, savedLastGiftId) {
