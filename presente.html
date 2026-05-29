@@ -184,19 +184,10 @@
       baseline() { return target; }
     };
   })();
-<<<<<<< HEAD
-  const params   = new URLSearchParams(window.location.search);
-  const giftId   = params.get('id');
-  const gifts    = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
-  const lastGiftId = localStorage.getItem('DearMoment_last_gift_id');
-  let gift = gifts.find(g => g.id === giftId);
-  const root = document.getElementById('giftRoot');
-=======
   const params     = new URLSearchParams(window.location.search);
   const giftId     = params.get('id');
-  const lastGiftId = localStorage.getItem('soulmates_last_gift_id');
+  const lastGiftId = localStorage.getItem('DearMoment_last_gift_id');
   const root       = document.getElementById('giftRoot');
->>>>>>> 06de5011a601ae9740bc3e7d0e5a7f66eb91b4a6
 
   /* ── Cliente Supabase ────────────────────────────────── */
   const _SB_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';

@@ -58,13 +58,6 @@ form.addEventListener('submit', async (e) => {
 
     if (hasError) return;
 
-<<<<<<< HEAD
-    // Login bem-sucedido — persiste sessão simulada até integração com backend
-    localStorage.setItem('DearMoment_session', JSON.stringify({ loggedIn: true, email: nameValue }));
-
-    // Redireciona: se vier do wizard, vai para pagamento; senão, vai para home
-    const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
-=======
     if (!window.sb) {
         nameError.innerHTML = `${errorIcon} Erro de conexão. Recarregue a página.`;
         return;
@@ -91,8 +84,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     // Login OK — a sessão fica persistida pelo SDK. Redireciona.
-    const pendingPlan = localStorage.getItem('soulmates_pending_plan');
->>>>>>> 06de5011a601ae9740bc3e7d0e5a7f66eb91b4a6
+    const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
     document.body.style.opacity = '0';
     document.body.style.transition = 'opacity 0.4s ease';
     setTimeout(() => {

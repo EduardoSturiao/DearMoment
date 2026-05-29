@@ -151,7 +151,7 @@ form.addEventListener('submit', async function (e) {
     }
 
     // Com confirmação de e-mail DESLIGADA, signUp já devolve sessão → loga direto.
-    const pendingPlan = localStorage.getItem('soulmates_pending_plan');
+    const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
     document.body.classList.add('fade-out');
     setTimeout(() => {
         if (data.session) {

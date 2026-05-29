@@ -289,25 +289,13 @@ function getTemplateMeta(templateId = getFinalTemplate()) {
 async function openFinalGift(planId) {
   state.selectedPlan = planId;
   saveState();
-  localStorage.setItem('soulmates_pending_plan', planId);
+  localStorage.setItem('DearMoment_pending_plan', planId);
 
-<<<<<<< HEAD
-  const template     = getFinalTemplate();
-  const templateMeta = getTemplateMeta(template);
-
-  if (template === 'spotify') {
-    const giftId = localStorage.getItem('DearMoment_last_gift_id');
-    if (giftId) {
-      window.location.href = `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`;
-      return;
-    }
-=======
   // Checa sessão real do Supabase: logado vai pro pagamento, senão pro login
   let loggedIn = false;
   if (window.sb) {
     const { data } = await window.sb.auth.getSession();
     loggedIn = !!(data && data.session);
->>>>>>> 06de5011a601ae9740bc3e7d0e5a7f66eb91b4a6
   }
 
   document.body.style.opacity = '0';
@@ -685,11 +673,7 @@ function setupPlanButtons() {
   document.querySelectorAll('.btn-plan:not([data-plan])').forEach(btn => {
     btn.addEventListener('click', async () => {
       const plan = btn.closest('.plan-card').classList.contains('featured') ? 'vitalicio' : '24h';
-<<<<<<< HEAD
       localStorage.setItem('DearMoment_pending_plan', plan);
-      const loggedIn = localStorage.getItem('DearMoment_session');
-=======
-      localStorage.setItem('soulmates_pending_plan', plan);
 
       // Checa sessão real do Supabase Auth
       let loggedIn = false;
@@ -698,7 +682,7 @@ function setupPlanButtons() {
         loggedIn = !!(data && data.session);
       }
 
->>>>>>> 06de5011a601ae9740bc3e7d0e5a7f66eb91b4a6
+
       document.body.style.opacity = '0';
       document.body.style.transition = 'opacity 0.4s ease';
       setTimeout(() => {

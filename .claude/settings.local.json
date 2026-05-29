@@ -9,5 +9,8 @@
       "Bash(python -m http.server 8000)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/index.html)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }
