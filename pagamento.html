@@ -206,8 +206,7 @@
         localStorage.setItem('DearMoment_gifts', JSON.stringify(gifts.filter(g => g.id !== giftId)));
         localStorage.removeItem('DearMoment_wizard_state');
 
-        // sandbox_init_point = ambiente de testes | init_point = produção
-        window.location.href = data.sandbox_init_point;
+        window.location.href = data.init_point;
 
       } catch (err) {
         console.error('Falha ao iniciar pagamento:', err);
