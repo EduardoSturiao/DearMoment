@@ -168,11 +168,7 @@ function buildPresentData() {
   const message = state.message?.trim() || getDefaultMessage();
   const signaturePrefix = state.giftType === 'amigo' ? 'Com carinho' : 'Com amor';
 
-  let closingCopy = planMeta.copy;
-
-  if (state.wrappedSelected) {
-    closingCopy += ' A abertura Wrapped também faz parte desta entrega.';
-  }
+  const closingCopy = planMeta.copy;
 
   return {
     planMeta,

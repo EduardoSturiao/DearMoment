@@ -235,15 +235,35 @@
       capsulas:         Array.isArray(data.capsulas) ? data.capsulas : ['', '', '', ''],
       extraPhoto:       coverUrl,
       giftType:         data.gift_type || 'amoroso',
-      createdAt:        new Date().toISOString(),
+      plan:             data.plan || 'vitalicio',
+      createdAt:        data.created_at || new Date().toISOString(),
     };
+  }
+
+  /* ── Verifica se um presente 24h expirou ───────────── */
+  function isExpired(gift) {
+    if (gift.plan !== '24h') return false;
+    return (Date.now() - new Date(gift.createdAt).getTime()) > 86400000;
+  }
+
+  function showExpired() {
+    root.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:32px;text-align:center;">
+        <div style="font-size:56px;margin-bottom:24px;">⏳</div>
+        <h2 style="font-family:'Sora',sans-serif;color:#ff6dba;margin:0 0 12px;">Este presente expirou</h2>
+        <p style="color:#8892a4;font-size:15px;line-height:1.6;max-width:300px;margin:0 0 32px;">O Plano 24 Horas é válido por 24 horas a partir da criação. Para homenagens permanentes, escolha o Plano Vitalício.</p>
+        <a href="./index.html" style="padding:12px 28px;background:#ff6dba;color:#fff;border-radius:10px;text-decoration:none;font-family:'Sora',sans-serif;font-size:15px;font-weight:600;">Criar meu presente →</a>
+      </div>`;
   }
 
   /* ── Resolve gift por todas as fontes (Supabase → wizard state → demo) ── */
   async function resolveGift() {
     // 1. Supabase (gift pago)
     const fromDb = await loadGiftFromSupabase(giftId);
-    if (fromDb) return fromDb;
+    if (fromDb) {
+      if (isExpired(fromDb)) { showExpired(); return null; }
+      return fromDb;
+    }
 
     // 2. Wizard state (preview antes do pagamento)
     const fromWizard = getGiftFromWizardState(giftId, lastGiftId);
@@ -275,7 +295,7 @@
     return gift;
   }
 
-  resolveGift().then(renderGift);
+  resolveGift().then(g => { if (g) renderGift(g); });
 
   /* ── 1. Wizard state fallback ───────────────────────── */
   function getGiftFromWizardState(requestedId, savedLastGiftId) {

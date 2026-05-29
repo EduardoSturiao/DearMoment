@@ -16,27 +16,22 @@ serve(async (req) => {
   }
 
   try {
-    const { plan, giftId, hasWrapped, successUrl, failureUrl, pendingUrl } = await req.json();
+    const { plan, giftId, successUrl, failureUrl, pendingUrl } = await req.json();
+
+    const now = new Date();
+    const promoActive = now >= new Date('2026-06-07T00:00:00') && now <= new Date('2026-06-13T23:59:59');
+    const discount = promoActive ? 0.8 : 1.0;
 
     const planData = PLAN_DATA[plan] || PLAN_DATA['vitalicio'];
+    const unitPrice = Math.round(planData.price * discount * 100) / 100;
 
     const items: object[] = [{
       id: plan,
-      title: planData.title,
+      title: planData.title + (promoActive ? ' – 20% OFF Dia dos Namorados' : ''),
       quantity: 1,
-      unit_price: planData.price,
+      unit_price: unitPrice,
       currency_id: 'BRL',
     }];
-
-    if (hasWrapped) {
-      items.push({
-        id: 'wrapped',
-        title: 'DearMoment – Versão Wrapped',
-        quantity: 1,
-        unit_price: 7.90,
-        currency_id: 'BRL',
-      });
-    }
 
     const preference = {
       items,

@@ -55,11 +55,6 @@
         </span>
       </div>
 
-      <div class="order-line" id="orderWrappedLine" style="display:none">
-        <span class="label">Versão Wrapped</span>
-        <span class="value">+ R$ 7,90</span>
-      </div>
-
       <div class="order-line total">
         <span class="label">Total</span>
         <span class="value" id="orderTotal">R$ 29,90</span>
@@ -125,23 +120,28 @@
     const BUCKET        = 'gift-images';
     const db            = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    const plan       = localStorage.getItem('DearMoment_pending_plan') || 'vitalicio';
-    const hasWrapped = localStorage.getItem('DearMoment_pending_wrapped') === '1';
-    const metaRaw    = localStorage.getItem('DearMoment_last_gift_meta');
-    const meta       = metaRaw ? JSON.parse(metaRaw) : {};
+    const plan    = localStorage.getItem('DearMoment_pending_plan') || 'vitalicio';
+    const metaRaw = localStorage.getItem('DearMoment_last_gift_meta');
+    const meta    = metaRaw ? JSON.parse(metaRaw) : {};
+
+    const promoActive = (() => {
+      const now = new Date();
+      return now >= new Date('2026-06-07T00:00:00') && now <= new Date('2026-06-13T23:59:59');
+    })();
 
     const planData = PLAN_DATA[plan] || PLAN_DATA.vitalicio;
-    const total    = planData.price + (hasWrapped ? 7.90 : 0);
+    const total    = promoActive ? Math.round(planData.price * 0.8 * 100) / 100 : planData.price;
     const fmtBRL   = v => 'R$ ' + v.toFixed(2).replace('.', ',');
 
     /* ── Preenche resumo do pedido ──────────────────────── */
     document.getElementById('orderPlanLabel').textContent = planData.label;
-    document.getElementById('orderPlanPrice').textContent = fmtBRL(planData.price);
-    document.getElementById('orderPlanBadge').textContent = planData.badge;
+    document.getElementById('orderPlanPrice').textContent = promoActive
+      ? fmtBRL(total)
+      : fmtBRL(planData.price);
+    document.getElementById('orderPlanBadge').textContent = promoActive ? '🏷 20% OFF' : planData.badge;
     document.getElementById('orderTotal').textContent     = fmtBRL(total);
     document.getElementById('btnPayTotal').textContent    = fmtBRL(total);
 
-    if (hasWrapped) document.getElementById('orderWrappedLine').style.display = '';
     if (meta.name1 && meta.name2) document.getElementById('orderGiftNames').textContent = `${meta.name1} & ${meta.name2}`;
     if (meta.title)               document.getElementById('orderGiftTitle').textContent  = meta.title;
 
@@ -192,7 +192,6 @@
           body: JSON.stringify({
             plan,
             giftId,
-            hasWrapped,
             successUrl: `${baseUrl}?status=approved&external_reference=${giftId}`,
             failureUrl: `${baseUrl}?status=rejected`,
             pendingUrl: `${baseUrl}?status=pending`,
@@ -290,7 +289,6 @@
     /* ── Exibe tela de sucesso e gera QR Code ───────────── */
     function showSuccess() {
       localStorage.removeItem('DearMoment_pending_plan');
-      localStorage.removeItem('DearMoment_pending_wrapped');
 
       document.getElementById('payPanel').style.display  = 'none';
       document.getElementById('paySuccess').classList.add('visible');
