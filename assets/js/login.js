@@ -95,3 +95,56 @@ form.addEventListener('submit', async (e) => {
 function isEmpty(value) {
     return value === '';
 }
+
+// Recuperação de senha
+document.getElementById('forgotLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('form_header').style.display = 'none';
+    document.getElementById('form').style.display = 'none';
+    document.getElementById('recoveryPanel').style.display = 'block';
+});
+
+document.getElementById('backToLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('recoveryPanel').style.display = 'none';
+    document.getElementById('form_header').style.display = 'flex';
+    document.getElementById('form').style.display = 'flex';
+});
+
+document.getElementById('btnSendRecovery').addEventListener('click', async () => {
+    const email = document.getElementById('recoveryEmail').value.trim();
+    const errorEl = document.getElementById('recoveryError');
+    const btn = document.getElementById('btnSendRecovery');
+    const errorIcon = `<i class="fa-solid fa-circle-exclamation"></i>`;
+
+    errorEl.innerHTML = '';
+
+    if (!email) {
+        errorEl.innerHTML = `${errorIcon} Digite seu e-mail`;
+        return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Enviando...';
+
+    const { error } = await window.sb.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://dearmoment.com.br/redefinir-senha.html',
+    });
+
+    if (error) {
+        errorEl.innerHTML = `${errorIcon} Erro ao enviar. Tente novamente.`;
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        return;
+    }
+
+    document.getElementById('recoveryPanel').innerHTML = `
+        <div style="text-align:center;padding:8px 0;">
+            <p style="font-size:32px;margin-bottom:16px;">📬</p>
+            <p style="color:#f0f0f0;font-size:15px;font-weight:600;margin-bottom:8px;">Link enviado!</p>
+            <p style="color:#8892a4;font-size:13px;line-height:1.6;margin-bottom:24px;">Verifique sua caixa de entrada e clique no link para criar uma nova senha.</p>
+            <a href="./login.html" style="font-size:13px;color:#ff6dba;">← Voltar ao login</a>
+        </div>
+    `;
+});

@@ -62,14 +62,38 @@
                     <span class="error"></span>
                 </div>
 
-               
+
             </div>
+
+            <a href="#" id="forgotLink" style="font-size:12px;color:#8892a4;text-align:right;display:block;margin-top:-6px;">Esqueci minha senha?</a>
 
             <button type="submit" class="btn-default">
                 <i class="fa-solid fa-check"></i>
                 Entrar
             </button>
         </form>
+
+        <!-- Painel de recuperação de senha -->
+        <div id="recoveryPanel" style="display:none;">
+          <h2 style="font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:#f0f0f0;margin-bottom:4px;">Recuperar senha</h2>
+          <div style="width:40px;height:3px;background:#ff6dba;border-radius:99px;margin-bottom:20px;"></div>
+          <p style="color:#8892a4;font-size:13px;line-height:1.6;margin-bottom:20px;">Digite seu e-mail e enviaremos um link para criar uma nova senha.</p>
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="input-box">
+              <label class="form-label">E-mail</label>
+              <div class="input-field">
+                <input type="email" id="recoveryEmail" class="form-control" placeholder="seu@email.com">
+                <i class="fa-regular fa-envelope"></i>
+              </div>
+              <span class="error" id="recoveryError"></span>
+            </div>
+            <button class="btn-default" id="btnSendRecovery">
+              <i class="fa-solid fa-paper-plane"></i>
+              Enviar link
+            </button>
+            <a href="#" id="backToLogin" style="font-size:13px;color:#8892a4;text-align:center;display:block;">← Voltar ao login</a>
+          </div>
+        </div>
     </main>
 
 

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="./assets/css/login.css">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&display=swap" rel="stylesheet">
+  <title>Redefinir Senha | DearMoment</title>
+</head>
+<body>
+  <main id="form_container">
+
+    <!-- Logo -->
+    <a href="./index.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:28px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 3 34 23" width="38" height="26" style="filter:drop-shadow(0 0 6px rgba(255,109,186,0.45));">
+        <defs>
+          <clipPath id="sm-clip-top"><rect x="0" y="3" width="34" height="11"/></clipPath>
+          <clipPath id="sm-clip-bot"><rect x="0" y="14" width="34" height="13"/></clipPath>
+        </defs>
+        <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-bot)"/>
+        <circle cx="12" cy="14" r="9" stroke="#ff6dba" stroke-width="3.2" fill="none"/>
+        <circle cx="22" cy="14" r="9" stroke="#ffb6d9" stroke-width="3.2" fill="none" clip-path="url(#sm-clip-top)"/>
+      </svg>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:#ff6dba;letter-spacing:0.5px;">DearMoment</span>
+    </a>
+
+    <!-- Verificando link -->
+    <div id="loadingPanel" style="text-align:center;padding:8px 0;">
+      <p style="color:#8892a4;font-size:14px;">Verificando link...</p>
+    </div>
+
+    <!-- Formulário de nova senha -->
+    <div id="resetPanel" style="display:none;">
+      <h2 style="font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:#f0f0f0;margin-bottom:4px;">Nova senha</h2>
+      <div style="width:40px;height:3px;background:#ff6dba;border-radius:99px;margin-bottom:24px;"></div>
+      <form id="resetForm" style="display:flex;flex-direction:column;gap:20px;">
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div class="input-box">
+            <label class="form-label">Nova senha</label>
+            <div class="input-field">
+              <input type="password" id="newPassword" class="form-control" placeholder="Mínimo 6 caracteres">
+              <i class="fa-regular fa-eye-slash password-icon"></i>
+            </div>
+            <span class="error" id="newPassError"></span>
+          </div>
+          <div class="input-box">
+            <label class="form-label">Confirmar senha</label>
+            <div class="input-field">
+              <input type="password" id="confirmPassword" class="form-control" placeholder="Repita a nova senha">
+              <i class="fa-regular fa-eye-slash password-icon"></i>
+            </div>
+            <span class="error" id="confirmPassError"></span>
+          </div>
+        </div>
+        <button type="submit" class="btn-default">
+          <i class="fa-solid fa-check"></i>
+          Salvar nova senha
+        </button>
+      </form>
+    </div>
+
+    <!-- Link inválido ou expirado -->
+    <div id="errorPanel" style="display:none;text-align:center;padding:8px 0;">
+      <p style="font-size:32px;margin-bottom:16px;">⚠️</p>
+      <p style="color:#f87171;font-size:14px;margin-bottom:8px;">Link inválido ou expirado.</p>
+      <p style="color:#8892a4;font-size:13px;line-height:1.6;margin-bottom:24px;">Solicite um novo link de recuperação.</p>
+      <a href="./login.html" class="btn-default" style="text-decoration:none;">← Voltar ao login</a>
+    </div>
+
+    <!-- Sucesso -->
+    <div id="successPanel" style="display:none;text-align:center;padding:8px 0;">
+      <p style="font-size:32px;margin-bottom:16px;">✅</p>
+      <p style="color:#f0f0f0;font-size:15px;font-weight:600;margin-bottom:8px;">Senha redefinida!</p>
+      <p style="color:#8892a4;font-size:13px;line-height:1.6;">Redirecionando para o login...</p>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="./assets/js/supabase-client.js"></script>
+  <script>
+    const panels = ['loadingPanel', 'resetPanel', 'errorPanel', 'successPanel'];
+    function show(id) {
+      panels.forEach(p => {
+        document.getElementById(p).style.display = p === id ? 'block' : 'none';
+      });
+    }
+
+    // Toggle show/hide senha
+    document.querySelectorAll('.password-icon').forEach(icon => {
+      icon.addEventListener('click', function () {
+        const input = this.closest('.input-field').querySelector('.form-control');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        this.classList.toggle('fa-eye');
+      });
+    });
+
+    // Supabase detecta o token da URL e dispara PASSWORD_RECOVERY
+    const fallbackTimer = setTimeout(() => {
+      if (document.getElementById('loadingPanel').style.display !== 'none') {
+        show('errorPanel');
+      }
+    }, 5000);
+
+    window.sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        clearTimeout(fallbackTimer);
+        show('resetPanel');
+      }
+    });
+
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const errorIcon = `<i class="fa-solid fa-circle-exclamation"></i>`;
+      const newPass     = document.getElementById('newPassword').value;
+      const confirmPass = document.getElementById('confirmPassword').value;
+      const newPassError    = document.getElementById('newPassError');
+      const confirmPassError = document.getElementById('confirmPassError');
+
+      newPassError.innerHTML    = '';
+      confirmPassError.innerHTML = '';
+
+      let hasError = false;
+
+      if (newPass.length < 6) {
+        newPassError.innerHTML = `${errorIcon} A senha deve ter pelo menos 6 caracteres`;
+        hasError = true;
+      }
+      if (newPass !== confirmPass) {
+        confirmPassError.innerHTML = `${errorIcon} As senhas não coincidem`;
+        hasError = true;
+      }
+      if (hasError) return;
+
+      const btn = e.target.querySelector('button');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'Salvando...';
+
+      const { error } = await window.sb.auth.updateUser({ password: newPass });
+
+      if (error) {
+        newPassError.innerHTML = `${errorIcon} Erro ao redefinir a senha. Tente novamente.`;
+        btn.disabled  = false;
+        btn.innerHTML = originalHtml;
+        return;
+      }
+
+      show('successPanel');
+      setTimeout(() => { window.location.href = './login.html'; }, 2000);
+    });
+  </script>
+</body>
+</html>

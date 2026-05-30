@@ -9,7 +9,7 @@
  */
 
 (function () {
-  const CONSENT_KEY = 'sm_cookie_consent';
+  const CONSENT_KEY = 'DearMoment_cookie_consent';
 
   function getConsent() {
     return localStorage.getItem(CONSENT_KEY);
