@@ -1,5 +1,5 @@
 /* ================================================================
-   MEUS PRESENTES — lógica de exibição
+   MEUS PRESENTES — lógica de exibição e exclusão
    Lê os presentes pagos da tabela `gifts` no Supabase, com as fotos
    embedadas via `gift_photos`. URLs públicas geradas pelo Storage.
 ================================================================ */
@@ -11,10 +11,11 @@
 
   const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
 
+  let giftsData = [];
+
   async function loadGifts() {
     if (!db) return [];
 
-    // Exige login — só mostra os presentes do próprio usuário
     const { data: userData } = await db.auth.getUser();
     const user = userData && userData.user;
     if (!user) {
@@ -41,12 +42,13 @@
         ? db.storage.from(BUCKET).getPublicUrl(cover.storage_path).data.publicUrl
         : null;
       return {
-        id:         g.id,
-        name1:      g.name1,
-        name2:      g.name2,
-        startDate:  g.start_date,
-        plan:       g.plan,
+        id:        g.id,
+        name1:     g.name1,
+        name2:     g.name2,
+        startDate: g.start_date,
+        plan:      g.plan,
         coverUrl,
+        allPaths:  photos.map(p => p.storage_path),
       };
     });
   }
@@ -77,27 +79,74 @@
       const plan = gift.plan === 'vitalicio' ? 'Vitalício' : '24 Horas';
 
       return `
-        <a class="mp-card" href="./presente.html?id=${encodeURIComponent(gift.id)}">
-          ${coverHtml}
-          <div class="mp-card-body">
-            <div class="mp-card-names">${names}</div>
-            ${date ? `<div class="mp-card-date">${date}</div>` : ''}
-            <div class="mp-card-plan">
-              <span class="mp-card-plan-badge">Plano ${plan}</span>
-              <i class="fa-solid fa-arrow-right mp-card-arrow"></i>
+        <div class="mp-card" data-id="${gift.id}">
+          <a class="mp-card-inner" href="./presente.html?id=${encodeURIComponent(gift.id)}">
+            ${coverHtml}
+            <div class="mp-card-body">
+              <div class="mp-card-names">${names}</div>
+              ${date ? `<div class="mp-card-date">${date}</div>` : ''}
+              <div class="mp-card-plan">
+                <span class="mp-card-plan-badge">Plano ${plan}</span>
+                <i class="fa-solid fa-arrow-right mp-card-arrow"></i>
+              </div>
             </div>
-          </div>
-        </a>
+          </a>
+          <button class="mp-card-delete" data-id="${gift.id}" aria-label="Excluir presente" title="Excluir presente">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
       `;
     }).join('');
   }
 
+  async function deleteGift(giftId, allPaths, cardEl) {
+    if (!confirm('Tem certeza que deseja excluir este presente? Esta ação não pode ser desfeita.')) return;
+
+    cardEl.style.opacity = '0.4';
+    cardEl.style.pointerEvents = 'none';
+
+    try {
+      if (allPaths.length > 0) {
+        await db.storage.from(BUCKET).remove(allPaths);
+      }
+
+      await db.from('gift_photos').delete().eq('gift_id', giftId);
+
+      const { error } = await db.from('gifts').delete().eq('id', giftId);
+      if (error) throw error;
+
+      cardEl.style.opacity = '0';
+      setTimeout(() => {
+        cardEl.remove();
+        giftsData = giftsData.filter(g => g.id !== giftId);
+        if (document.querySelectorAll('.mp-card').length === 0) {
+          renderEmpty();
+        }
+      }, 300);
+
+    } catch (err) {
+      console.error('Erro ao excluir presente:', err);
+      cardEl.style.opacity = '1';
+      cardEl.style.pointerEvents = '';
+      alert('Erro ao excluir o presente. Tente novamente.');
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
-    const gifts = await loadGifts();
-    if (gifts.length === 0) {
+    giftsData = await loadGifts();
+    if (giftsData.length === 0) {
       renderEmpty();
     } else {
-      renderGifts(gifts);
+      renderGifts(giftsData);
     }
+
+    document.getElementById('mp-grid').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.mp-card-delete');
+      if (!btn) return;
+      const giftId = btn.dataset.id;
+      const gift   = giftsData.find(g => g.id === giftId);
+      const cardEl = btn.closest('.mp-card');
+      await deleteGift(giftId, gift ? gift.allPaths : [], cardEl);
+    });
   });
 })();
