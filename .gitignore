@@ -40,3 +40,6 @@ logs/
 *.tmp
 *.temp
 .cache/
+
+# Banco de dados
+supabase/.temp/

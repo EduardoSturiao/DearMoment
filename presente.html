@@ -44,6 +44,7 @@
   <audio id="sparkleAudio2" src="./assets/audio/sparkle-whoosh-2.mp3" preload="auto"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="./assets/js/supabase-client.js"></script>
   <script>
   /* ================================================================
      PRESENTE.HTML — v2 multi-páginas
@@ -191,9 +192,8 @@
   const root       = document.getElementById('giftRoot');
 
   /* ── Cliente Supabase ────────────────────────────────── */
-  const _SB_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
-  const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
-  const _sbClient = window.supabase ? window.supabase.createClient(_SB_URL, _SB_ANON) : null;
+  // Usa o cliente compartilhado (inicializado em supabase-client.js)
+  const _sbClient = window.sb;
   const BUCKET = 'gift-images';
 
   /* ── Busca o gift por ID na tabela `gifts` + JOIN com `gift_photos` ── */

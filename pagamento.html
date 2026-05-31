@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./assets/css/cookies.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="./assets/js/supabase-client.js"></script>
 </head>
 <body>
 
@@ -87,6 +88,16 @@
         </p>
       </div>
 
+      <!-- Estado: aguardando confirmação do webhook -->
+      <div id="payConfirming" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;text-align:center;gap:20px;">
+        <div style="width:48px;height:48px;border:3px solid #ff6dba;border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite;"></div>
+        <div>
+          <p style="color:#f0f0f0;font-size:16px;font-weight:600;margin:0 0 8px;">Confirmando pagamento...</p>
+          <p style="color:#8892a4;font-size:13px;line-height:1.6;margin:0;">Isso leva alguns segundos. Não feche esta página.</p>
+        </div>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
       <!-- Estado de sucesso -->
       <div class="pay-success" id="paySuccess">
         <div class="pay-success-emoji">🎉</div>
@@ -115,11 +126,11 @@
       '24h':     { label: 'Plano 24 Horas',  price: 19.90, badge: '24h' },
     };
 
-    const SUPABASE_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
-    const EDGE_BASE     = `${SUPABASE_URL}/functions/v1`;
-    const BUCKET        = 'gift-images';
-    const db            = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const SUPABASE_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
+    const EDGE_BASE    = `${SUPABASE_URL}/functions/v1`;
+    const BUCKET       = 'gift-images';
+    // Usa o cliente Supabase compartilhado (inicializado em supabase-client.js)
+    const db           = window.sb;
 
     const plan    = localStorage.getItem('DearMoment_pending_plan') || 'vitalicio';
     const metaRaw = localStorage.getItem('DearMoment_last_gift_meta');
@@ -155,16 +166,14 @@
       }
 
       // Retorno do MercadoPago: detecta status na URL
-      const params    = new URLSearchParams(window.location.search);
-      const mpStatus  = params.get('status');
-      const mpGiftId  = params.get('external_reference');
+      const params   = new URLSearchParams(window.location.search);
+      const mpStatus = params.get('status');
+      const mpGiftId = params.get('external_reference');
 
-      if (mpStatus === 'approved') {
-        // Confirma pagamento no banco e exibe sucesso
-        if (mpGiftId) {
-          await db.from('gifts').update({ paid: true }).eq('id', mpGiftId);
-        }
-        showSuccess();
+      if (mpStatus === 'approved' && mpGiftId) {
+        // Inicia polling — o webhook é a única fonte de verdade para paid=true.
+        // O frontend NUNCA grava paid=true diretamente.
+        pollPaidStatus(mpGiftId);
       } else if (mpStatus === 'rejected' || mpStatus === 'cancelled') {
         const btn = document.getElementById('btnPay');
         btn.insertAdjacentHTML('afterend',
@@ -186,10 +195,14 @@
         btn.textContent = 'Redirecionando para o MercadoPago...';
 
         // 2. Cria a preferência de pagamento via Edge Function
+        const { data: { session } } = await db.auth.getSession();
         const baseUrl = window.location.origin + window.location.pathname;
         const res = await fetch(`${EDGE_BASE}/create-preference`, {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
           body: JSON.stringify({
             plan,
             giftId,
@@ -286,14 +299,53 @@
       return giftId;
     }
 
+    /* ── Polling: aguarda o webhook confirmar paid=true no Supabase ── */
+    function pollPaidStatus(giftId) {
+      document.getElementById('payPanel').style.display      = 'none';
+      document.getElementById('payConfirming').style.display = 'flex';
+
+      const MAX_ATTEMPTS = 30; // 30 × 2 s = 60 s
+      let attempts = 0;
+
+      const timer = setInterval(async () => {
+        attempts++;
+        try {
+          const { data } = await db
+            .from('gifts')
+            .select('paid')
+            .eq('id', giftId)
+            .single();
+
+          if (data && data.paid) {
+            clearInterval(timer);
+            showSuccess(giftId);
+            return;
+          }
+        } catch (_) { /* rede instável — tenta na próxima iteração */ }
+
+        if (attempts >= MAX_ATTEMPTS) {
+          clearInterval(timer);
+          document.getElementById('payConfirming').innerHTML = `
+            <div style="text-align:center;padding:16px;">
+              <p style="color:#f0f0f0;font-size:15px;font-weight:600;margin:0 0 10px;">Pagamento recebido!</p>
+              <p style="color:#8892a4;font-size:13px;line-height:1.6;margin:0 0 20px;">
+                A confirmação pode levar mais alguns instantes.<br>
+                Acesse <a href="./meus-presentes.html" style="color:#ff6dba;">Meus Presentes</a> para ver seu presente quando estiver pronto.
+              </p>
+            </div>`;
+        }
+      }, 2000);
+    }
+
     /* ── Exibe tela de sucesso e gera QR Code ───────────── */
-    function showSuccess() {
+    function showSuccess(giftId) {
       localStorage.removeItem('DearMoment_pending_plan');
 
-      document.getElementById('payPanel').style.display  = 'none';
+      document.getElementById('payPanel').style.display      = 'none';
+      document.getElementById('payConfirming').style.display = 'none';
       document.getElementById('paySuccess').classList.add('visible');
 
-      const id = localStorage.getItem('DearMoment_last_gift_id');
+      const id = giftId || localStorage.getItem('DearMoment_last_gift_id');
       if (!id) return;
 
       const base    = window.location.origin + window.location.pathname.replace('pagamento.html', '');

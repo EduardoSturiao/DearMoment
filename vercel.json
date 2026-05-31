@@ -1,0 +1,33 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://imiwhgrjwgydedbfdlkn.supabase.co; connect-src 'self' https://imiwhgrjwgydedbfdlkn.supabase.co https://api.mercadopago.com https://servicodados.ibge.gov.br https://api.deezer.com; media-src 'self' https://cdns-preview-3.dzcdn.net https://cdns-preview-4.dzcdn.net https://cdns-preview-5.dzcdn.net https://cdns-preview-6.dzcdn.net https://cdns-preview-7.dzcdn.net https://cdns-preview-8.dzcdn.net https://cdns-preview-9.dzcdn.net; frame-src https://www.mercadopago.com.br https://www.mercadopago.com; object-src 'none'; base-uri 'self';"
+        }
+      ]
+    }
+  ]
+}

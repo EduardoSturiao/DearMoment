@@ -129,7 +129,7 @@ document.getElementById('btnSendRecovery').addEventListener('click', async () =>
     btn.innerHTML = 'Enviando...';
 
     const { error } = await window.sb.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://dearmoment.com.br/redefinir-senha.html',
+        redirectTo: `${window.location.origin}/redefinir-senha.html`,
     });
 
     if (error) {

@@ -5,11 +5,10 @@
 ================================================================ */
 
 (function () {
-  const SUPABASE_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
   const BUCKET = 'gift-images';
 
-  const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
+  // Usa o cliente Supabase compartilhado (inicializado em supabase-client.js)
+  const db = window.sb;
 
   let giftsData = [];
 
@@ -58,19 +57,30 @@
     document.getElementById('mp-grid').style.display = 'none';
   }
 
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
   function renderGifts(gifts) {
     document.getElementById('mp-empty').style.display = 'none';
     const grid = document.getElementById('mp-grid');
     grid.style.display = 'grid';
 
     grid.innerHTML = gifts.map(gift => {
-      const coverHtml = gift.coverUrl
-        ? `<div class="mp-card-cover"><img src="${gift.coverUrl}" alt="Foto do casal"></div>`
+      const safeId      = escHtml(gift.id);
+      const safeCover   = gift.coverUrl ? escHtml(gift.coverUrl) : '';
+      const coverHtml   = safeCover
+        ? `<div class="mp-card-cover"><img src="${safeCover}" alt="Foto do casal"></div>`
         : `<div class="mp-card-cover-placeholder"><i class="fa-regular fa-images"></i></div>`;
 
       const names = gift.name1 && gift.name2
-        ? `${gift.name1} & ${gift.name2}`
-        : gift.name1 || 'Homenagem sem título';
+        ? `${escHtml(gift.name1)} &amp; ${escHtml(gift.name2)}`
+        : escHtml(gift.name1 || 'Homenagem sem título');
 
       const date = gift.startDate
         ? `Desde ${new Date(gift.startDate).toLocaleDateString('pt-BR')}`
@@ -79,19 +89,19 @@
       const plan = gift.plan === 'vitalicio' ? 'Vitalício' : '24 Horas';
 
       return `
-        <div class="mp-card" data-id="${gift.id}">
+        <div class="mp-card" data-id="${safeId}">
           <a class="mp-card-inner" href="./presente.html?id=${encodeURIComponent(gift.id)}">
             ${coverHtml}
             <div class="mp-card-body">
               <div class="mp-card-names">${names}</div>
-              ${date ? `<div class="mp-card-date">${date}</div>` : ''}
+              ${date ? `<div class="mp-card-date">${escHtml(date)}</div>` : ''}
               <div class="mp-card-plan">
-                <span class="mp-card-plan-badge">Plano ${plan}</span>
+                <span class="mp-card-plan-badge">Plano ${escHtml(plan)}</span>
                 <i class="fa-solid fa-arrow-right mp-card-arrow"></i>
               </div>
             </div>
           </a>
-          <button class="mp-card-delete" data-id="${gift.id}" aria-label="Excluir presente" title="Excluir presente">
+          <button class="mp-card-delete" data-id="${safeId}" aria-label="Excluir presente" title="Excluir presente">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
