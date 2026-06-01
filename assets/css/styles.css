@@ -59,6 +59,7 @@
 /* NAVBAR */
 
 :root {
+  --promo-h: 0px;
   /* font */
   --primary_font: "Syne", sans-serif;
   --secondary_font: "Sora", sans-serif;
@@ -105,7 +106,7 @@ body.fade-out {
 /* ── Pill Nav ─────────────────────────────────────────── */
 .sm-pill-nav {
   position: fixed;
-  top: 20px;
+  top: calc(var(--promo-h) + 20px);
   left: 0;
   right: 0;
   z-index: 1000;

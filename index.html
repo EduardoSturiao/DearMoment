@@ -43,9 +43,22 @@
       const now = new Date();
       const start = new Date('2026-06-01T00:00:00');
       const end   = new Date('2026-06-30T23:59:59');
-      if (now >= start && now <= end) {
-        document.getElementById('promo-banner').style.display = 'block';
-      }
+      if (now < start || now > end) return;
+
+      const banner = document.getElementById('promo-banner');
+      banner.style.display = 'block';
+
+      requestAnimationFrame(function () {
+        var h = banner.offsetHeight;
+        document.documentElement.style.setProperty('--promo-h', h + 'px');
+
+        new IntersectionObserver(function (entries) {
+          document.documentElement.style.setProperty(
+            '--promo-h',
+            entries[0].isIntersecting ? h + 'px' : '0px'
+          );
+        }, { threshold: 0 }).observe(banner);
+      });
     })();
   </script>
 
