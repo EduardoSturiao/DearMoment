@@ -43,3 +43,7 @@ logs/
 
 # Banco de dados
 supabase/.temp/
+
+
+#logo
+.logo-export.html

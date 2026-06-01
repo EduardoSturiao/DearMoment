@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>DearMoment — Exportar Logo PNG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0e1218;
+      font-family: 'Syne', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      padding: 60px 40px;
+      min-height: 100vh;
+    }
+    h1 { font-size: 18px; color: #ff6dba; letter-spacing: 0.06em; }
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 32px 40px;
+      border-radius: 16px;
+      border: 1px solid #2a2f3a;
+      min-width: 420px;
+    }
+    .card.dark  { background: #121820; }
+    .card.light { background: #f0f0f0; }
+    .card label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.1em; }
+    .card.light label { color: #555; }
+    .preview { display: flex; align-items: center; justify-content: center; min-height: 80px; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    button {
+      padding: 8px 18px;
+      background: #ff6dba;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+    button.sec {
+      background: transparent;
+      border: 1px solid #ff6dba;
+      color: #ff6dba;
+    }
+    canvas { display: none; }
+    .hint { font-size: 12px; color: #555; text-align: center; max-width: 400px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+
+<h1>DearMoment — Exportar Logo</h1>
+
+<div class="card dark">
+  <label>Versão escura (fundo transparente — usar sobre fundo escuro)</label>
+  <div class="preview" id="prev-dark"></div>
+  <div class="btn-row">
+    <button onclick="exportPng('dark', 1)">PNG 1× · 280×60</button>
+    <button onclick="exportPng('dark', 2)">PNG 2× · 560×120</button>
+    <button onclick="exportPng('dark', 4)">PNG 4× · 1120×240</button>
+    <button class="sec" onclick="exportSvg('dark')">Baixar SVG</button>
+  </div>
+</div>
+
+<div class="card light">
+  <label style="color:#555">Versão clara (fundo transparente — usar sobre fundo claro)</label>
+  <div class="preview" id="prev-light"></div>
+  <div class="btn-row">
+    <button onclick="exportPng('light', 1)">PNG 1× · 280×60</button>
+    <button onclick="exportPng('light', 2)">PNG 2× · 560×120</button>
+    <button onclick="exportPng('light', 4)">PNG 4× · 1120×240</button>
+    <button class="sec" onclick="exportSvg('light')">Baixar SVG</button>
+  </div>
+</div>
+
+<p class="hint">
+  Abra este arquivo no <strong>Chrome ou Edge</strong>, aguarde a fonte Syne carregar
+  (requer internet) e clique no tamanho desejado.<br>
+  Todos os PNGs são exportados com <strong>fundo 100% transparente</strong>.
+</p>
+
+<canvas id="canvas"></canvas>
+
+<script>
+  const W = 280, H = 60;
+
+  // SVG inline — sem dependência de servidor ou fetch
+  const svgs = {
+    dark: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" width="280" height="60">
+  <defs>
+    <clipPath id="d-top"><rect x="0" y="0" width="68" height="30"/></clipPath>
+    <clipPath id="d-bot"><rect x="0" y="30" width="68" height="30"/></clipPath>
+  </defs>
+  <circle cx="24" cy="30" r="19" stroke="#ff6dba" stroke-width="3.4" fill="none"/>
+  <circle cx="44" cy="30" r="19" stroke="#ffb6d9" stroke-width="3.4" fill="none" clip-path="url(#d-bot)"/>
+  <circle cx="44" cy="30" r="19" stroke="#ffb6d9" stroke-width="3.4" fill="none" clip-path="url(#d-top)"/>
+  <text font-family="Syne, sans-serif" font-size="27" y="41">
+    <tspan x="76" font-weight="700" fill="#ff6dba">Dear</tspan><tspan font-weight="400" fill="#ffb6d9">Moment</tspan>
+  </text>
+</svg>`,
+    light: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" width="280" height="60">
+  <defs>
+    <clipPath id="l-top"><rect x="0" y="0" width="68" height="30"/></clipPath>
+    <clipPath id="l-bot"><rect x="0" y="30" width="68" height="30"/></clipPath>
+  </defs>
+  <circle cx="24" cy="30" r="19" stroke="#ff6dba" stroke-width="3.4" fill="none"/>
+  <circle cx="44" cy="30" r="19" stroke="#e04da0" stroke-width="3.4" fill="none" clip-path="url(#l-bot)"/>
+  <circle cx="44" cy="30" r="19" stroke="#e04da0" stroke-width="3.4" fill="none" clip-path="url(#l-top)"/>
+  <text font-family="Syne, sans-serif" font-size="27" y="41">
+    <tspan x="76" font-weight="700" fill="#ff6dba">Dear</tspan><tspan font-weight="400" fill="#121820">Moment</tspan>
+  </text>
+</svg>`
+  };
+
+  // Renderiza previews inline
+  document.getElementById('prev-dark').innerHTML  = svgs.dark;
+  document.getElementById('prev-light').innerHTML = svgs.light;
+
+  function exportPng(variant, scale) {
+    const canvas = document.getElementById('canvas');
+    canvas.width  = W * scale;
+    canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const blob = new Blob([svgs[variant]], { type: 'image/svg+xml' });
+    const url  = URL.createObjectURL(blob);
+    const img  = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      const link = document.createElement('a');
+      link.download = `logo-dearmoment-${variant}@${scale}x.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+    img.src = url;
+  }
+
+  function exportSvg(variant) {
+    const blob = new Blob([svgs[variant]], { type: 'image/svg+xml' });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `logo-dearmoment-${variant}.svg`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
