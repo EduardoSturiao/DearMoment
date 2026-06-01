@@ -576,14 +576,14 @@ function setupMusicSearch() {
   async function fetchSuggestions(query) {
     try {
       const data = await jsonp(
-        `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=8&output=jsonp`
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=8`
       );
-      const tracks = (data.data || []).map(t => ({
-        trackName:       t.title,
-        artistName:      t.artist && t.artist.name ? t.artist.name : '',
-        artworkUrl60:    t.album && (t.album.cover_small || t.album.cover_medium) || '',
-        previewUrl:      t.preview || '',
-        trackTimeMillis: typeof t.duration === 'number' ? t.duration * 1000 : undefined
+      const tracks = (data.results || []).map(t => ({
+        trackName:       t.trackName       || '',
+        artistName:      t.artistName      || '',
+        artworkUrl60:    t.artworkUrl60    || t.artworkUrl100 || '',
+        previewUrl:      t.previewUrl      || '',
+        trackTimeMillis: t.trackTimeMillis
       }));
       renderSuggestions(tracks);
     } catch (_) {
