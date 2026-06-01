@@ -98,7 +98,7 @@ serve(async (req) => {
 
     // ── 4. Calcular preço e criar preferência no MP ──────────────
     const now = new Date();
-    const promoActive = now >= new Date('2026-06-07T00:00:00') && now <= new Date('2026-06-13T23:59:59');
+    const promoActive = now >= new Date('2026-06-01T00:00:00') && now <= new Date('2026-06-30T23:59:59');
     const discount    = promoActive ? 0.8 : 1.0;
 
     const planData  = PLAN_DATA[plan];
