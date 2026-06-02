@@ -685,7 +685,8 @@
                 <div id="gcFormCadastrar" class="gc-auth-form" style="display:none">
                   <input type="text" id="gcCadNome" placeholder="Seu primeiro nome" autocomplete="given-name" class="gc-auth-input">
                   <input type="email" id="gcCadEmail" placeholder="E-mail" autocomplete="email" class="gc-auth-input">
-                  <input type="password" id="gcCadSenha" placeholder="Senha (mín. 6 caracteres)" autocomplete="new-password" class="gc-auth-input">
+                  <input type="password" id="gcCadSenha" placeholder="Senha (mín. 8 caracteres)" autocomplete="new-password" class="gc-auth-input">
+                  <input type="password" id="gcCadConfirmar" placeholder="Confirmar senha" autocomplete="new-password" class="gc-auth-input">
                   <p class="gc-auth-error" id="gcCadError"></p>
                   <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnCadastrar" type="button"><span aria-hidden="true">✦</span> Criar conta e salvar</button>
                 </div>
@@ -1773,13 +1774,15 @@
     });
 
     document.getElementById('gcBtnCadastrar').addEventListener('click', async () => {
-      const nome  = document.getElementById('gcCadNome').value.trim();
-      const email = document.getElementById('gcCadEmail').value.trim();
-      const senha = document.getElementById('gcCadSenha').value;
-      const errEl = document.getElementById('gcCadError');
+      const nome      = document.getElementById('gcCadNome').value.trim();
+      const email     = document.getElementById('gcCadEmail').value.trim();
+      const senha     = document.getElementById('gcCadSenha').value;
+      const confirmar = document.getElementById('gcCadConfirmar').value;
+      const errEl     = document.getElementById('gcCadError');
       errEl.textContent = '';
-      if (!nome || !email || !senha) { errEl.textContent = 'Preencha todos os campos.'; return; }
-      if (senha.length < 6) { errEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; return; }
+      if (!nome || !email || !senha || !confirmar) { errEl.textContent = 'Preencha todos os campos.'; return; }
+      if (senha.length < 8) { errEl.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+      if (senha !== confirmar) { errEl.textContent = 'As senhas não coincidem.'; return; }
       const btn = document.getElementById('gcBtnCadastrar');
       btn.disabled = true; btn.textContent = 'Criando conta...';
       const { data, error } = await _sbClient.auth.signUp({
@@ -1797,6 +1800,7 @@
         await persistSave(data.user.id);
         showState('gcSaveDone');
       } else {
+        localStorage.setItem('DearMoment_pending_gift_save', id);
         document.getElementById('gcAuthConfirmNote').style.display = '';
         document.getElementById('gcAuthTabs').style.display = 'none';
         formCadastrar.style.display = 'none';

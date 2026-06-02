@@ -15,5 +15,20 @@
 
   if (!window.sb) {
     console.error('[SoulMates] SDK do Supabase não carregou antes de supabase-client.js');
+    return;
   }
+
+  /* Auto-salva presente pendente após confirmação de e-mail */
+  window.sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const pendingId = localStorage.getItem('DearMoment_pending_gift_save');
+      if (pendingId) {
+        localStorage.removeItem('DearMoment_pending_gift_save');
+        await window.sb.from('saved_gifts').insert({
+          user_id: session.user.id,
+          gift_id: pendingId,
+        });
+      }
+    }
+  });
 })();
