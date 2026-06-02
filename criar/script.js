@@ -84,7 +84,10 @@ async function loadCidades() {
   try {
     const res  = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome');
     const data = await res.json();
-    CIDADES = data.map(m => `${m.nome}, ${m.microrregiao.mesorregiao.UF.sigla}`);
+    CIDADES = data.map(m => {
+      try { return `${m.nome}, ${m.microrregiao.mesorregiao.UF.sigla}`; }
+      catch (_) { return m.nome || null; }
+    }).filter(Boolean);
   } catch (_) {
     CIDADES = [
       'São Paulo, SP','Rio de Janeiro, RJ','Brasília, DF','Salvador, BA','Fortaleza, CE',
@@ -147,7 +150,7 @@ function escapeHtml(str) {
 }
 
 function normalizeStr(str) {
-  return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 function fileToBase64(file) {
@@ -266,11 +269,22 @@ function validateStep(n) {
       break;
     case 3:
       if (!state.startDate)   { showToast('Informe a data de início'); return false; }
+      if (new Date(state.startDate + 'T00:00:00') > new Date()) {
+        showToast('A data deve ser no passado 📅'); return false;
+      }
       if (!state.city.trim()) { showToast('Informe a cidade'); return false; }
       break;
     case 4:
       if (!state.title.trim()) { showToast('Adicione um título'); return false; }
       break;
+    case 9: {
+      const emptyIdx = state.capsulas.findIndex(c => !c || !c.trim());
+      if (emptyIdx !== -1) {
+        showToast(`Preencha a mensagem da cápsula ${emptyIdx + 1}`);
+        return false;
+      }
+      break;
+    }
   }
   return true;
 }
@@ -728,10 +742,16 @@ function bindInputs() {
   /* Etapa 3 — data */
   const dateInput = document.getElementById('startDate');
   if (state.startDate) dateInput.value = state.startDate;
+  const dateError = document.getElementById('startDateError');
   const handleDateChange = () => {
-    state.startDate = dateInput.value;
+    const newDate = dateInput.value;
+    if (!newDate) return; // Ignora eventos intermediários do Chrome com valor vazio
+    const isFuture = new Date(newDate + 'T00:00:00') > new Date();
+    if (dateError) dateError.style.display = isFuture ? '' : 'none';
+    if (isFuture) { stopCounter(); return; }
+    state.startDate = newDate;
     saveState();
-    startCounter(state.startDate);
+    startCounter(newDate);
     updatePreview();
   };
   dateInput.addEventListener('input', handleDateChange);
@@ -922,7 +942,20 @@ function init() {
   setupPlanButtons();
 
   showStep(state.currentStep);
-  if (state.startDate) startCounter(state.startDate);
+
+  // Timer global — lê state.startDate diretamente a cada segundo,
+  // sem depender de start/stop chamados corretamente na navegação
+  setInterval(() => {
+    if (!state.startDate) return;
+    const t = calcTimeSince(state.startDate);
+    if (!t) return;
+    setTextSafe('cYears',   t.years);
+    setTextSafe('cMonths',  t.months);
+    setTextSafe('cDays',    t.days);
+    setTextSafe('cHours',   t.hours);
+    setTextSafe('cMinutes', t.minutes);
+    setTextSafe('cSeconds', t.seconds);
+  }, 1000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
