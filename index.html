@@ -5,15 +5,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
-    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Preconnect: elimina DNS+TCP+TLS das origens externas antes dos requests chegarem -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+  <!-- Bootstrap CSS — mantido render-blocking pois o grid é usado acima da dobra -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
   <link rel="stylesheet" href="assets/css/cookies.css">
-  <link
+
+  <!-- Google Fonts — async: não bloqueia render; texto exibe em fallback e faz swap -->
+  <link rel="preload" as="style"
     href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
+    onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&family=Syne:wght@400;500;600;700&display=swap"></noscript>
+
+  <!-- Font Awesome — async: só usado abaixo da dobra (FAQ chevrons + social footer) -->
+  <link rel="preload" as="style"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"
+    onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
   <title>DearMoment — Presenteie sua Alma Gêmea</title>
 </head>
 <body>
@@ -213,7 +229,7 @@
               <div class="hero-phone-screen">
                 <video id="mockupVideo"
                        src="./assets/videos/demo.mp4"
-                       autoplay muted playsinline preload="auto">
+                       autoplay muted playsinline preload="none">
                 </video>
               </div>
 

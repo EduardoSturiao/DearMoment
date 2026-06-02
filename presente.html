@@ -655,10 +655,43 @@
             <button class="gc-despedida-btn gc-despedida-primary" id="gcBtnRever" type="button">
               <span aria-hidden="true">↻</span> Rever desde o início
             </button>
-            <a class="gc-despedida-btn gc-despedida-secondary" href="./cadastro.html">
-              <span aria-hidden="true">✦</span> Criar minha conta
-            </a>
-            <p class="gc-despedida-hint">Crie sua conta para acessar este presente quando quiser e gerenciar os que você criar.</p>
+            <div class="gc-save-widget" id="gcSaveWidget">
+              <div class="gc-save-state" id="gcSaveLoading"><span class="gc-save-spinner"></span></div>
+              <div class="gc-save-state" id="gcSaveDone" style="display:none">
+                <span class="gc-save-check">✓</span>
+                <span>Presente salvo! Veja em <a href="./meus-presentes.html">Meus Presentes</a></span>
+              </div>
+              <div class="gc-save-state" id="gcSaveReady" style="display:none">
+                <p class="gc-despedida-hint" style="margin:0 0 10px">Salve este presente para acessá-lo sempre que quiser.</p>
+                <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnSaveGift" type="button">
+                  <span aria-hidden="true">✦</span> Salvar este presente
+                </button>
+              </div>
+              <div class="gc-save-state" id="gcSaveAuth" style="display:none">
+                <div class="gc-save-cta-box">
+                  <p class="gc-save-cta-title">Quer ter acesso a este presente sempre que quiser?</p>
+                  <p class="gc-despedida-hint" style="max-width:none;margin:4px 0 0">Entre ou crie sua conta — é gratuito.</p>
+                </div>
+                <div class="gc-auth-tabs" id="gcAuthTabs">
+                  <button class="gc-auth-tab gc-auth-tab-active" id="gcTabEntrar" type="button">Entrar</button>
+                  <button class="gc-auth-tab" id="gcTabCadastrar" type="button">Criar conta</button>
+                </div>
+                <div id="gcFormEntrar" class="gc-auth-form">
+                  <input type="email" id="gcLoginEmail" placeholder="E-mail" autocomplete="email" class="gc-auth-input">
+                  <input type="password" id="gcLoginSenha" placeholder="Senha" autocomplete="current-password" class="gc-auth-input">
+                  <p class="gc-auth-error" id="gcLoginError"></p>
+                  <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnLogin" type="button"><span aria-hidden="true">✦</span> Entrar e salvar</button>
+                </div>
+                <div id="gcFormCadastrar" class="gc-auth-form" style="display:none">
+                  <input type="text" id="gcCadNome" placeholder="Seu primeiro nome" autocomplete="given-name" class="gc-auth-input">
+                  <input type="email" id="gcCadEmail" placeholder="E-mail" autocomplete="email" class="gc-auth-input">
+                  <input type="password" id="gcCadSenha" placeholder="Senha (mín. 6 caracteres)" autocomplete="new-password" class="gc-auth-input">
+                  <p class="gc-auth-error" id="gcCadError"></p>
+                  <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnCadastrar" type="button"><span aria-hidden="true">✦</span> Criar conta e salvar</button>
+                </div>
+                <p class="gc-auth-confirm-note" id="gcAuthConfirmNote" style="display:none">Conta criada! Confirme seu e-mail para ativar o acesso.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>` : '';
@@ -727,6 +760,7 @@
     setupCapsulasCarta(g);
     setupCarousel(g);
     if (hasConstellation) setupConstellation(g.startDate);
+    setupSaveWidget(giftId);
   }
 
   /* ── 3. Navegação entre telas ───────────────────────── */
@@ -1650,6 +1684,124 @@
     if (counterInterval) clearInterval(counterInterval);
     const audio = document.getElementById('giftAudio');
     if (audio) audio.pause();
+  }
+
+  /* ── Widget de salvar presente (destinatário) ────────── */
+  async function setupSaveWidget(id) {
+    if (!id || !_sbClient) return;
+    const widget = document.getElementById('gcSaveWidget');
+    if (!widget) return;
+
+    function showState(stateId) {
+      ['gcSaveLoading','gcSaveDone','gcSaveReady','gcSaveAuth'].forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.style.display = s === stateId ? '' : 'none';
+      });
+    }
+
+    async function persistSave(userId) {
+      const { error } = await _sbClient
+        .from('saved_gifts')
+        .insert({ user_id: userId, gift_id: id });
+      return !error || error.code === '23505';
+    }
+
+    const { data: { user } } = await _sbClient.auth.getUser();
+
+    if (user) {
+      const { data: existing } = await _sbClient
+        .from('saved_gifts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('gift_id', id)
+        .maybeSingle();
+
+      if (existing) {
+        showState('gcSaveDone');
+      } else {
+        showState('gcSaveReady');
+        const btn = document.getElementById('gcBtnSaveGift');
+        if (btn) btn.addEventListener('click', async () => {
+          showState('gcSaveLoading');
+          const ok = await persistSave(user.id);
+          showState(ok ? 'gcSaveDone' : 'gcSaveReady');
+        });
+      }
+      return;
+    }
+
+    showState('gcSaveAuth');
+
+    const tabEntrar    = document.getElementById('gcTabEntrar');
+    const tabCadastrar = document.getElementById('gcTabCadastrar');
+    const formEntrar   = document.getElementById('gcFormEntrar');
+    const formCadastrar= document.getElementById('gcFormCadastrar');
+
+    tabEntrar.addEventListener('click', () => {
+      tabEntrar.classList.add('gc-auth-tab-active');
+      tabCadastrar.classList.remove('gc-auth-tab-active');
+      formEntrar.style.display = '';
+      formCadastrar.style.display = 'none';
+    });
+    tabCadastrar.addEventListener('click', () => {
+      tabCadastrar.classList.add('gc-auth-tab-active');
+      tabEntrar.classList.remove('gc-auth-tab-active');
+      formCadastrar.style.display = '';
+      formEntrar.style.display = 'none';
+    });
+
+    document.getElementById('gcBtnLogin').addEventListener('click', async () => {
+      const email = document.getElementById('gcLoginEmail').value.trim();
+      const senha = document.getElementById('gcLoginSenha').value;
+      const errEl = document.getElementById('gcLoginError');
+      errEl.textContent = '';
+      if (!email || !senha) { errEl.textContent = 'Preencha e-mail e senha.'; return; }
+      const btn = document.getElementById('gcBtnLogin');
+      btn.disabled = true; btn.textContent = 'Entrando...';
+      const { data, error } = await _sbClient.auth.signInWithPassword({ email, password: senha });
+      if (error) {
+        errEl.textContent = /Email not confirmed/i.test(error.message)
+          ? 'Confirme seu e-mail antes de entrar.'
+          : 'E-mail ou senha inválidos.';
+        btn.disabled = false;
+        btn.innerHTML = '<span aria-hidden="true">✦</span> Entrar e salvar';
+        return;
+      }
+      showState('gcSaveLoading');
+      await persistSave(data.user.id);
+      showState('gcSaveDone');
+    });
+
+    document.getElementById('gcBtnCadastrar').addEventListener('click', async () => {
+      const nome  = document.getElementById('gcCadNome').value.trim();
+      const email = document.getElementById('gcCadEmail').value.trim();
+      const senha = document.getElementById('gcCadSenha').value;
+      const errEl = document.getElementById('gcCadError');
+      errEl.textContent = '';
+      if (!nome || !email || !senha) { errEl.textContent = 'Preencha todos os campos.'; return; }
+      if (senha.length < 6) { errEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; return; }
+      const btn = document.getElementById('gcBtnCadastrar');
+      btn.disabled = true; btn.textContent = 'Criando conta...';
+      const { data, error } = await _sbClient.auth.signUp({
+        email, password: senha,
+        options: { data: { first_name: nome } },
+      });
+      if (error) {
+        errEl.textContent = 'Erro ao criar conta. Tente novamente.';
+        btn.disabled = false;
+        btn.innerHTML = '<span aria-hidden="true">✦</span> Criar conta e salvar';
+        return;
+      }
+      if (data.session) {
+        showState('gcSaveLoading');
+        await persistSave(data.user.id);
+        showState('gcSaveDone');
+      } else {
+        document.getElementById('gcAuthConfirmNote').style.display = '';
+        document.getElementById('gcAuthTabs').style.display = 'none';
+        formCadastrar.style.display = 'none';
+      }
+    });
   }
   </script>
 

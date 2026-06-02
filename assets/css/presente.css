@@ -2422,6 +2422,124 @@ body {
   max-width: 280px;
 }
 
+/* ── Widget de salvar presente (destinatário) ────────── */
+.gc-save-widget {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.gc-save-state {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.gc-save-spinner {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255,109,186,0.25);
+  border-top-color: #ff6dba;
+  border-radius: 50%;
+  animation: gc-spin 0.7s linear infinite;
+  margin: 6px 0;
+}
+@keyframes gc-spin { to { transform: rotate(360deg); } }
+.gc-save-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255,109,186,0.1);
+  border: 1px solid rgba(255,109,186,0.25);
+  border-radius: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+.gc-save-done a { color: #ff6dba; text-decoration: none; }
+.gc-save-done a:hover { text-decoration: underline; }
+.gc-save-check {
+  color: #ff6dba;
+  font-weight: 700;
+  font-size: 16px;
+}
+.gc-save-cta-box {
+  text-align: center;
+  padding: 12px 0 4px;
+}
+.gc-save-cta-title {
+  font-family: var(--font-h, 'Sora', sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  margin: 0;
+  line-height: 1.4;
+}
+.gc-auth-tabs {
+  display: flex;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.gc-auth-tab {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-h, 'Sora', sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.gc-auth-tab.gc-auth-tab-active {
+  background: rgba(255,109,186,0.18);
+  color: #ff6dba;
+}
+.gc-auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gc-auth-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: #fff;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.gc-auth-input::placeholder { color: rgba(255,255,255,0.3); }
+.gc-auth-input:focus { border-color: rgba(255,109,186,0.5); }
+.gc-auth-error {
+  font-size: 12px;
+  color: #ff8fab;
+  margin: 0;
+  min-height: 16px;
+  text-align: center;
+}
+.gc-auth-confirm-note {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  padding: 10px 12px;
+  background: rgba(255,109,186,0.1);
+  border-radius: 8px;
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* ── Tela de erro (gift não encontrado) ───────────────── */
 .gift-error {
   display: flex;
