@@ -45,5 +45,12 @@ logs/
 supabase/.temp/
 
 
-#logo
+# Logo
 .logo-export.html
+
+# Scripts e artefatos de demo (uso interno)
+criar-demo-gift.mjs
+atualizar-musica-demo.mjs
+_gerar-arte-qr.mjs
+arte-qr-demo.html
+qr_b64.txt
