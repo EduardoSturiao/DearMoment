@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code — DearMoment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0d12;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Sora', system-ui, sans-serif;
+      color: #fff;
+      padding: 40px 24px;
+      gap: 28px;
+    }
+
+    /* ── Setup panel ── */
+    #setupPanel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+    }
+    #setupPanel h2 { font-size: 22px; color: #ff6dba; }
+    #setupPanel p  { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+    #urlInput {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,109,186,0.35);
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    #urlInput:focus { border-color: #ff6dba; }
+    #urlInput::placeholder { color: rgba(255,255,255,0.3); }
+
+    /* ── Canvas ── */
+    #qrCanvas {
+      display: none;
+      border-radius: 24px;
+      box-shadow: 0 0 60px rgba(255,109,186,0.18), 0 0 120px rgba(255,109,186,0.07);
+    }
+
+    /* ── Controls ── */
+    #controls {
+      display: none;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 28px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .18s, transform .18s;
+    }
+    .btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary   { background: linear-gradient(135deg, #ff6dba, #ff8ecb); color: #fff; }
+    .btn-secondary { background: rgba(255,109,186,0.1); color: #ff6dba; border: 1px solid rgba(255,109,186,0.3); }
+
+    #hint {
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Painel de configuração (aparece apenas se não houver ?id= na URL) -->
+<div id="setupPanel">
+  <h2>❤ Gerar QR Code</h2>
+  <p>Cole o link ou o UUID do presente (copiado do terminal) para gerar o QR Code decorado.</p>
+  <input id="urlInput" type="text" placeholder="https://soulmates-bice.vercel.app/presente.html?id=...">
+  <button class="btn btn-primary" onclick="startFromInput()">Gerar QR Code</button>
+</div>
+
+<!-- QR Code renderizado no canvas -->
+<canvas id="qrCanvas"></canvas>
+
+<!-- Botões de ação -->
+<div id="controls">
+  <button class="btn btn-primary"   id="btnDownload" onclick="downloadPNG()">⬇ Baixar PNG</button>
+  <button class="btn btn-secondary" id="btnCopy"     onclick="copyLink()">🔗 Copiar link</button>
+</div>
+
+<p id="hint"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+/* ──────────────────────────────────────────────────────────────────
+   CONFIGURAÇÃO
+   Substitua GIFT_ID pelo UUID retornado pelo script, ou deixe null
+   para usar ?id= da URL ou o painel de input.
+────────────────────────────────────────────────────────────────── */
+const GIFT_ID    = null;
+const GIFT_NAME  = 'Gustavo ❤ Luísa';
+const BASE_URL   = 'https://soulmates-bice.vercel.app/presente.html';
+
+/* ── Paleta ── */
+const C = {
+  pink:    '#ff6dba',
+  pinkDim: 'rgba(255,109,186,0.55)',
+  dark:    '#121820',
+  bg0:     '#120d1c',
+  bg1:     '#0a0d12',
+  white:   '#ffffff',
+};
+
+/* ── Estado ── */
+let currentUrl = '';
+
+/* ── Inicialização ── */
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = GIFT_ID || params.get('id');
+
+  if (id) {
+    currentUrl = id.startsWith('http') ? id : `${BASE_URL}?id=${id}`;
+    generate(currentUrl);
+  } else {
+    document.getElementById('setupPanel').style.display = 'flex';
+  }
+});
+
+function startFromInput() {
+  const val = document.getElementById('urlInput').value.trim();
+  if (!val) return;
+  currentUrl = val.startsWith('http') ? val : `${BASE_URL}?id=${val}`;
+  document.getElementById('setupPanel').style.display = 'none';
+  generate(currentUrl);
+}
+
+/* ── Geração principal ──────────────────────────────────────────── */
+function generate(url) {
+  const canvas = document.getElementById('qrCanvas');
+  const SCALE  = 2;   /* 2× para telas retina */
+  const W = 480, H = 570;
+
+  canvas.width        = W * SCALE;
+  canvas.height       = H * SCALE;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  drawBackground(ctx, W, H);
+  drawParticles(ctx, W, H);
+  drawHeader(ctx, W);
+
+  const QR_SIZE = 300;
+  const QR_X = (W - QR_SIZE) / 2;
+  const QR_Y = 98;
+
+  drawQRFrame(ctx, QR_X, QR_Y, QR_SIZE);
+
+  const qr   = QRCode.create(url, { errorCorrectionLevel: 'H' });
+  const PAD  = 22;
+  drawQRModules(ctx, qr, QR_X + PAD, QR_Y + PAD, QR_SIZE - PAD * 2);
+  drawCenterHeart(ctx, QR_X + QR_SIZE / 2, QR_Y + QR_SIZE / 2);
+  drawFooter(ctx, W, QR_Y + QR_SIZE);
+
+  canvas.style.display = 'block';
+  document.getElementById('controls').style.display = 'flex';
+  document.getElementById('hint').textContent = 'O QR Code aponta para um link permanente (Plano Vitalício).';
+}
+
+/* ── Funções de desenho ─────────────────────────────────────────── */
+
+function drawBackground(ctx, W, H) {
+  const grad = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H * 0.4, W * 0.9);
+  grad.addColorStop(0,   '#1c1030');
+  grad.addColorStop(0.6, '#110c1e');
+  grad.addColorStop(1,   '#080a10');
+
+  roundedRect(ctx, 0, 0, W, H, 24);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  /* Subtle vignette border */
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,109,186,0.18)';
+  ctx.lineWidth   = 1.5;
+  roundedRect(ctx, 1, 1, W - 2, H - 2, 23);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawParticles(ctx, W, H) {
+  const items = [
+    { x: 28,   y: 44,    s: 13, a: 0.4, t: '✦' },
+    { x: W-30, y: 55,    s: 10, a: 0.35, t: '✦' },
+    { x: 22,   y: H-65,  s: 11, a: 0.3, t: '✦' },
+    { x: W-26, y: H-78,  s: 13, a: 0.4, t: '✦' },
+    { x: 50,   y: H/2,   s: 9,  a: 0.2, t: '❤' },
+    { x: W-48, y: H/2+16,s: 9,  a: 0.2, t: '❤' },
+    { x: 38,   y: 80,    s: 8,  a: 0.18, t: '❤' },
+    { x: W-40, y: 95,    s: 8,  a: 0.18, t: '❤' },
+    { x: 30,   y: H-110, s: 8,  a: 0.18, t: '✦' },
+    { x: W-32, y: H-120, s: 8,  a: 0.18, t: '✦' },
+  ];
+
+  ctx.save();
+  items.forEach(p => {
+    ctx.globalAlpha  = p.a;
+    ctx.fillStyle    = C.pink;
+    ctx.font         = `${p.s}px serif`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.t, p.x, p.y);
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawHeader(ctx, W) {
+  ctx.save();
+
+  /* Linha de separação sutil acima */
+  ctx.strokeStyle = 'rgba(255,109,186,0.12)';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 90, 90);
+  ctx.lineTo(W / 2 + 90, 90);
+  ctx.stroke();
+
+  /* Logo */
+  ctx.shadowColor = C.pink;
+  ctx.shadowBlur  = 20;
+  ctx.fillStyle   = C.pink;
+  ctx.font        = '700 24px "Sora", sans-serif';
+  ctx.textAlign   = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('❤  DearMoment', W / 2, 60);
+
+  /* Subtítulo */
+  ctx.shadowBlur  = 0;
+  ctx.fillStyle   = 'rgba(255,255,255,0.38)';
+  ctx.font        = '300 12px "Sora", sans-serif';
+  ctx.letterSpacing = '0.08em';
+  ctx.fillText('PRESENTE ESPECIAL PARA VOCÊ', W / 2, 80);
+
+  ctx.restore();
+}
+
+function drawQRFrame(ctx, x, y, size) {
+  ctx.save();
+
+  /* Brilho externo */
+  ctx.shadowColor = C.pink;
+  ctx.shadowBlur  = 30;
+
+  const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+  grad.addColorStop(0,   'rgba(255,109,186,0.22)');
+  grad.addColorStop(0.5, 'rgba(255,109,186,0.08)');
+  grad.addColorStop(1,   'rgba(255,109,186,0.18)');
+
+  roundedRect(ctx, x, y, size, size, 18);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255,109,186,0.45)';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+
+  /* Cantos decorativos */
+  drawCornerAccent(ctx, x,        y,        1,  1);
+  drawCornerAccent(ctx, x + size, y,       -1,  1);
+  drawCornerAccent(ctx, x,        y + size,  1, -1);
+  drawCornerAccent(ctx, x + size, y + size, -1, -1);
+
+  ctx.restore();
+}
+
+function drawCornerAccent(ctx, cx, cy, sx, sy) {
+  const L = 22, W2 = 3;
+  ctx.save();
+  ctx.strokeStyle = C.pink;
+  ctx.lineWidth   = W2;
+  ctx.lineCap     = 'round';
+  ctx.shadowColor = C.pink;
+  ctx.shadowBlur  = 8;
+  ctx.beginPath();
+  ctx.moveTo(cx + sx * 10, cy);
+  ctx.lineTo(cx,            cy);
+  ctx.lineTo(cx,            cy + sy * 10);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawQRModules(ctx, qr, x, y, size) {
+  const n    = qr.modules.size;
+  const data = qr.modules.data;
+  const cell = size / n;
+  const r    = Math.min(cell * 0.36, 2.5);
+
+  /* Separação visual das "finder patterns" (3 cantos) */
+  function isFinderPattern(row, col) {
+    if (row < 8 && col < 8)     return true;
+    if (row < 8 && col >= n-8)  return true;
+    if (row >= n-8 && col < 8)  return true;
+    return false;
+  }
+
+  ctx.save();
+
+  /* Módulos de dados */
+  ctx.fillStyle = C.pink;
+
+  for (let row = 0; row < n; row++) {
+    for (let col = 0; col < n; col++) {
+      if (!data[row * n + col]) continue;
+
+      const cx = x + col * cell + cell / 2;
+      const cy = y + row * cell + cell / 2;
+
+      if (isFinderPattern(row, col)) {
+        /* Quadrado cheio — padrão de localização */
+        const s = cell * 0.84;
+        roundedRect(ctx, cx - s/2, cy - s/2, s, s, 1.2);
+        ctx.fill();
+      } else {
+        /* Módulo arredondado */
+        const s = cell * 0.72;
+        roundedRect(ctx, cx - s/2, cy - s/2, s, s, r);
+        ctx.fill();
+      }
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawCenterHeart(ctx, cx, cy) {
+  const R = 22;
+
+  ctx.save();
+
+  /* Fundo escuro para cobrir os módulos QR embaixo */
+  ctx.shadowColor = 'rgba(255,109,186,0.5)';
+  ctx.shadowBlur  = 14;
+  ctx.fillStyle   = '#1c1030';
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Anel rosa */
+  ctx.strokeStyle = C.pink;
+  ctx.lineWidth   = 2;
+  ctx.shadowBlur  = 0;
+  ctx.stroke();
+
+  /* Emoji ❤ */
+  ctx.shadowColor  = C.pink;
+  ctx.shadowBlur   = 10;
+  ctx.font         = `${R * 1.05}px serif`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('❤', cx, cy + 1.5);
+
+  ctx.restore();
+}
+
+function drawFooter(ctx, W, qrBottom) {
+  const Y1 = qrBottom + 30;
+  const Y2 = Y1 + 32;
+  const Y3 = Y2 + 26;
+
+  ctx.save();
+
+  /* "Escaneie para abrir" */
+  ctx.fillStyle    = 'rgba(255,255,255,0.4)';
+  ctx.font         = '300 12px "Sora", sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Escaneie para abrir o presente', W / 2, Y1);
+
+  /* Divisor */
+  ctx.strokeStyle = 'rgba(255,109,186,0.2)';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(W/2 - 75, Y1 + 12);
+  ctx.lineTo(W/2 + 75, Y1 + 12);
+  ctx.stroke();
+
+  /* Nome do casal */
+  ctx.shadowColor  = C.pink;
+  ctx.shadowBlur   = 10;
+  ctx.fillStyle    = C.white;
+  ctx.font         = '600 18px "Sora", sans-serif';
+  ctx.fillText(GIFT_NAME, W / 2, Y2);
+
+  /* Crédito */
+  ctx.shadowBlur   = 0;
+  ctx.fillStyle    = 'rgba(255,109,186,0.4)';
+  ctx.font         = '300 11px "Sora", sans-serif';
+  ctx.fillText('criado com ❤ no DearMoment', W / 2, Y3);
+
+  ctx.restore();
+}
+
+/* ── Util: rounded rect (compatível sem roundRect nativo) ── */
+function roundedRect(ctx, x, y, w, h, r) {
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h,     x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y,         x + r, y);
+    ctx.closePath();
+  }
+}
+
+/* ── Download PNG ── */
+function downloadPNG() {
+  const canvas = document.getElementById('qrCanvas');
+  const link   = document.createElement('a');
+  link.download = 'qr-dearmoment-gustavo-luisa.png';
+  link.href     = canvas.toDataURL('image/png');
+  link.click();
+}
+
+/* ── Copiar link ── */
+function copyLink() {
+  navigator.clipboard.writeText(currentUrl).then(() => {
+    const btn  = document.getElementById('btnCopy');
+    const prev = btn.textContent;
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => { btn.textContent = prev; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

@@ -954,11 +954,84 @@
           audio.pause();
         }
       });
+    } else if (gift.youtubeId) {
+      setupYouTubeAudio(gift.youtubeId, btn, barFill, currentLabel, durationLabel, playIcon, pauseIcon, formatAudioTime);
     } else {
       btn.disabled = true;
     }
 
     syncUI();
+  }
+
+  function setupYouTubeAudio(videoId, btn, barFill, currentLabel, durationLabel, playIcon, pauseIcon, fmt) {
+    let player   = null;
+    let ready    = false;
+    let syncTimer = null;
+
+    /* Container invisível para o iframe do YouTube */
+    const host = document.createElement('div');
+    host.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;';
+    host.id = 'ytAudioHost';
+    document.body.appendChild(host);
+
+    function loadApi() {
+      if (window.YT && window.YT.Player) { onApiReady(); return; }
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => { if (typeof prev === 'function') prev(); onApiReady(); };
+      if (!document.querySelector('script[data-yt-api]')) {
+        const s = document.createElement('script');
+        s.src = 'https://www.youtube.com/iframe_api';
+        s.dataset.ytApi = '1';
+        document.head.appendChild(s);
+      }
+    }
+
+    function onApiReady() {
+      player = new YT.Player('ytAudioHost', {
+        videoId,
+        host: 'https://www.youtube-nocookie.com',
+        playerVars: { autoplay: 0, controls: 0, rel: 0, playsinline: 1, modestbranding: 1 },
+        events: {
+          onReady() {
+            ready = true;
+            const dur = player.getDuration() || 0;
+            if (durationLabel && dur > 0) durationLabel.textContent = fmt(dur);
+          },
+          onStateChange(e) {
+            const playing = e.data === YT.PlayerState.PLAYING;
+            if (playIcon)  playIcon.style.display  = playing ? 'none' : '';
+            if (pauseIcon) pauseIcon.style.display = playing ? '' : 'none';
+            if (playing) {
+              syncTimer = syncTimer || setInterval(tick, 500);
+            } else {
+              clearInterval(syncTimer);
+              syncTimer = null;
+            }
+          }
+        }
+      });
+    }
+
+    function tick() {
+      if (!player || !ready) return;
+      const curr = player.getCurrentTime() || 0;
+      const dur  = player.getDuration()    || 0;
+      if (currentLabel)                currentLabel.textContent  = fmt(curr);
+      if (durationLabel && dur > 0)    durationLabel.textContent = fmt(dur);
+      if (barFill && dur > 0)          barFill.style.width = `${Math.min((curr / dur) * 100, 100)}%`;
+    }
+
+    btn.addEventListener('click', () => {
+      if (!player || !ready) return;
+      if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+      } else {
+        player.setVolume(90);
+        player.playVideo();
+      }
+    });
+
+    loadApi();
   }
 
   /* ── 6. Cápsulas + Carta ────────────────────────────── */
