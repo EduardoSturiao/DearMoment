@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <title>Moska &amp; Yasmin | DearMoment</title>
+
+  <meta property="og:title"       content="Moska &amp; Yasmin — Um presente feito com amor ❤️">
+  <meta property="og:description" content="Abra e descubra uma homenagem criada só para você.">
+  <meta property="og:image"       content="./assets/images/publi-moska-yasmin/capa.jpeg">
+
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap&text=%E2%99%88%E2%99%89%E2%99%8A%E2%99%8B%E2%99%8C%E2%99%8D%E2%99%8E%E2%99%8F%E2%99%90%E2%99%91%E2%99%92%E2%99%93" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/presente.css">
+  <link rel="stylesheet" href="./assets/css/cookies.css">
+</head>
+<body>
+
+  <div class="particles">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <header class="gift-header">
+    <span class="gift-logo">❤ DearMoment</span>
+    <span class="gift-tag">Presente exclusivo</span>
+  </header>
+
+  <div id="giftRoot"></div>
+
+  <div class="stories-overlay" id="storiesOverlay">
+    <div class="stories-bars" id="storiesBars"></div>
+    <button class="stories-close" id="storiesClose">✕</button>
+    <img class="stories-img" id="storiesImg" src="" alt="Foto">
+    <div class="stories-tap-left"  id="storiesTapLeft"></div>
+    <div class="stories-tap-right" id="storiesTapRight"></div>
+    <div class="stories-counter"   id="storiesCounter"></div>
+  </div>
+
+  <audio id="giftAudio" preload="auto"></audio>
+  <audio id="typewriterAudio" src="./assets/audio/typewriter.mp3" preload="auto" loop></audio>
+  <audio id="sparkleAudio"  src="./assets/audio/sparkle-whoosh.mp3"   preload="auto"></audio>
+  <audio id="sparkleAudio2" src="./assets/audio/sparkle-whoosh-2.mp3" preload="auto"></audio>
+
+  <script>
+  /* ================================================================
+     PRESENTE.HTML — v2 multi-páginas
+  ================================================================ */
+
+  let counterInterval = null;
+  const WIZARD_STORAGE_KEY = 'DearMoment_wizard_state';
+
+  /* ── SFX (Web Audio API — sem arquivos extras) ─────── */
+  const sfx = (() => {
+    let ctx = null;
+    function ensure() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      return ctx;
+    }
+    function pop() {
+      const a = ensure(); if (!a) return;
+      const t = a.currentTime;
+      const osc = a.createOscillator();
+      const gain = a.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(220, t + 0.18);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.18, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(gain).connect(a.destination);
+      osc.start(t); osc.stop(t + 0.24);
+    }
+    return { pop };
+  })();
+
+  /* Áudio da máquina de escrever — toca em loop durante a digitação da carta */
+  const typewriter = (() => {
+    const el = document.getElementById('typewriterAudio');
+    if (!el) return { start: () => {}, stop: () => {} };
+    el.volume = 0.45;
+    let fadeTimer = null;
+    function start() {
+      clearInterval(fadeTimer);
+      try { el.currentTime = 0; } catch (_) {}
+      el.volume = 0.45;
+      el.play().catch(() => {});
+    }
+    function stop() {
+      clearInterval(fadeTimer);
+      const start = el.volume;
+      const steps = 18;
+      let s = 0;
+      fadeTimer = setInterval(() => {
+        s++;
+        el.volume = Math.max(0, start * (1 - s / steps));
+        if (s >= steps) {
+          clearInterval(fadeTimer);
+          el.pause();
+          try { el.currentTime = 0; } catch (_) {}
+          el.volume = 0.45;
+        }
+      }, 28);
+    }
+    return { start, stop };
+  })();
+
+  /* SFX da abertura de cápsula — sparkle whooshes (alterna entre dois MP3s) */
+  const sparkle = (() => {
+    const els = [
+      document.getElementById('sparkleAudio'),
+      document.getElementById('sparkleAudio2'),
+    ].filter(Boolean);
+    if (!els.length) return { play: () => {} };
+    els.forEach(el => { el.volume = 0.55; });
+    let lastIdx = -1;
+    function play() {
+      let idx;
+      if (els.length === 1) {
+        idx = 0;
+      } else {
+        do { idx = Math.floor(Math.random() * els.length); }
+        while (idx === lastIdx);
+      }
+      lastIdx = idx;
+      const el = els[idx];
+      try { el.currentTime = 0; } catch (_) {}
+      el.play().catch(() => {});
+    }
+    return { play };
+  })();
+
+  /* Controlador de volume da música — fade-in inicial + ducking durante a carta */
+  const musicDuck = (() => {
+    const el = document.getElementById('giftAudio');
+    if (!el) return { fadeIn: () => {}, duck: () => {}, unduck: () => {}, baseline: () => 1 };
+    const NORMAL = 1.0;
+    const DUCKED = 0.35;
+    let target   = NORMAL;
+    let raf      = null;
+    let watchdog = null;
+
+    function setVol(v) {
+      const clamped = Math.max(0, Math.min(1, v));
+      try { el.volume = clamped; } catch (_) {}
+    }
+
+    function tween(to, ms) {
+      if (raf) cancelAnimationFrame(raf);
+      target = to;
+      const from = el.volume;
+      const t0   = performance.now();
+      function frame() {
+        const k = Math.min(1, (performance.now() - t0) / ms);
+        // ease-in-out cúbico — transição mais natural
+        const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        setVol(from + (to - from) * e);
+        if (k < 1) { raf = requestAnimationFrame(frame); }
+        else       { raf = null; }
+      }
+      raf = requestAnimationFrame(frame);
+    }
+
+    /* Watchdog: se algo externo mexer no volume enquanto não estamos
+       tweenando, reassere o target. Garante que o ducking mantém. */
+    function startWatchdog() {
+      if (watchdog) return;
+      watchdog = setInterval(() => {
+        if (raf) return; /* tween em progresso, deixa quieto */
+        if (Math.abs(el.volume - target) > 0.02) setVol(target);
+      }, 120);
+    }
+
+    return {
+      fadeIn()   { setVol(0); target = NORMAL; tween(NORMAL, 2800); startWatchdog(); },
+      duck()     { tween(DUCKED, 700); startWatchdog(); },
+      unduck()   { tween(NORMAL, 900); startWatchdog(); },
+      baseline() { return target; }
+    };
+  })();
+  const params     = new URLSearchParams(window.location.search);
+  const giftId     = params.get('id');
+  const lastGiftId = localStorage.getItem('DearMoment_last_gift_id');
+  const root       = document.getElementById('giftRoot');
+
+  /* ── Cliente Supabase ────────────────────────────────── */
+  const _sbClient = null;
+  const BUCKET = 'gift-images';
+
+  /* ── Busca o gift por ID na tabela `gifts` + JOIN com `gift_photos` ── */
+  async function loadGiftFromSupabase(id) {
+    if (!_sbClient || !id) return null;
+    const { data, error } = await _sbClient
+      .from('gifts')
+      .select('*, gift_photos(storage_path, is_extra, position)')
+      .eq('id', id)
+      .eq('paid', true)
+      .maybeSingle();
+    if (error || !data) return null;
+
+    const photoRows = Array.isArray(data.gift_photos) ? data.gift_photos : [];
+    const gallery   = photoRows
+      .filter(p => !p.is_extra)
+      .sort((a, b) => a.position - b.position)
+      .map(p => _sbClient.storage.from(BUCKET).getPublicUrl(p.storage_path).data.publicUrl);
+    const coverRow  = photoRows.find(p => p.is_extra);
+    const coverUrl  = coverRow
+      ? _sbClient.storage.from(BUCKET).getPublicUrl(coverRow.storage_path).data.publicUrl
+      : '';
+
+    return {
+      id:               data.id,
+      name1:            data.name1 || '',
+      name2:            data.name2 || '',
+      startDate:        data.start_date || '',
+      city:             data.city || '',
+      title:            data.title || '',
+      selectedTemplate: data.template || '',
+      youtubeId:        data.youtube_id || '',
+      previewUrl:       data.preview_url || '',
+      musicDuration:    data.music_duration || 0,
+      songName:         data.song_name || '',
+      artistName:       data.artist_name || '',
+      photos:           gallery,
+      photoCaptions:    Array.isArray(data.photo_captions) ? data.photo_captions : [],
+      message:          data.message || '',
+      capsulas:         Array.isArray(data.capsulas) ? data.capsulas : ['', '', '', ''],
+      extraPhoto:       coverUrl,
+      giftType:         data.gift_type || 'amoroso',
+      plan:             data.plan || 'vitalicio',
+      createdAt:        data.created_at || new Date().toISOString(),
+    };
+  }
+
+  /* ── Verifica se um presente 24h expirou ───────────── */
+  function isExpired(gift) {
+    if (gift.plan !== '24h') return false;
+    return (Date.now() - new Date(gift.createdAt).getTime()) > 86400000;
+  }
+
+  function showExpired() {
+    root.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:32px;text-align:center;">
+        <div style="font-size:56px;margin-bottom:24px;">⏳</div>
+        <h2 style="font-family:'Sora',sans-serif;color:#ff6dba;margin:0 0 12px;">Este presente expirou</h2>
+        <p style="color:#8892a4;font-size:15px;line-height:1.6;max-width:300px;margin:0 0 32px;">O Plano 24 Horas é válido por 24 horas a partir da criação. Para homenagens permanentes, escolha o Plano Vitalício.</p>
+        <a href="./index.html" style="padding:12px 28px;background:#ff6dba;color:#fff;border-radius:10px;text-decoration:none;font-family:'Sora',sans-serif;font-size:15px;font-weight:600;">Criar meu presente →</a>
+      </div>`;
+  }
+
+  /* ── Gift data — Moska & Yasmin (publi DearMoment) ── */
+  async function resolveGift() {
+    return {
+      id: 'demo-moska-yasmin',
+      name1: 'Moska',
+      name2: 'Yasmin',
+      startDate: '2022-08-01',
+      city: '',
+      title: 'Minha alma gêmea ❤️‍🔥',
+      youtubeId: '2n6U5zSU1SA',
+      previewUrl: '',
+      songName: 'A Forma da Água',
+      artistName: 'Froid',
+      photos: [
+        './assets/images/publi-moska-yasmin/foto1.jpeg',
+        './assets/images/publi-moska-yasmin/foto2.jpeg',
+        './assets/images/publi-moska-yasmin/foto3.jpeg',
+        './assets/images/publi-moska-yasmin/foto4.jpeg',
+        './assets/images/publi-moska-yasmin/capa.jpeg',
+      ],
+      photoCaptions: ['', '', '', '', ''],
+      message: 'Eu nunca tive um amor assim, nunca com esse tamanho.',
+      capsulas: [
+        'Tu nasceu pra mim!',
+        'Essa música sempre vai me lembrar de nós...',
+        'Você é o meu lugar favorito',
+        'Mal posso esperar pra viver minha vida toda com você.',
+      ],
+      extraPhoto: './assets/images/publi-moska-yasmin/capa.jpeg',
+      giftType: 'amoroso',
+      plan: 'vitalicio',
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  function suplementaDemo(gift) {
+    if (!gift.extraPhoto) gift.extraPhoto = './assets/images/demo-cover.jpg';
+    if (!Array.isArray(gift.photos) || !gift.photos.length) {
+      gift.photos = ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'];
+    }
+    return gift;
+  }
+
+  resolveGift().then(g => { if (g) renderGift(g); });
+
+  /* ── 1. Wizard state fallback ───────────────────────── */
+  function getGiftFromWizardState(requestedId, savedLastGiftId) {
+    try {
+      const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+      if (!raw) return null;
+      const wizard = JSON.parse(raw);
+      if (!wizard) return null;
+      const matchesCurrentFlow = !requestedId || requestedId === savedLastGiftId;
+      const hasMinimumData = Boolean(wizard.name1 || wizard.name2 || wizard.title || wizard.message);
+      if (!matchesCurrentFlow || !hasMinimumData) return null;
+      return {
+        id: savedLastGiftId || requestedId || 'wizard-preview',
+        name1: wizard.name1 || '', name2: wizard.name2 || '',
+        startDate: wizard.startDate || '', city: wizard.city || '',
+        title: wizard.title || '', youtubeId: wizard.youtubeId || '', youtubeQuery: wizard.youtubeQuery || '',
+        previewUrl: wizard.previewUrl || '',
+        musicMoment: Math.max(0, Number(wizard.musicMoment) || 0),
+        songName: wizard.songName || '', artistName: wizard.artistName || '',
+        photos: Array.isArray(wizard.photos) ? wizard.photos.filter(Boolean) : [],
+        photoCaptions: Array.isArray(wizard.photoCaptions) ? wizard.photoCaptions : [],
+        message: wizard.message || '',
+        capsulas: Array.isArray(wizard.capsulas) ? wizard.capsulas : ['', '', '', ''],
+        extraPhoto: wizard.extraPhoto || '',
+        giftType: wizard.giftType || 'amoroso',
+        createdAt: wizard.createdAt || new Date().toISOString(),
+      };
+    } catch (_) { return null; }
+  }
+
+  /* ── 2. Render principal ────────────────────────────── */
+  function renderGift(g) {
+    const names = g.name1 && g.name2 ? `${g.name1} & ${g.name2}` : (g.name1 || 'Presente especial');
+    document.title = names + ' | DearMoment';
+    document.querySelector('meta[property="og:title"]').content =
+      `${names} — Um presente feito com amor ❤️`;
+
+    const galleryPhotos = Array.isArray(g.photos) ? g.photos.filter(Boolean) : [];
+    const coverSrc  = g.extraPhoto || galleryPhotos[0] || '';
+    const coupleSrc = (g.extraPhoto && galleryPhotos.length > 0)
+      ? galleryPhotos[0]
+      : (galleryPhotos[0] || g.extraPhoto || '');
+    const songName      = g.songName   || 'Nossa Música';
+    const artistName    = g.artistName || 'Artista';
+    const startYear     = g.startDate
+      ? new Date(g.startDate + 'T00:00:00').getFullYear() : '';
+
+    const hasGallery       = galleryPhotos.length > 0;
+    const hasConstellation = Boolean(g.startDate);
+
+    /* Determina o próximo screen de cada página */
+    const nextOfPlayer = hasGallery ? 'screenGallery'
+                       : hasConstellation ? 'screenConstellation'
+                       : 'screenCapsulas';
+    const nextOfGallery = hasConstellation ? 'screenConstellation' : 'screenCapsulas';
+
+    /* Determina o screen anterior de cada página */
+    const prevOfGallery       = 'screenPlayer';
+    const prevOfConstellation = hasGallery ? 'screenGallery' : 'screenPlayer';
+    const prevOfCapsulas      = hasConstellation ? 'screenConstellation'
+                              : hasGallery ? 'screenGallery' : 'screenPlayer';
+
+    /* ── Intro screen ── */
+    const revealHTML = `
+      <div id="screenReveal" class="pg-screen">
+        <div class="pg-reveal-bg">
+          <div class="pg-reveal-particles" id="pgRevealParticles"></div>
+          <div class="pg-reveal-content">
+            <div class="pg-reveal-envelope">💌</div>
+            <p class="pg-reveal-sender">${escHtml(g.name1 || 'Alguém especial')}</p>
+            <p class="pg-reveal-msg">preparou um presente especial para você...</p>
+            <button class="pg-reveal-btn" id="btnReveal">Ver presente</button>
+          </div>
+        </div>
+      </div>`;
+
+    /* ── Player page ── */
+    const coverHTML = coverSrc
+      ? `<img src="${escHtml(coverSrc)}" alt="Foto de capa" class="sp-cover-img">`
+      : `<div class="sp-cover-placeholder">❤️</div>`;
+
+    const playerHTML = `
+      <div id="screenPlayer" class="pg-screen pg-hidden">
+        <div class="sp-page">
+
+          <div class="sp-particles" id="spParticles"></div>
+
+          <div class="sp-topbar">
+            <span class="sp-topbar-chevron">⌄</span>
+            <span class="sp-topbar-title">${escHtml(g.title || 'Para você ❤️')}</span>
+            <span class="sp-topbar-dots">•••</span>
+          </div>
+
+          <div class="sp-cover">${coverHTML}</div>
+
+          <div class="sp-info-row">
+            <div class="sp-info-text">
+              <div class="sp-track-name">${escHtml(songName)}</div>
+              <div class="sp-track-artist">${escHtml(artistName)}</div>
+            </div>
+            <button class="sp-heart-btn" id="spHeartBtn">♡</button>
+          </div>
+
+          <div class="sp-progress-wrap">
+            <div class="sp-progress-track">
+              <div class="sp-progress-fill" id="giftPlayerBarFill"></div>
+            </div>
+            <div class="sp-progress-times">
+              <span id="giftPlayerCurrent">0:00</span>
+              <span id="giftPlayerDuration">—:——</span>
+            </div>
+          </div>
+
+          <div class="sp-controls">
+            <button class="sp-ctrl-btn sp-btn-side" title="Aleatório">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17zm4.15-5.09v1.11l1.79 1.79 1.42-1.42zM4 18.59L5.41 20l9.55-9.55-1.41-1.41zm10.33.5l1.42 1.42L20 16.5V20h-5.5v1.5l2.04-2.04z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-side" title="Anterior">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-play" id="btnGiftPlay" title="Reproduzir">
+              <svg id="spPlayIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="spPauseIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-side" title="Próxima">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+            </button>
+            <button class="sp-ctrl-btn sp-btn-side" title="Repetir">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+            </button>
+          </div>
+
+          <div class="sp-couple-card">
+            <p class="sp-couple-label">Sobre o casal</p>
+            ${coupleSrc ? `
+            <div class="sp-couple-photo-wrap">
+              <img src="${escHtml(coupleSrc)}" alt="Foto do casal">
+            </div>` : ''}
+            <div class="sp-couple-info">
+              <div class="sp-couple-names">${escHtml(g.name1 || '')}${g.name1 && g.name2 ? ' e ' : ''}${escHtml(g.name2 || '')}</div>
+              ${startYear ? `<div class="sp-couple-since">Juntos desde ${startYear}</div>` : ''}
+            </div>
+            ${g.startDate ? `
+            <div class="sp-counter-grid">
+              <div class="sp-c-item"><span id="gcYears">—</span><small>Anos</small></div>
+              <div class="sp-c-item"><span id="gcMonths">—</span><small>Meses</small></div>
+              <div class="sp-c-item"><span id="gcDays">—</span><small>Dias</small></div>
+              <div class="sp-c-item"><span id="gcHours">—</span><small>Horas</small></div>
+              <div class="sp-c-item"><span id="gcMinutes">—</span><small>Minutos</small></div>
+              <div class="sp-c-item sp-c-sec"><span id="gcSeconds">—</span><small>Segundos</small></div>
+            </div>
+            ${g.city ? `<p class="sp-city">📍 ${escHtml(g.city)}</p>` : ''}` : ''}
+          </div>
+
+          <div class="pg-next-wrap">
+            <button class="pg-next-btn" data-to="${nextOfPlayer}">
+              ${hasGallery ? '📸 Lembra disso?' : hasConstellation ? '✨ Naquele dia, o céu...' : '💌 Tem algo só pra você ↓'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+
+    /* ── Gallery page ── */
+    const FALLBACK_CAPTIONS = [
+      'só nós dois 💖',
+      'meu lugar favorito 🌸',
+      'pra sempre ✨',
+      'eu e você 🥰',
+      'nosso momento 🌙',
+      'inesquecível 💫',
+      'meu sorriso 💕',
+      'te amo 💗',
+      'minha pessoa 🤍',
+      'amor sem fim 💞',
+      'memórias nossas 🌷',
+      'no seu olhar 👀💗',
+    ];
+    const userCaptions = Array.isArray(g.photoCaptions) ? g.photoCaptions : [];
+    const captionFor = i => {
+      const c = (userCaptions[i] || '').trim();
+      return c || FALLBACK_CAPTIONS[i % FALLBACK_CAPTIONS.length];
+    };
+
+    function buildCarouselCards() {
+      return galleryPhotos.map((src, i) => `
+        <div class="cp-card${i === 0 ? ' cp-active' : ''}" data-index="${i}" data-caption="${escHtml(captionFor(i))}" style="--cp-delay:${i * 85}ms">
+          <img class="cp-card-img" src="${escHtml(src)}" alt="Foto ${i + 1}" loading="lazy">
+          <div class="cp-overlay">
+            <span class="cp-tap-hint">↑ toque para ampliar</span>
+          </div>
+        </div>`).join('');
+    }
+
+    function buildDots() {
+      return galleryPhotos.map((_, i) =>
+        `<div class="cp-dot${i === 0 ? ' cp-dot-active' : ''}" data-index="${i}"></div>`
+      ).join('');
+    }
+
+    const galleryHTML = hasGallery ? `
+      <div id="screenGallery" class="pg-screen pg-hidden">
+        <button class="pg-back-chevron" data-back="${prevOfGallery}" aria-label="Voltar">‹</button>
+        <div class="cp-page">
+          <div class="cp-ambient" id="cpAmbient"></div>
+          <div class="cp-vignette"></div>
+          <div class="cp-header">
+            <p class="cp-eyebrow">Nossa história em fotos</p>
+            <h2 class="cp-title">Eu e você</h2>
+            <p class="cp-title-sub">deslize para navegar</p>
+          </div>
+          <div class="cp-wrap" id="cpWrap">
+            <div class="cp-track" id="cpTrack">${buildCarouselCards()}</div>
+          </div>
+
+          <div class="cp-glass-caption" id="cpGlassCaption">
+            <span class="cp-glass-text" id="cpGlassText">${escHtml(captionFor(0))}</span>
+          </div>
+
+          <div class="cp-controls">
+            <button class="cp-arrow" id="cpPrev" aria-label="Anterior" disabled>&#8249;</button>
+            <div class="cp-dots" id="cpDots">${buildDots()}</div>
+            <button class="cp-arrow" id="cpNext" aria-label="Próxima"${galleryPhotos.length <= 1 ? ' disabled' : ''}>&#8250;</button>
+          </div>
+          <p class="cp-counter" id="cpCounter">1 / ${galleryPhotos.length}</p>
+          <div class="pg-next-wrap">
+            <button class="pg-next-btn" data-to="${nextOfGallery}">
+              ${hasConstellation ? '✨ Naquele dia, o céu...' : '💌 Tem algo só pra você ↓'}
+            </button>
+          </div>
+        </div>
+      </div>` : '';
+
+    /* ── Constellation page ── */
+    const constellationHTML = hasConstellation ? `
+      <div id="screenConstellation" class="pg-screen pg-hidden">
+        <button class="pg-back-chevron" data-back="${prevOfConstellation}" aria-label="Voltar">‹</button>
+        <canvas class="gc-star-canvas" id="constStarCanvas"></canvas>
+        <div class="gc-bg-particles" id="constBgParticles"></div>
+        <div class="pg-wrap pg-wrap-const">
+          <section class="gift-constellation" id="giftConstellation">
+            <p class="gift-constellation-eyebrow">Quando as estrelas registraram o início desta história</p>
+            <div class="gift-constellation-globe">
+              <div class="gift-constellation-ring">
+                <canvas id="starCanvas"></canvas>
+              </div>
+              <svg class="gift-constellation-arc" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48.5"/>
+              </svg>
+            </div>
+            <div class="gift-constellation-footer">
+              <p class="gift-constellation-date">${formatDate(g.startDate)}</p>
+
+              <div class="gift-constellation-facts" id="giftConstellationFacts">
+                <div class="gcf-fact">
+                  <span class="gcf-fact-icon gcf-fact-icon-svg" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3.5" y="6" width="17" height="14" rx="2.6"/>
+                      <path d="M3.5 10.2h17"/>
+                      <path d="M8 3.8v4"/>
+                      <path d="M16 3.8v4"/>
+                      <circle cx="12" cy="14.6" r="1.35" fill="currentColor" stroke="none"/>
+                    </svg>
+                  </span>
+                  <div class="gcf-fact-content">
+                    <span class="gcf-fact-label">era</span>
+                    <span class="gcf-fact-value" id="gcfFactDay">—</span>
+                  </div>
+                </div>
+                <div class="gcf-fact">
+                  <span class="gcf-fact-icon gcf-fact-icon-svg gcf-fact-icon-moon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19.6 14A8 8 0 1 1 10 4.4a6.5 6.5 0 0 0 9.6 9.6z"/>
+                      <path d="M5.4 7.6l.45 1.25 1.25.45-1.25.45-.45 1.25-.45-1.25-1.25-.45 1.25-.45z" fill="currentColor" stroke="none"/>
+                      <path d="M8.2 4.2l.32.95.95.32-.95.32-.32.95-.32-.95-.95-.32.95-.32z" fill="currentColor" stroke="none"/>
+                    </svg>
+                  </span>
+                  <div class="gcf-fact-content">
+                    <span class="gcf-fact-label">a lua estava</span>
+                    <span class="gcf-fact-value" id="gcfFactMoon">—</span>
+                  </div>
+                </div>
+                <div class="gcf-fact">
+                  <span class="gcf-fact-icon gcf-fact-icon-zodiac" id="gcfFactZodiacIcon" aria-hidden="true">♋</span>
+                  <div class="gcf-fact-content">
+                    <span class="gcf-fact-label">no signo de</span>
+                    <span class="gcf-fact-value" id="gcfFactZodiac">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="gift-constellation-cons-list">
+                <span class="gccl-label">Constelações visíveis no céu brasileiro nessa época do ano</span>
+                <span class="gccl-names" id="gcclNames">—</span>
+                <span class="gccl-hint">olhe pra cima e tente encontrá-las ✨</span>
+              </p>
+
+              <p class="gift-constellation-tagline">O universo já sabia...</p>
+            </div>
+          </section>
+          <div class="pg-next-wrap">
+            <p class="pg-next-hint">Ainda tem mais para você...</p>
+            <button class="pg-next-btn pg-next-special" data-to="screenCapsulas">
+              <span class="pg-next-icon">💌</span>
+              Tem algo só pra você ↓
+            </button>
+          </div>
+        </div>
+      </div>` : '';
+
+    /* ── Capsulas page ── */
+    const capsulaEmojis  = ['💌', '🎵', '📍', '🔮'];
+    const capsulaTextos  = (g.capsulas && g.capsulas.length) ? g.capsulas : ['', '', '', ''];
+    const capsulasTitles = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'Nosso futuro'];
+
+    const capsulaItems = capsulaEmojis.map((emoji, i) => `
+      <div class="gc-capsula" data-index="${i}">
+        <div class="gc-capsula-inner">
+          <div class="gc-capsula-frente">
+            <div class="gc-capsula-flap"></div>
+            <div class="gc-capsula-seal">${emoji}</div>
+            <div class="gc-capsula-num">Cápsula 0${i + 1}</div>
+            <div class="gc-capsula-hint">Toque para abrir</div>
+          </div>
+          <div class="gc-capsula-verso">
+            <div class="gc-verso-emoji">${emoji}</div>
+            <div class="gc-verso-titulo">${escHtml(capsulasTitles[i])}</div>
+            <div class="gc-verso-texto">${escHtml(capsulaTextos[i] || capsulasTitles[i])}</div>
+          </div>
+        </div>
+      </div>`).join('');
+
+    const cartaHTML = g.message ? `
+      <section class="gc-carta-section" id="gcCartaSection">
+        <div class="gc-carta-ornamento"><span></span><em>💌</em><span></span></div>
+        <div class="gc-carta-papel">
+          <div class="gc-carta-data">${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          <div class="gc-carta-linha"></div>
+          <div class="gc-carta-saudacao">${g.name2 ? escHtml(g.name2) + ',' : 'Amor,'}</div>
+          <div class="gc-carta-corpo" id="gcCartaCorpo"><span class="gc-cursor" id="gcCursor"></span></div>
+          <div class="gc-carta-assinatura" id="gcCartaAssinatura">
+            <span class="gc-assina-com">com todo o meu amor,</span>
+            <span class="gc-assina-nome">${g.name1 ? escHtml(g.name1) : 'Eu'}</span>
+            <span class="gc-assina-emoji">❤️</span>
+          </div>
+          <div class="gc-carta-selos" id="gcCartaSelos">
+            <div class="gc-selo"><span>💕</span>Para sempre</div>
+            <div class="gc-selo"><span>✨</span>Com amor</div>
+            <div class="gc-selo"><span>🔒</span>Só para você</div>
+          </div>
+        </div>
+
+        <div class="gc-despedida" id="gcDespedida">
+          <p class="gc-despedida-line">Para sempre,</p>
+          <p class="gc-despedida-names">${escHtml(g.name1 || '')}${g.name1 && g.name2 ? ' &amp; ' : ''}${escHtml(g.name2 || '')}</p>
+          <div class="gc-despedida-actions">
+            <button class="gc-despedida-btn gc-despedida-primary" id="gcBtnRever" type="button">
+              <span aria-hidden="true">↻</span> Rever desde o início
+            </button>
+            <div class="gc-save-widget" id="gcSaveWidget">
+              <div class="gc-save-state" id="gcSaveLoading"><span class="gc-save-spinner"></span></div>
+              <div class="gc-save-state" id="gcSaveDone" style="display:none">
+                <span class="gc-save-check">✓</span>
+                <span>Presente salvo! Veja em <a href="./meus-presentes.html">Meus Presentes</a></span>
+              </div>
+              <div class="gc-save-state" id="gcSaveReady" style="display:none">
+                <p class="gc-despedida-hint" style="margin:0 0 10px">Salve este presente para acessá-lo sempre que quiser.</p>
+                <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnSaveGift" type="button">
+                  <span aria-hidden="true">✦</span> Salvar este presente
+                </button>
+              </div>
+              <div class="gc-save-state" id="gcSaveAuth" style="display:none">
+                <div class="gc-save-cta-box">
+                  <p class="gc-save-cta-title">Quer ter acesso a este presente sempre que quiser?</p>
+                  <p class="gc-despedida-hint" style="max-width:none;margin:4px 0 0">Entre ou crie sua conta — é gratuito.</p>
+                </div>
+                <div class="gc-auth-tabs" id="gcAuthTabs">
+                  <button class="gc-auth-tab gc-auth-tab-active" id="gcTabEntrar" type="button">Entrar</button>
+                  <button class="gc-auth-tab" id="gcTabCadastrar" type="button">Criar conta</button>
+                </div>
+                <div id="gcFormEntrar" class="gc-auth-form">
+                  <input type="email" id="gcLoginEmail" placeholder="E-mail" autocomplete="email" class="gc-auth-input">
+                  <input type="password" id="gcLoginSenha" placeholder="Senha" autocomplete="current-password" class="gc-auth-input">
+                  <p class="gc-auth-error" id="gcLoginError"></p>
+                  <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnLogin" type="button"><span aria-hidden="true">✦</span> Entrar e salvar</button>
+                </div>
+                <div id="gcFormCadastrar" class="gc-auth-form" style="display:none">
+                  <input type="text" id="gcCadNome" placeholder="Seu primeiro nome" autocomplete="given-name" class="gc-auth-input">
+                  <input type="email" id="gcCadEmail" placeholder="E-mail" autocomplete="email" class="gc-auth-input">
+                  <input type="password" id="gcCadSenha" placeholder="Senha (mín. 8 caracteres)" autocomplete="new-password" class="gc-auth-input">
+                  <input type="password" id="gcCadConfirmar" placeholder="Confirmar senha" autocomplete="new-password" class="gc-auth-input">
+                  <p class="gc-auth-error" id="gcCadError"></p>
+                  <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnCadastrar" type="button"><span aria-hidden="true">✦</span> Criar conta e salvar</button>
+                </div>
+                <p class="gc-auth-confirm-note" id="gcAuthConfirmNote" style="display:none">Conta criada! Confirme seu e-mail para ativar o acesso.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>` : '';
+
+    const capsulaPageHTML = `
+      <div id="screenCapsulas" class="pg-screen pg-hidden">
+        <button class="pg-back-chevron" data-back="${prevOfCapsulas}" aria-label="Voltar">‹</button>
+        <canvas class="gc-star-canvas" id="gcStarCanvas"></canvas>
+        <div class="gc-bg-particles" id="gcBgParticles"></div>
+        <div class="gc-burst-wrap" id="gcBurstWrap"></div>
+        <div class="gc-page-wrap">
+          <div class="gc-hero">
+            <div class="gc-hero-glow"></div>
+            <div class="gc-hero-badge">✦ DearMoment · Presente Especial</div>
+            <h1 class="gc-hero-title">Guardei<br>tudo isso<br>para você</h1>
+            <p class="gc-hero-sub">Abra cada cápsula com calma.<br>Cada uma guarda um pedaço do que sinto.</p>
+            <div class="gc-hero-divider"><span></span><em>💌</em><span></span></div>
+          </div>
+          <div class="gc-progress-wrap">
+            <div class="gc-progress-label">
+              <span>Cápsulas abertas</span>
+              <span id="gcProgressText">0 / 4</span>
+            </div>
+            <div class="gc-progress-track"><div class="gc-progress-fill" id="gcProgressFill"></div></div>
+          </div>
+          <div class="gc-capsulas-grid" id="gcCapsulaGrid">${capsulaItems}</div>
+          <div class="gc-btn-carta-wrap" id="gcBtnCartaWrap">
+            <p class="gc-btn-carta-hint">Você abriu tudo. Tem uma última coisa...</p>
+            <button class="gc-btn-carta" id="gcBtnCarta">
+              <span class="gc-btn-icon">✉️</span>
+              Ler a carta completa
+            </button>
+          </div>
+          ${cartaHTML}
+
+          <div class="gc-modal-overlay" id="gcModalOverlay" aria-hidden="true">
+            <div class="gc-modal-card" role="dialog" aria-modal="true" aria-labelledby="gcModalTitle">
+              <button class="gc-modal-close" id="gcModalClose" type="button" aria-label="Fechar cápsula">✕</button>
+              <div class="gc-modal-glow"></div>
+              <div class="gc-modal-emoji" id="gcModalEmoji">💌</div>
+              <div class="gc-modal-num" id="gcModalNum">Cápsula</div>
+              <h3 class="gc-modal-title" id="gcModalTitle">Título</h3>
+              <p class="gc-modal-text" id="gcModalText">Texto</p>
+              <button class="gc-modal-cta" id="gcModalCta" type="button">Fechar e continuar</button>
+            </div>
+          </div>
+
+          <footer class="gift-footer gift-footer-final" id="gcFinalFooter" style="margin-top:16px;position:relative;z-index:1">
+            <p>Criado com ❤ no DearMoment</p>
+            <a href="./index.html">Criar o meu presente →</a>
+          </footer>
+        </div>
+      </div>`;
+
+    root.innerHTML = revealHTML + playerHTML + galleryHTML + constellationHTML + capsulaPageHTML;
+
+    /* Move o modal pra body — evita que position:fixed seja contido por ancestrais com transform (.pg-enter) */
+    const modalEl = document.getElementById('gcModalOverlay');
+    if (modalEl && modalEl.parentElement !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+
+    if (g.startDate) startCounter(g.startDate);
+    setupPlayer(g);
+    setupNavigation(g);
+    setupCapsulasCarta(g);
+    setupCarousel(g);
+    if (hasConstellation) setupConstellation(g.startDate);
+    setupSaveWidget(giftId);
+  }
+
+  /* ── 3. Navegação entre telas ───────────────────────── */
+  function setupNavigation(g) {
+    spawnRevealParticles();
+    spawnPlayerParticles();
+
+    function transitionTo(fromId, toId) {
+      const from = document.getElementById(fromId);
+      const to   = document.getElementById(toId);
+      if (!from || !to) return;
+      from.classList.add('pg-exit');
+      setTimeout(() => {
+        from.classList.add('pg-hidden');
+        from.classList.remove('pg-exit', 'pg-enter');
+        to.classList.remove('pg-hidden');
+        to.classList.add('pg-enter');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        if (toId === 'screenCapsulas') {
+          initGcStarfield();
+          initGcParticles();
+        }
+        if (toId === 'screenConstellation') {
+          initBgStarfield(document.getElementById('constStarCanvas'), 200);
+          initBgParticles(document.getElementById('constBgParticles'), {
+            emojis: ['✨','💫','⭐','🌙','✦','✧','🌟'],
+            count: 12,
+          });
+        }
+      }, 420);
+    }
+
+    const btnReveal = document.getElementById('btnReveal');
+    if (btnReveal) {
+      btnReveal.addEventListener('click', () => {
+        transitionTo('screenReveal', 'screenPlayer');
+        if (g.previewUrl) {
+          const aud = document.getElementById('giftAudio');
+          if (aud) {
+            musicDuck.fadeIn();
+            aud.play().catch(() => {});
+          }
+        }
+      });
+    }
+
+    /* Pausa quando o usuário sai da aba/app, retoma quando volta */
+    let _audioWasPlaying = false;
+    document.addEventListener('visibilitychange', () => {
+      const aud = document.getElementById('giftAudio');
+      if (!aud) return;
+      if (document.hidden) {
+        _audioWasPlaying = !aud.paused;
+        if (_audioWasPlaying) aud.pause();
+      } else {
+        if (_audioWasPlaying) aud.play().catch(() => {});
+      }
+    });
+
+    document.querySelectorAll('.pg-next-btn[data-to]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const screen = btn.closest('.pg-screen');
+        if (screen) transitionTo(screen.id, btn.dataset.to);
+      });
+    });
+
+    document.querySelectorAll('.pg-back-btn[data-back], .pg-back-chevron[data-back]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const screen = btn.closest('.pg-screen');
+        if (screen) transitionTo(screen.id, btn.dataset.back);
+      });
+    });
+
+    const heartBtn = document.getElementById('spHeartBtn');
+    if (heartBtn) {
+      heartBtn.addEventListener('click', () => {
+        heartBtn.textContent = heartBtn.textContent === '♡' ? '♥' : '♡';
+        heartBtn.style.color = heartBtn.textContent === '♥' ? '#ff6dba' : '';
+      });
+    }
+  }
+
+  function spawnRevealParticles() {
+    const wrap = document.getElementById('pgRevealParticles');
+    if (!wrap) return;
+    const emojis = ['💕','💗','✨','🌸','💫','⭐','💝','🥀'];
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'pg-rp';
+      p.textContent = emojis[i % emojis.length];
+      p.style.cssText = `left:${Math.random()*100}%;font-size:${10+Math.random()*14}px;animation-duration:${12+Math.random()*10}s;animation-delay:-${Math.random()*15}s`;
+      wrap.appendChild(p);
+    }
+  }
+
+  function spawnPlayerParticles() {
+    const wrap = document.getElementById('spParticles');
+    if (!wrap) return;
+    const emojis = ['💕','✨','💫','🌸','💗','⭐'];
+    /* 6 partículas — 3 em cada lateral */
+    const positions = [4, 9, 14, 86, 91, 96];
+    emojis.forEach((emoji, i) => {
+      const p = document.createElement('div');
+      p.className = 'sp-particle';
+      p.textContent = emoji;
+      p.style.cssText = `left:${positions[i]}%;font-size:${8+Math.random()*6}px;animation-duration:${20+Math.random()*12}s;animation-delay:-${Math.random()*18}s`;
+      wrap.appendChild(p);
+    });
+  }
+
+  /* ── 4. Contador em tempo real ──────────────────────── */
+  function startCounter(dateStr) {
+    function tick() {
+      const t = calcTimeSince(dateStr);
+      if (!t) return;
+      setTxt('gcYears',   t.years);
+      setTxt('gcMonths',  t.months);
+      setTxt('gcDays',    t.days);
+      setTxt('gcHours',   t.hours);
+      setTxt('gcMinutes', t.minutes);
+      setTxt('gcSeconds', t.seconds);
+    }
+    tick();
+    counterInterval = setInterval(tick, 1000);
+  }
+
+  function calcTimeSince(dateStr) {
+    const start = new Date(dateStr + 'T00:00:00');
+    const now   = new Date();
+    if (isNaN(start) || start > now) return null;
+    let years  = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth()    - start.getMonth();
+    let days   = now.getDate()     - start.getDate();
+    if (days   < 0) { months--; days   += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+    if (months < 0) { years--;  months += 12; }
+    const totalMs = now - start;
+    const hours   = Math.floor((totalMs / 3600000) % 24);
+    const minutes = Math.floor((totalMs / 60000)   % 60);
+    const seconds = Math.floor((totalMs / 1000)    % 60);
+    return { years, months, days, hours, minutes, seconds };
+  }
+
+  /* ── 5. Player de música ────────────────────────────── */
+  function setupPlayer(gift) {
+    const btn          = document.getElementById('btnGiftPlay');
+    const audio        = document.getElementById('giftAudio');
+    const barFill      = document.getElementById('giftPlayerBarFill');
+    const currentLabel = document.getElementById('giftPlayerCurrent');
+    const durationLabel= document.getElementById('giftPlayerDuration');
+    const playIcon     = document.getElementById('spPlayIcon');
+    const pauseIcon    = document.getElementById('spPauseIcon');
+    const previewUrl   = gift.previewUrl || '';
+
+    if (!btn) return;
+
+    function formatAudioTime(s) {
+      const safe = Math.max(0, Number(s) || 0);
+      return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2,'0')}`;
+    }
+
+    function syncUI() {
+      if (!audio || !barFill || !currentLabel || !durationLabel) return;
+      const current  = Number(audio.currentTime) || 0;
+      const duration = Number(audio.duration) || 0;
+      currentLabel.textContent  = formatAudioTime(current);
+      durationLabel.textContent = duration > 0 ? formatAudioTime(duration) : '—:——';
+      barFill.style.width = duration > 0 ? `${Math.min((current/duration)*100,100)}%` : '0%';
+      if (playIcon && pauseIcon) {
+        playIcon.style.display  = audio.paused ? '' : 'none';
+        pauseIcon.style.display = audio.paused ? 'none' : '';
+      }
+    }
+
+    if (previewUrl && audio) {
+      audio.src  = previewUrl;
+      audio.loop = true;
+      audio._readyToPlay = false;
+      audio.addEventListener('canplay',       () => { audio._readyToPlay = true; });
+      audio.addEventListener('loadedmetadata', syncUI);
+      audio.addEventListener('timeupdate',     syncUI);
+      audio.addEventListener('play',           syncUI);
+      audio.addEventListener('pause',          syncUI);
+      audio.addEventListener('seeked',         syncUI);
+
+      btn.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.volume = musicDuck.baseline();
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
+      });
+    } else if (gift.youtubeId) {
+      setupYouTubeAudio(gift.youtubeId, btn, barFill, currentLabel, durationLabel, playIcon, pauseIcon, formatAudioTime);
+    } else {
+      btn.disabled = true;
+    }
+
+    syncUI();
+  }
+
+  function setupYouTubeAudio(videoId, btn, barFill, currentLabel, durationLabel, playIcon, pauseIcon, fmt) {
+    let player   = null;
+    let ready    = false;
+    let syncTimer = null;
+
+    /* Container invisível para o iframe do YouTube */
+    const host = document.createElement('div');
+    host.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;';
+    host.id = 'ytAudioHost';
+    document.body.appendChild(host);
+
+    function loadApi() {
+      if (window.YT && window.YT.Player) { onApiReady(); return; }
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => { if (typeof prev === 'function') prev(); onApiReady(); };
+      if (!document.querySelector('script[data-yt-api]')) {
+        const s = document.createElement('script');
+        s.src = 'https://www.youtube.com/iframe_api';
+        s.dataset.ytApi = '1';
+        document.head.appendChild(s);
+      }
+    }
+
+    function onApiReady() {
+      player = new YT.Player('ytAudioHost', {
+        videoId,
+        host: 'https://www.youtube-nocookie.com',
+        playerVars: { autoplay: 0, controls: 0, rel: 0, playsinline: 1, modestbranding: 1 },
+        events: {
+          onReady() {
+            ready = true;
+            const dur = player.getDuration() || 0;
+            if (durationLabel && dur > 0) durationLabel.textContent = fmt(dur);
+          },
+          onStateChange(e) {
+            const playing = e.data === YT.PlayerState.PLAYING;
+            if (playIcon)  playIcon.style.display  = playing ? 'none' : '';
+            if (pauseIcon) pauseIcon.style.display = playing ? '' : 'none';
+            if (playing) {
+              syncTimer = syncTimer || setInterval(tick, 500);
+            } else {
+              clearInterval(syncTimer);
+              syncTimer = null;
+            }
+          }
+        }
+      });
+    }
+
+    function tick() {
+      if (!player || !ready) return;
+      const curr = player.getCurrentTime() || 0;
+      const dur  = player.getDuration()    || 0;
+      if (currentLabel)                currentLabel.textContent  = fmt(curr);
+      if (durationLabel && dur > 0)    durationLabel.textContent = fmt(dur);
+      if (barFill && dur > 0)          barFill.style.width = `${Math.min((curr / dur) * 100, 100)}%`;
+    }
+
+    btn.addEventListener('click', () => {
+      if (!player || !ready) return;
+      if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+      } else {
+        player.setVolume(90);
+        player.playVideo();
+      }
+    });
+
+    loadApi();
+  }
+
+  /* ── 6. Cápsulas + Carta ────────────────────────────── */
+  function setupCapsulasCarta(g) {
+    const capsulas     = document.querySelectorAll('.gc-capsula');
+    const progressFill = document.getElementById('gcProgressFill');
+    const progressText = document.getElementById('gcProgressText');
+    const btnWrap      = document.getElementById('gcBtnCartaWrap');
+    const btnCarta     = document.getElementById('gcBtnCarta');
+    const cartaSection = document.getElementById('gcCartaSection');
+    if (!capsulas.length) return;
+
+    let abertas = 0;
+    const total = capsulas.length;
+
+    capsulas.forEach((c, i) => {
+      setTimeout(() => c.classList.add('gc-visible'), 300 + i * 120);
+    });
+
+    const capsulaEmojisLocal  = ['💌', '🎵', '📍', '🔮'];
+    const capsulasTitlesLocal = ['O primeiro dia', 'Nossa música', 'Nosso lugar', 'Nosso futuro'];
+    const capsulasTextosLocal = (g.capsulas && g.capsulas.length) ? g.capsulas : ['', '', '', ''];
+
+    const modalOverlay = document.getElementById('gcModalOverlay');
+    const modalClose   = document.getElementById('gcModalClose');
+    const modalCta     = document.getElementById('gcModalCta');
+    const modalEmoji   = document.getElementById('gcModalEmoji');
+    const modalNum     = document.getElementById('gcModalNum');
+    const modalTitle   = document.getElementById('gcModalTitle');
+    const modalText    = document.getElementById('gcModalText');
+
+    let capsulaOcupada = false;
+
+    function openCapsulaModal(index) {
+      if (!modalOverlay) return;
+      modalEmoji.textContent = capsulaEmojisLocal[index] || '💌';
+      modalNum.textContent   = `Cápsula 0${index + 1}`;
+      modalTitle.textContent = capsulasTitlesLocal[index] || '';
+      modalText.textContent  = capsulasTextosLocal[index] || capsulasTitlesLocal[index] || '';
+      modalOverlay.classList.add('gc-modal-open');
+      modalOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeCapsulaModal() {
+      if (!modalOverlay) return;
+      modalOverlay.classList.remove('gc-modal-open');
+      modalOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      capsulas.forEach(c => c.classList.remove('gc-aberta'));
+      capsulaOcupada = false;
+    }
+    if (modalClose) modalClose.addEventListener('click', closeCapsulaModal);
+    if (modalCta)   modalCta.addEventListener('click',   closeCapsulaModal);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('gc-modal-open')) {
+        closeCapsulaModal();
+      }
+    });
+
+    capsulas.forEach(c => {
+      c.addEventListener('click', () => {
+        if (capsulaOcupada) return;
+        if (c.classList.contains('gc-aberta')) return;
+        capsulaOcupada = true;
+        const isFirst = c.dataset.wasOpened !== 'true';
+        const idx = parseInt(c.dataset.index, 10);
+        c.classList.add('gc-aberta');
+        sparkle.play();
+        spawnBurst(c);
+        if (isFirst) {
+          c.dataset.wasOpened = 'true';
+          abertas++;
+          const pct = (abertas / total) * 100;
+          if (progressFill) progressFill.style.width = pct + '%';
+          if (progressText) progressText.textContent = `${abertas} / ${total}`;
+          if (abertas === total && btnWrap) {
+            setTimeout(() => btnWrap.classList.add('gc-visivel'), 500 + 800);
+          }
+        }
+        /* Abre o modal após o flip completar (1250ms) + pausa para o verso ser lido */
+        setTimeout(() => openCapsulaModal(idx), 1500);
+      });
+    });
+
+    function spawnBurst(el) {
+      const rect  = el.getBoundingClientRect();
+      const cx    = rect.left + rect.width / 2;
+      const cy    = rect.top  + rect.height / 2;
+      const emojis = ['💗','💖','✨','💫','🌸','💕','⭐','💝'];
+      const wrap  = document.getElementById('gcBurstWrap');
+      if (!wrap) return;
+      for (let i = 0; i < 16; i++) {
+        const p   = document.createElement('div');
+        p.className = 'gc-burst-p';
+        const angle = (i / 16) * 360 + Math.random() * 20;
+        const dist  = 80 + Math.random() * 140;
+        const rad   = angle * Math.PI / 180;
+        const tx    = Math.cos(rad) * dist;
+        const ty    = Math.sin(rad) * dist;
+        const rot   = Math.round(Math.random() * 360 - 180);
+        const dur   = (0.5 + Math.random() * 0.4).toFixed(2);
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.cssText = `left:${cx}px;top:${cy}px;font-size:${12+Math.random()*12}px;--tx:${tx}px;--ty:${ty}px;--r:${rot}deg;--d:${dur}s`;
+        wrap.appendChild(p);
+        setTimeout(() => p.remove(), parseFloat(dur) * 1000 + 50);
+      }
+    }
+
+    if (btnCarta && cartaSection) {
+      btnCarta.addEventListener('click', () => {
+        if (btnWrap) btnWrap.style.display = 'none';
+        cartaSection.classList.add('gc-carta-visivel');
+        const finalFooter = document.getElementById('gcFinalFooter');
+        if (finalFooter) finalFooter.classList.add('gc-final-visivel');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          cartaSection.classList.add('gc-carta-animada');
+          setTimeout(() => {
+            cartaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => digitarCarta(g.message), 700);
+          }, 100);
+        }));
+      });
+    }
+
+    function digitarCarta(texto) {
+      if (!texto) return;
+      const corpo      = document.getElementById('gcCartaCorpo');
+      const cursor     = document.getElementById('gcCursor');
+      const assinatura = document.getElementById('gcCartaAssinatura');
+      const selos      = document.getElementById('gcCartaSelos');
+      const despedida  = document.getElementById('gcDespedida');
+      if (!corpo || !cursor) return;
+      corpo.innerHTML = '';
+      corpo.appendChild(cursor);
+      typewriter.start();
+      musicDuck.duck();
+      let i = 0;
+      function tick() {
+        if (i >= texto.length) {
+          typewriter.stop();
+          musicDuck.unduck();
+          cursor.classList.add('gc-cursor-oculto');
+          if (assinatura) assinatura.classList.add('gc-visivel');
+          if (selos) selos.classList.add('gc-visivel');
+          if (despedida) {
+            setTimeout(() => {
+              despedida.classList.add('gc-visivel');
+              despedida.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 1100);
+          }
+          return;
+        }
+        const ch = texto[i++];
+        if (ch === '\n') cursor.insertAdjacentHTML('beforebegin','<br><br>');
+        else cursor.insertAdjacentText('beforebegin', ch);
+        const delay = '.!?'.includes(ch) ? 110 : ch === ',' ? 70 : (Math.random() < 0.04 ? 55 : 26);
+        setTimeout(tick, delay);
+      }
+      tick();
+    }
+
+    /* Botão "Rever desde o início" — reseta cápsulas/carta e volta pro Reveal */
+    const btnRever = document.getElementById('gcBtnRever');
+    if (btnRever) {
+      btnRever.addEventListener('click', () => {
+        typewriter.stop();
+        musicDuck.unduck();
+        closeCapsulaModal();
+        capsulas.forEach(c => {
+          c.classList.remove('gc-aberta');
+          delete c.dataset.wasOpened;
+        });
+        abertas = 0;
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressText) progressText.textContent = `0 / ${total}`;
+        if (btnWrap) {
+          btnWrap.classList.remove('gc-visivel');
+          btnWrap.style.display = '';
+        }
+        if (cartaSection) {
+          cartaSection.classList.remove('gc-carta-visivel', 'gc-carta-animada');
+          const corpo = document.getElementById('gcCartaCorpo');
+          const cursor = document.getElementById('gcCursor');
+          if (corpo) {
+            corpo.innerHTML = '';
+            if (cursor) {
+              cursor.classList.remove('gc-cursor-oculto');
+              corpo.appendChild(cursor);
+            }
+          }
+          const assinatura = document.getElementById('gcCartaAssinatura');
+          const selos      = document.getElementById('gcCartaSelos');
+          const despedida  = document.getElementById('gcDespedida');
+          if (assinatura) assinatura.classList.remove('gc-visivel');
+          if (selos)      selos.classList.remove('gc-visivel');
+          if (despedida)  despedida.classList.remove('gc-visivel');
+        }
+        const finalFooter = document.getElementById('gcFinalFooter');
+        if (finalFooter) finalFooter.classList.remove('gc-final-visivel');
+        const cap = document.getElementById('screenCapsulas');
+        const rev = document.getElementById('screenReveal');
+        if (cap && rev) {
+          cap.classList.add('pg-exit');
+          setTimeout(() => {
+            cap.classList.add('pg-hidden');
+            cap.classList.remove('pg-exit', 'pg-enter');
+            rev.classList.remove('pg-hidden');
+            rev.classList.add('pg-enter');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }, 420);
+        }
+      });
+    }
+  }
+
+  /* ── 7. Starfield + Particles (background reutilizável) ── */
+  const _bgInited = new WeakSet();
+  function initBgStarfield(canvas, count) {
+    if (!canvas || _bgInited.has(canvas)) return;
+    _bgInited.add(canvas);
+    const N = count || 160;
+    const ctx = canvas.getContext('2d');
+    let stars = [], W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    function createStars(n) {
+      stars = [];
+      for (let i = 0; i < n; i++)
+        stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.4+0.2,
+          alpha: Math.random(), speed: Math.random()*0.004+0.001, phase: Math.random()*Math.PI*2 });
+    }
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      stars.forEach(s => {
+        s.alpha = 0.25 + 0.65 * Math.abs(Math.sin(s.phase + t * s.speed));
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${s.alpha.toFixed(2)})`; ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    resize(); createStars(N);
+    window.addEventListener('resize', () => { resize(); createStars(N); });
+    requestAnimationFrame(draw);
+  }
+
+  function initBgParticles(wrap, opts) {
+    if (!wrap || _bgInited.has(wrap)) return;
+    _bgInited.add(wrap);
+    const emojis = (opts && opts.emojis) || ['💕','💗','✨','🌸','💫','⭐','🥀','💞'];
+    const count  = (opts && opts.count)  || 14;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'gc-bg-particle';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.fontSize = (10 + Math.random() * 12) + 'px';
+      el.style.animationDuration = (18 + Math.random() * 20) + 's';
+      el.style.animationDelay = -(Math.random() * 20) + 's';
+      wrap.appendChild(el);
+    }
+  }
+
+  function initGcStarfield() { initBgStarfield(document.getElementById('gcStarCanvas')); }
+  function initGcParticles() { initBgParticles(document.getElementById('gcBgParticles')); }
+
+  /* ── 8. Carousel de fotos + stories viewer ─────────── */
+  function setupCarousel(g) {
+    const track   = document.getElementById('cpTrack');
+    const wrap    = document.getElementById('cpWrap');
+    const dotsEl  = document.getElementById('cpDots');
+    const counter = document.getElementById('cpCounter');
+    const ambient = document.getElementById('cpAmbient');
+    const prevBtn = document.getElementById('cpPrev');
+    const nextBtn = document.getElementById('cpNext');
+    if (!track || !wrap) return;
+
+    const cs     = [...track.querySelectorAll('.cp-card')];
+    const photos = cs.map(c => c.querySelector('img').src);
+    const total  = cs.length;
+    if (!total) return;
+
+    const glassEl   = document.getElementById('cpGlassCaption');
+    const glassText = document.getElementById('cpGlassText');
+    const dots      = dotsEl ? [...dotsEl.querySelectorAll('.cp-dot')] : [];
+
+    let current = 0;
+
+    function goTo(index, animate) {
+      if (index < 0 || index >= total) return;
+      const gap = 18;
+
+      /* Lê layout ANTES de escrever classes — evita forced reflow */
+      const cardW = cs[0].offsetWidth;
+      const wrapW = wrap.offsetWidth;
+
+      cs.forEach((c, i) => {
+        const wasActive = c.classList.contains('cp-active');
+        c.classList.remove('cp-active', 'cp-adj');
+        const d = Math.abs(i - index);
+        if (d === 0) c.classList.add('cp-active');
+        else if (d === 1) c.classList.add('cp-adj');
+        /* Limpa animation inline do card que saiu de ativo */
+        if (wasActive && i !== index) {
+          const img = c.querySelector('.cp-card-img');
+          if (img) img.style.animation = '';
+        }
+      });
+
+      /* Glass caption — fade out → troca texto → fade in */
+      if (glassEl && glassText) {
+        const newCaption = cs[index].dataset.caption || '';
+        if (animate === false) {
+          glassText.textContent = newCaption;
+        } else {
+          glassEl.classList.add('cp-glass-fade');
+          setTimeout(() => {
+            glassText.textContent = newCaption;
+            glassEl.classList.remove('cp-glass-fade');
+          }, 190);
+        }
+      }
+
+      dots.forEach((d, i) => d.classList.toggle('cp-dot-active', i === index));
+
+      if (counter) counter.textContent = `${index + 1} / ${total}`;
+      if (prevBtn) prevBtn.disabled = index === 0;
+      if (nextBtn) nextBtn.disabled = index === total - 1;
+
+      const offset = wrapW / 2 - cardW / 2 - index * (cardW + gap);
+      track.style.transition = animate === false
+        ? 'none'
+        : 'transform 0.38s cubic-bezier(0.4,0,0.2,1)';
+      track.style.transform = `translateX(${offset}px)`;
+
+      if (ambient && photos[index]) {
+        ambient.style.backgroundImage = `url(${photos[index]})`;
+        requestAnimationFrame(() => ambient.classList.add('cp-ready'));
+      }
+
+      /* Parallax: image entrance + card counter-nudge */
+      if (animate !== false) {
+        const dir      = index > current ? 'right' : 'left';
+        const animName = dir === 'right' ? 'cpImgFromRight' : 'cpImgFromLeft';
+        const img      = cs[index].querySelector('.cp-card-img');
+        const card     = cs[index];
+        if (img) {
+          img.style.animation = 'none';
+          requestAnimationFrame(() => {
+            /* Guard: só aplica se este card ainda for o ativo */
+            if (card.classList.contains('cp-active')) {
+              img.style.animation = `${animName} 0.52s cubic-bezier(0.34,1.1,0.64,1) both`;
+            }
+          });
+        }
+        card.style.translate = dir === 'right' ? '6px 0' : '-6px 0';
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => { card.style.translate = '0 0'; })
+        );
+      }
+
+      current = index;
+    }
+
+    function triggerEntrance() {
+      cs.forEach(c => {
+        c.classList.remove('cp-entering');
+        void c.offsetWidth;
+        c.classList.add('cp-entering');
+      });
+      goTo(0, false);
+    }
+
+    /* Dispara entrada ao abrir a tela */
+    const galleryScreen = document.getElementById('screenGallery');
+    if (galleryScreen) {
+      new MutationObserver(() => {
+        if (!galleryScreen.classList.contains('pg-hidden')) triggerEntrance();
+      }).observe(galleryScreen, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    goTo(0, false);
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goTo(current - 1, true));
+    if (nextBtn) nextBtn.addEventListener('click', () => goTo(current + 1, true));
+
+    if (dotsEl) dotsEl.addEventListener('click', e => {
+      const dot = e.target.closest('.cp-dot');
+      if (dot) goTo(parseInt(dot.dataset.index), true);
+    });
+
+    track.addEventListener('click', e => {
+      const card = e.target.closest('.cp-card');
+      if (!card) return;
+      const idx = parseInt(card.dataset.index);
+      if (idx !== current) goTo(idx, true);
+      else openStories(idx);
+    });
+
+    let tsX = 0, tsY = 0;
+    track.addEventListener('touchstart', e => {
+      tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
+    }, { passive: true });
+    track.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - tsX;
+      const dy = Math.abs(e.changedTouches[0].clientY - tsY);
+      if (Math.abs(dx) > 44 && dy < 70) goTo(current + (dx < 0 ? 1 : -1), true);
+    });
+
+    document.addEventListener('keydown', e => {
+      const scr = document.getElementById('screenGallery');
+      if (!scr || scr.classList.contains('pg-hidden')) return;
+      if (e.key === 'ArrowLeft')  goTo(current - 1, true);
+      if (e.key === 'ArrowRight') goTo(current + 1, true);
+    });
+
+    let resizeT;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => goTo(current, false), 80);
+    });
+
+    /* Stories viewer (toque na foto ativa → fullscreen) */
+    const overlay  = document.getElementById('storiesOverlay');
+    const barsEl   = document.getElementById('storiesBars');
+    const closeBtn = document.getElementById('storiesClose');
+    const imgEl    = document.getElementById('storiesImg');
+    const tapLeft  = document.getElementById('storiesTapLeft');
+    const tapRight = document.getElementById('storiesTapRight');
+    const stCnt    = document.getElementById('storiesCounter');
+    const DURATION = 4500;
+    let stCur = 0, stTimer = null;
+
+    function openStories(index) {
+      if (!overlay) return;
+      stCur = index;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      showSlide(stCur);
+    }
+    function closeStories() {
+      if (!overlay) return;
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      clearTimeout(stTimer);
+      if (imgEl) imgEl.src = '';
+    }
+    function showSlide(i) {
+      clearTimeout(stTimer);
+      if (!imgEl) return;
+      imgEl.style.opacity = '0';
+      imgEl.src = photos[i];
+      imgEl.onload = () => { imgEl.style.opacity = '1'; };
+      if (stCnt) stCnt.textContent = `${i + 1} / ${total}`;
+      if (barsEl) barsEl.innerHTML = photos.map((_, k) => {
+        const cls = k < i ? 'done' : k === i ? 'active' : '';
+        return `<div class="stories-bar"><div class="stories-bar-fill ${cls}"></div></div>`;
+      }).join('');
+      stTimer = setTimeout(() => advSt(1), DURATION);
+    }
+    function advSt(dir) {
+      const n = stCur + dir;
+      if (n < 0 || n >= total) { closeStories(); return; }
+      stCur = n; showSlide(stCur);
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeStories);
+    if (tapLeft)  tapLeft.addEventListener('click',  () => advSt(-1));
+    if (tapRight) tapRight.addEventListener('click', () => advSt(1));
+
+    if (overlay) {
+      let stTsX = 0;
+      overlay.addEventListener('touchstart', e => { stTsX = e.touches[0].clientX; }, { passive: true });
+      overlay.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - stTsX;
+        if (Math.abs(dx) > 40) advSt(dx < 0 ? 1 : -1);
+      });
+    }
+    document.addEventListener('keydown', e => {
+      if (!overlay || !overlay.classList.contains('open')) return;
+      if (e.key === 'Escape')     closeStories();
+      if (e.key === 'ArrowRight') advSt(1);
+      if (e.key === 'ArrowLeft')  advSt(-1);
+    });
+  }
+
+  /* ── 9. Constelação ─────────────────────────────────── */
+  function setupConstellation(dateStr) {
+    const canvas = document.getElementById('starCanvas');
+    if (!canvas) return;
+
+    const CONS = [
+      { name:'Órion',      stars:[[.32,.28],[.68,.24],[.28,.52],[.50,.49],[.72,.52],[.34,.76],[.68,.73]], lines:[[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]], cx:.50,cy:.74,sc:.28 },
+      { name:'Leão',       stars:[[.18,.52],[.30,.28],[.48,.18],[.64,.28],[.74,.50],[.66,.70],[.44,.74]], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[3,0]], cx:.76,cy:.42,sc:.26 },
+      { name:'Cassiopeia', stars:[[.10,.62],[.28,.30],[.50,.52],[.72,.30],[.90,.62]],                    lines:[[0,1],[1,2],[2,3],[3,4]],                         cx:.50,cy:.20,sc:.30 },
+      { name:'Cruz do Sul',stars:[[.50,.10],[.50,.90],[.10,.50],[.90,.50],[.78,.18]],                    lines:[[0,1],[2,3],[0,4]],                               cx:.22,cy:.60,sc:.22 },
+      { name:'Escorpião',  stars:[[.38,.10],[.54,.18],[.68,.10],[.76,.28],[.72,.44],[.62,.56],[.54,.66],[.48,.78],[.44,.90],[.36,.84]], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9]], cx:.76,cy:.70,sc:.24 },
+      { name:'Ursa Maior', stars:[[.14,.58],[.28,.48],[.42,.44],[.56,.46],[.64,.34],[.76,.24],[.86,.36]], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]],            cx:.24,cy:.30,sc:.28 },
+      { name:'Gêmeos',     stars:[[.20,.18],[.80,.18],[.22,.44],[.78,.44],[.26,.70],[.74,.70]],           lines:[[0,2],[2,4],[1,3],[3,5],[4,5]],                  cx:.72,cy:.24,sc:.24 },
+    ];
+
+    const d = new Date(dateStr + 'T00:00:00');
+    let seed = (d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate()) | 0;
+    function rand() { seed = (Math.imul(seed,1664525)+1013904223)|0; return (seed>>>0)/4294967296; }
+
+    /* ── Substância: dia da semana, fase da lua, signo ── */
+    const DAYS_PT = [
+      { word: 'domingo',       art: 'um'  },
+      { word: 'segunda-feira', art: 'uma' },
+      { word: 'terça-feira',   art: 'uma' },
+      { word: 'quarta-feira',  art: 'uma' },
+      { word: 'quinta-feira',  art: 'uma' },
+      { word: 'sexta-feira',   art: 'uma' },
+      { word: 'sábado',        art: 'um'  },
+    ];
+    function moonPhase(date) {
+      /* Sincronizado com a Lua Nova de 06/01/2000 (UT) */
+      const known = Date.UTC(2000, 0, 6, 18, 14);
+      const diff  = (date.getTime() - known) / 86400000;
+      const cycle = 29.530588853;
+      const age   = ((diff % cycle) + cycle) % cycle;
+      if (age < 1.84566)  return { name: 'Lua Nova',         icon: '🌑' };
+      if (age < 5.53699)  return { name: 'Crescente',        icon: '🌒' };
+      if (age < 9.22831)  return { name: 'Quarto Crescente', icon: '🌓' };
+      if (age < 12.91963) return { name: 'Gibosa Crescente', icon: '🌔' };
+      if (age < 16.61096) return { name: 'Lua Cheia',        icon: '🌕' };
+      if (age < 20.30228) return { name: 'Gibosa Minguante', icon: '🌖' };
+      if (age < 23.99361) return { name: 'Quarto Minguante', icon: '🌗' };
+      if (age < 27.68493) return { name: 'Minguante',        icon: '🌘' };
+      return                     { name: 'Lua Nova',         icon: '🌑' };
+    }
+    function zodiacSign(date) {
+      const m = date.getMonth() + 1, dd = date.getDate();
+      if ((m===3 && dd>=21) || (m===4 && dd<=19))  return { name: 'Áries',       icon: '♈' };
+      if ((m===4 && dd>=20) || (m===5 && dd<=20))  return { name: 'Touro',       icon: '♉' };
+      if ((m===5 && dd>=21) || (m===6 && dd<=20))  return { name: 'Gêmeos',      icon: '♊' };
+      if ((m===6 && dd>=21) || (m===7 && dd<=22))  return { name: 'Câncer',      icon: '♋' };
+      if ((m===7 && dd>=23) || (m===8 && dd<=22))  return { name: 'Leão',        icon: '♌' };
+      if ((m===8 && dd>=23) || (m===9 && dd<=22))  return { name: 'Virgem',      icon: '♍' };
+      if ((m===9 && dd>=23) || (m===10 && dd<=22)) return { name: 'Libra',       icon: '♎' };
+      if ((m===10 && dd>=23) || (m===11 && dd<=21))return { name: 'Escorpião',   icon: '♏' };
+      if ((m===11 && dd>=22) || (m===12 && dd<=21))return { name: 'Sagitário',   icon: '♐' };
+      if ((m===12 && dd>=22) || (m===1 && dd<=19)) return { name: 'Capricórnio', icon: '♑' };
+      if ((m===1 && dd>=20) || (m===2 && dd<=18))  return { name: 'Aquário',     icon: '♒' };
+      return { name: 'Peixes', icon: '♓' };
+    }
+    const dayInfo  = DAYS_PT[d.getDay()];
+    const moonInfo = moonPhase(d);
+    const signInfo = zodiacSign(d);
+    const factDay     = document.getElementById('gcfFactDay');
+    const factMoon    = document.getElementById('gcfFactMoon');
+    const factZodiac  = document.getElementById('gcfFactZodiac');
+    const factZodIc   = document.getElementById('gcfFactZodiacIcon');
+    if (factDay)    factDay.textContent    = `${dayInfo.art} ${dayInfo.word}`;
+    if (factMoon)   factMoon.textContent   = moonInfo.name;
+    if (factZodiac) factZodiac.textContent = signInfo.name;
+    if (factZodIc)  factZodIc.textContent  = signInfo.icon;
+
+    /* ── Seleciona 3 constelações reais para a época do ano ──
+       Mapeia meses em que cada constelação é visível no céu noturno
+       brasileiro (hemisfério sul + norte do BR para as boreais).      */
+    const CONS_VIS = {
+      'Órion':       [11, 12, 1, 2, 3, 4],          // verão BR: alta no zênite jan-fev
+      'Leão':        [2, 3, 4, 5, 6],               // outono BR
+      'Cassiopeia':  [9, 10, 11, 12, 1, 2],         // visível no N do BR, primavera/verão
+      'Cruz do Sul': [1,2,3,4,5,6,7,8,9,10,11,12],  // circumpolar no S — sempre, melhor mai-jul
+      'Escorpião':   [5, 6, 7, 8, 9],               // inverno BR
+      'Ursa Maior':  [2, 3, 4, 5, 6],               // visível no N do BR, outono
+      'Gêmeos':      [12, 1, 2, 3, 4],              // verão BR
+    };
+    const monthOfDate = d.getMonth() + 1;
+    const visiblePool = CONS.filter(c => (CONS_VIS[c.name] || []).includes(monthOfDate));
+    /* Fallback de segurança: se algum mês não tiver 3, completa com Cruz do Sul (sempre visível) */
+    const pool = visiblePool.length >= 3 ? visiblePool.slice() : CONS.slice();
+    const selected = [];
+    while (selected.length < 3 && pool.length) {
+      const idx = Math.floor(rand() * pool.length);
+      selected.push(pool.splice(idx, 1)[0]);
+    }
+    const namesEl = document.getElementById('gcclNames');
+    if (namesEl) namesEl.textContent = selected.map(c => c.name).join(' · ');
+
+    const arcCircle = document.querySelector('.gift-constellation-arc circle');
+    const circ = 2 * Math.PI * 48.5;
+    if (arcCircle) { arcCircle.style.strokeDasharray = circ; arcCircle.style.strokeDashoffset = circ; }
+
+    /* Estado compartilhado entre o setup do canvas e o trigger do observer */
+    let canvasReady   = false;
+    let pendingStart  = false;
+    let runAnimation  = () => {};
+
+    function startConstellationAnim() {
+      if (!canvasReady) { pendingStart = true; return; }
+      runAnimation();
+    }
+
+    const section = document.getElementById('giftConstellation');
+    if (section) {
+      const obs = new IntersectionObserver(entries => {
+        if (!entries[0].isIntersecting) return;
+        if (arcCircle) { arcCircle.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.25,0.46,0.45,0.94)'; arcCircle.style.strokeDashoffset = 0; }
+        ['gift-constellation-eyebrow','gift-constellation-date','gift-constellation-tagline']
+          .forEach((cls, i) => {
+            const el = document.querySelector('.'+cls);
+            if (el) setTimeout(() => el.classList.add('constellation-shimmer'), i*220+200);
+          });
+        startConstellationAnim();
+        obs.disconnect();
+      }, { threshold: 0.45 });
+      obs.observe(section);
+    }
+
+    requestAnimationFrame(() => {
+      const S   = canvas.parentElement.clientWidth || 280;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = S * dpr; canvas.height = S * dpr;
+      canvas.style.width = S+'px'; canvas.style.height = S+'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      /* ─── BASE estática (fundo + dusts + estrelas + vinheta) ─── */
+      ctx.fillStyle = '#06060f'; ctx.fillRect(0,0,S,S);
+
+      const dusts = [
+        {x:.48,y:.46,r:.38,c:'rgba(90,45,200,0.28)'},{x:.22,y:.30,r:.22,c:'rgba(60,30,180,0.18)'},
+        {x:.75,y:.28,r:.20,c:'rgba(100,40,220,0.16)'},{x:.30,y:.68,r:.22,c:'rgba(255,109,186,0.12)'},
+        {x:.72,y:.65,r:.20,c:'rgba(80,30,200,0.15)'},{x:.55,y:.20,r:.18,c:'rgba(120,60,230,0.13)'},
+        {x:.20,y:.55,r:.18,c:'rgba(255,90,180,0.10)'},{x:.60,y:.75,r:.20,c:'rgba(70,25,180,0.14)'},
+      ];
+      dusts.forEach(({x,y,r,c}) => {
+        const g = ctx.createRadialGradient(x*S,y*S,0,x*S,y*S,r*S);
+        g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.fillRect(0,0,S,S);
+      });
+
+      for (let i = 0; i < 280; i++) {
+        const angle = rand()*Math.PI*2;
+        const r = Math.sqrt(rand())*S*.495;
+        const x = S/2+Math.cos(angle)*r, y = S/2+Math.sin(angle)*r;
+        const sz = rand()*1.3+0.12, a = rand()*0.60+0.20;
+        ctx.beginPath(); ctx.arc(x,y,sz,0,Math.PI*2);
+        ctx.fillStyle = rand()>.6 ? `rgba(210,220,255,${a.toFixed(2)})` : `rgba(255,255,255,${a.toFixed(2)})`;
+        ctx.fill();
+      }
+
+      const vig = ctx.createRadialGradient(S/2,S/2,S*.22,S/2,S/2,S*.50);
+      vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(4,4,14,0.72)');
+      ctx.fillStyle=vig; ctx.fillRect(0,0,S,S);
+
+      /* Snapshot da base — cada frame da animação restaura isso antes de redesenhar */
+      const baseImg = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      /* ─── Schedule da animação progressiva ─── */
+      const sched = [];
+      selected.forEach((con, ci) => {
+        const pts = con.stars.map(([sx,sy]) => [(con.cx+(sx-.5)*con.sc)*S,(con.cy+(sy-.5)*con.sc)*S]);
+        const baseDelay = 200 + ci * 350;
+        /* pontos da constelação fazem fade-in juntos */
+        sched.push({ kind: 'points', start: baseDelay, dur: 700, pts });
+        /* linhas vão aparecendo em sequência */
+        con.lines.forEach(([a,b], li) => {
+          sched.push({
+            kind: 'line',
+            start: baseDelay + 500 + li * 240,
+            dur: 520,
+            from: pts[a], to: pts[b],
+          });
+        });
+      });
+      const totalDur = Math.max(...sched.map(s => s.start + s.dur)) + 200;
+
+      function easeOutCubic(k) { return 1 - Math.pow(1 - k, 3); }
+      function easeOutQuad(k)  { return 1 - Math.pow(1 - k, 2); }
+
+      function drawFrame(elapsed) {
+        ctx.putImageData(baseImg, 0, 0);
+        sched.forEach(s => {
+          if (elapsed < s.start) return;
+          const k = Math.min(1, (elapsed - s.start) / s.dur);
+          if (s.kind === 'points') {
+            const e = easeOutQuad(k);
+            s.pts.forEach(([x,y]) => {
+              const glow = ctx.createRadialGradient(x,y,0,x,y,7);
+              glow.addColorStop(0, `rgba(210,225,255,${(0.28*e).toFixed(2)})`);
+              glow.addColorStop(1, 'rgba(210,225,255,0)');
+              ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
+              ctx.beginPath(); ctx.arc(x,y,1.9,0,Math.PI*2);
+              ctx.fillStyle = `rgba(235,245,255,${(0.95*e).toFixed(2)})`; ctx.fill();
+            });
+          } else {
+            const e = easeOutCubic(k);
+            const [x1,y1] = s.from, [x2,y2] = s.to;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 + (x2-x1)*e, y1 + (y2-y1)*e);
+            ctx.strokeStyle = 'rgba(200,220,255,0.48)';
+            ctx.lineWidth = 0.85;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+          }
+        });
+      }
+
+      runAnimation = () => {
+        const t0 = performance.now();
+        function tick(now) {
+          const elapsed = now - t0;
+          drawFrame(Math.min(elapsed, totalDur));
+          if (elapsed < totalDur) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      };
+
+      canvasReady = true;
+      if (pendingStart) runAnimation();
+    });
+  }
+
+  /* ── Utilitários ────────────────────────────────────── */
+  function setTxt(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function formatDate(dateStr) { const [y,m,d]=dateStr.split('-'); return `${d}/${m}/${y}`; }
+  function stopAll() {
+    if (counterInterval) clearInterval(counterInterval);
+    const audio = document.getElementById('giftAudio');
+    if (audio) audio.pause();
+  }
+
+  /* ── CTA: convidar o visitante a criar o próprio presente ── */
+  async function setupSaveWidget(id) {
+    const widget = document.getElementById('gcSaveWidget');
+    if (!widget) return;
+    ['gcSaveLoading', 'gcSaveDone', 'gcSaveAuth'].forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.style.display = 'none';
+    });
+    const saveReady = document.getElementById('gcSaveReady');
+    if (saveReady) {
+      saveReady.style.display = '';
+      saveReady.innerHTML = `
+        <p class="gc-despedida-hint" style="margin:0 0 12px">Quer criar um presente igual para quem você ama?</p>
+        <a href="./index.html" class="gc-despedida-btn gc-despedida-secondary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;justify-content:center;">
+          <span aria-hidden="true">✦</span> Criar meu presente
+        </a>`;
+    }
+  }
+  </script>
+
+  <div id="sm-cookie-banner" role="dialog" aria-label="Aviso de cookies">
+    <span class="sm-cookie-icon">🍪</span>
+    <p class="sm-cookie-text">
+      <strong>Sua privacidade importa</strong>
+      Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa política de privacidade.
+    </p>
+    <div class="sm-cookie-actions">
+      <button id="sm-cookie-accept">Aceitar</button>
+      <button id="sm-cookie-reject">Recusar</button>
+    </div>
+  </div>
+  <script src="./assets/js/cookies.js"></script>
+</body>
+</html>
