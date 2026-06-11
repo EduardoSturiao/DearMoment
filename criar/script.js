@@ -542,7 +542,7 @@ function setupMusicSearch() {
     suggestionsList.innerHTML = '';
     highlighted = -1;
 
-    if (q.length < 2) { suggestionsList.classList.add('hidden'); return; }
+    if (q.length < 2) { hideDropdown(); return; }
     debounceTimer = setTimeout(() => fetchSuggestions(q), 400);
   });
 
@@ -561,13 +561,35 @@ function setupMusicSearch() {
       e.preventDefault();
       items[highlighted].dispatchEvent(new MouseEvent('mousedown'));
     } else if (e.key === 'Escape') {
-      suggestionsList.classList.add('hidden');
+      hideDropdown();
     }
   });
 
   searchInput.addEventListener('blur', () => {
-    setTimeout(() => suggestionsList.classList.add('hidden'), 200);
+    setTimeout(() => hideDropdown(), 200);
   });
+
+  // No mobile o .steps-container tem overflow-y:auto que corta elementos
+  // position:absolute. Usando position:fixed com coordenadas do viewport.
+  function showDropdown() {
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      const rect = searchInput.getBoundingClientRect();
+      Object.assign(suggestionsList.style, {
+        position: 'fixed',
+        top:   (rect.bottom + 2) + 'px',
+        left:  rect.left + 'px',
+        width: rect.width + 'px',
+        right: 'auto',
+        maxHeight: Math.min(window.innerHeight - rect.bottom - 8, window.innerHeight * 0.44) + 'px',
+      });
+    }
+    suggestionsList.classList.remove('hidden');
+  }
+
+  function hideDropdown() {
+    suggestionsList.classList.add('hidden');
+    suggestionsList.style.cssText = '';
+  }
 
   const MUSIC_SEARCH_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
 
@@ -618,17 +640,11 @@ function setupMusicSearch() {
       suggestionsList.appendChild(li);
     });
 
-    suggestionsList.classList.remove('hidden');
-
-    if (window.matchMedia('(max-width: 900px)').matches) {
-      requestAnimationFrame(() => {
-        searchInput.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      });
-    }
+    showDropdown();
   }
 
   function selectTrack(track) {
-    suggestionsList.classList.add('hidden');
+    hideDropdown();
     searchInput.value = `${track.trackName} — ${track.artistName}`;
 
     const songEl   = document.getElementById('songName');
