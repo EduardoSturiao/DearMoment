@@ -569,29 +569,13 @@ function setupMusicSearch() {
     setTimeout(() => suggestionsList.classList.add('hidden'), 200);
   });
 
-  /* Deezer JSONP — busca título, artista, capa e duração real da faixa */
-  function jsonp(baseUrl, callbackParam = 'callback', timeoutMs = 8000) {
-    return new Promise((resolve, reject) => {
-      const cbName = 'dzCb_' + Math.random().toString(36).slice(2);
-      const script = document.createElement('script');
-      const cleanup = () => {
-        try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
-        if (script.parentNode) script.parentNode.removeChild(script);
-        clearTimeout(timer);
-      };
-      const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeoutMs);
-      window[cbName] = data => { cleanup(); resolve(data); };
-      script.onerror = () => { cleanup(); reject(new Error('jsonp error')); };
-      script.src = baseUrl + (baseUrl.includes('?') ? '&' : '?') + callbackParam + '=' + cbName;
-      document.head.appendChild(script);
-    });
-  }
-
   async function fetchSuggestions(query) {
     try {
-      const data = await jsonp(
+      const res = await fetch(
         `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=8`
       );
+      if (!res.ok) throw new Error('api error');
+      const data = await res.json();
       const tracks = (data.results || []).map(t => ({
         trackName:       t.trackName       || '',
         artistName:      t.artistName      || '',
