@@ -289,11 +289,21 @@
       const giftId   = gift.id;
       const photoRows = [];
 
+      // Converte data URL para Blob sem usar fetch() — evita bloqueio do CSP no connect-src
+      function dataUrlToBlob(dataUrl) {
+        const [header, b64] = dataUrl.split(',');
+        const mime  = header.match(/:(.*?);/)[1];
+        const bstr  = atob(b64);
+        const u8arr = new Uint8Array(bstr.length);
+        for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
+        return new Blob([u8arr], { type: mime });
+      }
+
       // 1. Upload das fotos da galeria
       for (let i = 0; i < (gift.photos || []).length; i++) {
         const src = gift.photos[i];
         if (!src || !src.startsWith('data:')) continue;
-        const blob = await (await fetch(src)).blob();
+        const blob = dataUrlToBlob(src);
         const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
         const path = `${userId}/${giftId}/photo-${i}.${ext}`;
         const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
@@ -303,7 +313,7 @@
 
       // 2. Upload da foto de capa (extra)
       if (gift.extraPhoto && gift.extraPhoto.startsWith('data:')) {
-        const blob = await (await fetch(gift.extraPhoto)).blob();
+        const blob = dataUrlToBlob(gift.extraPhoto);
         const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
         const path = `${userId}/${giftId}/cover.${ext}`;
         const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
