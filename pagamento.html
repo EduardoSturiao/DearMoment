@@ -290,8 +290,9 @@
       const { error: giftErr } = await db.from('gifts').upsert(giftRow);
       if (giftErr) throw giftErr;
 
-      // 4. INSERT na tabela gift_photos
+      // 4. INSERT na tabela gift_photos (limpa antes para garantir idempotência em retentativas)
       if (photoRows.length) {
+        await db.from('gift_photos').delete().eq('gift_id', giftId);
         const { error: photoErr } = await db.from('gift_photos').insert(photoRows);
         if (photoErr) throw photoErr;
       }

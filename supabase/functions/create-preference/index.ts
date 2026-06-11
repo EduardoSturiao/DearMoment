@@ -1,13 +1,21 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? 'https://soulmates-bice.vercel.app';
+// Suporta múltiplos domínios via ALLOWED_ORIGINS (separados por vírgula)
+// Fallback para ALLOWED_ORIGIN por retrocompatibilidade
+const ALLOWED_ORIGINS: string[] = (
+  Deno.env.get('ALLOWED_ORIGINS') ?? Deno.env.get('ALLOWED_ORIGIN') ?? 'https://soulmates-bice.vercel.app'
+).split(',').map(s => s.trim()).filter(Boolean);
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Vary': 'Origin',
-};
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin') ?? '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
 
 const PLAN_DATA: Record<string, { title: string; price: number }> = {
   vitalicio: { title: 'DearMoment – Plano Vitalício', price: 29.90 },
@@ -19,15 +27,17 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 function isAllowedUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.origin === ALLOWED_ORIGIN;
+    return ALLOWED_ORIGINS.includes(parsed.origin);
   } catch {
     return false;
   }
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: cors });
   }
 
   // ── 1. Verificar JWT do Supabase ─────────────────────────────
@@ -35,7 +45,7 @@ serve(async (req) => {
   if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Não autorizado' }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 
@@ -49,7 +59,7 @@ serve(async (req) => {
   if (authErr || !user) {
     return new Response(JSON.stringify({ error: 'Sessão inválida' }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 
@@ -61,22 +71,23 @@ serve(async (req) => {
     if (!['vitalicio', '24h'].includes(plan)) {
       return new Response(JSON.stringify({ error: 'Plano inválido' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
     if (!giftId || !UUID_RE.test(giftId)) {
       return new Response(JSON.stringify({ error: 'Gift ID inválido' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
     for (const url of [successUrl, failureUrl, pendingUrl]) {
       if (url && !isAllowedUrl(url)) {
+        console.error('URL de retorno inválida:', url, '| origens permitidas:', ALLOWED_ORIGINS);
         return new Response(JSON.stringify({ error: 'URL de retorno inválida' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...cors, 'Content-Type': 'application/json' },
         });
       }
     }
@@ -92,7 +103,7 @@ serve(async (req) => {
     if (giftErr || !gift) {
       return new Response(JSON.stringify({ error: 'Presente não encontrado' }), {
         status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
@@ -136,6 +147,7 @@ serve(async (req) => {
     const data = await res.json();
 
     if (!res.ok) {
+      console.error('MercadoPago preference error:', JSON.stringify(data));
       throw new Error('Erro ao criar preferência no MercadoPago');
     }
 
@@ -144,14 +156,14 @@ serve(async (req) => {
       sandbox_init_point: data.sandbox_init_point,
       preference_id:      data.id,
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
 
   } catch (err) {
     console.error('create-preference error:', err);
     return new Response(JSON.stringify({ error: 'Erro ao processar pagamento' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 });
