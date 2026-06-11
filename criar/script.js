@@ -569,11 +569,11 @@ function setupMusicSearch() {
     setTimeout(() => suggestionsList.classList.add('hidden'), 200);
   });
 
+  const MUSIC_SEARCH_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
+
   async function fetchSuggestions(query) {
     try {
-      const res = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=8`
-      );
+      const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error('api error');
       const data = await res.json();
       const tracks = (data.results || []).map(t => ({
@@ -584,7 +584,8 @@ function setupMusicSearch() {
         trackTimeMillis: t.trackTimeMillis
       }));
       renderSuggestions(tracks);
-    } catch (_) {
+    } catch (err) {
+      console.error('Busca de música falhou:', err);
       suggestionsList.classList.add('hidden');
     }
   }
