@@ -245,8 +245,42 @@
     async function finalizeGiftInSupabase(planChosen) {
       const lastGiftId = localStorage.getItem('DearMoment_last_gift_id');
       const gifts      = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
-      const gift       = gifts.find(g => g.id === lastGiftId) || gifts[gifts.length - 1];
-      if (!gift) throw new Error('Presente não encontrado no localStorage');
+      let gift         = gifts.find(g => g.id === lastGiftId) || gifts[gifts.length - 1];
+
+      // Fallback: reconstrói a partir do wizard state quando DearMoment_gifts falhou
+      // (ex: fotos grandes sem compressão esgotavam a quota do localStorage)
+      if (!gift) {
+        try {
+          const wiz = JSON.parse(localStorage.getItem('DearMoment_wizard_state') || 'null');
+          if (wiz && (wiz.name1 || wiz.name2 || wiz.title)) {
+            const id = lastGiftId || crypto.randomUUID();
+            localStorage.setItem('DearMoment_last_gift_id', id);
+            gift = {
+              id,
+              name1:            wiz.name1            || null,
+              name2:            wiz.name2            || null,
+              startDate:        wiz.startDate         || null,
+              city:             wiz.city              || null,
+              title:            wiz.title             || null,
+              selectedTemplate: wiz.selectedTemplate  || 'spotify',
+              youtubeId:        wiz.youtubeId         || null,
+              youtubeQuery:     wiz.youtubeQuery       || null,
+              previewUrl:       wiz.previewUrl         || null,
+              musicDuration:    wiz.musicDuration      || null,
+              songName:         wiz.songName           || null,
+              artistName:       wiz.artistName         || null,
+              photos:           Array.isArray(wiz.photos)       ? wiz.photos       : [],
+              photoCaptions:    Array.isArray(wiz.photoCaptions) ? wiz.photoCaptions : [],
+              message:          wiz.message            || null,
+              capsulas:         Array.isArray(wiz.capsulas)      ? wiz.capsulas      : [],
+              extraPhoto:       wiz.extraPhoto          || null,
+              giftType:         wiz.giftType            || 'amoroso',
+            };
+          }
+        } catch (_) {}
+      }
+
+      if (!gift) throw new Error('Presente não encontrado. Volte ao wizard e tente novamente.');
 
       const { data: userData } = await db.auth.getUser();
       const userId = userData && userData.user ? userData.user.id : null;
