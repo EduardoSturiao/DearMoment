@@ -254,3 +254,159 @@
   color: var(--primary_color);
   transform: translateX(4px);
 }
+
+/* ── Card footer com kebab ── */
+.mp-card-footer {
+  padding: 0 14px 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mp-card-kebab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 109, 186, 0.07);
+  border: 1px solid rgba(255, 109, 186, 0.18);
+  color: var(--primary_color);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.mp-card-kebab:hover {
+  background: rgba(255, 109, 186, 0.18);
+  border-color: rgba(255, 109, 186, 0.4);
+}
+
+/* ── Dropdown kebab (portal) ── */
+.mp-kebab-dd {
+  position: fixed;
+  z-index: 9000;
+  background: #1e2a3a;
+  border: 1px solid rgba(255, 109, 186, 0.22);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 190px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.mp-kebab-dd button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: #d0d8e8;
+  font-family: var(--secondary_font);
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mp-kebab-dd button i {
+  color: var(--primary_color);
+  font-size: 0.9rem;
+  width: 16px;
+  text-align: center;
+}
+
+.mp-kebab-dd button:hover {
+  background: rgba(255, 109, 186, 0.1);
+  color: #fff;
+}
+
+/* ── Modal QR decorado ── */
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.qr-modal-box {
+  background: #111827;
+  border: 1px solid rgba(255, 109, 186, 0.2);
+  border-radius: 16px;
+  padding: 24px 20px 20px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.qr-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #8892a4;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.qr-modal-close:hover {
+  color: #fff;
+}
+
+.qr-modal-canvas-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.qr-modal-canvas-wrap canvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 0 60px rgba(255, 109, 186, 0.18);
+}
+
+.qr-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.qr-modal-btn {
+  flex: 1;
+  padding: 11px 10px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--secondary_font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.qr-modal-download {
+  background: var(--primary_color);
+  color: #121820;
+}
+
+.qr-modal-copy {
+  background: rgba(255, 109, 186, 0.12);
+  border: 1px solid rgba(255, 109, 186, 0.28);
+  color: var(--primary_color);
+}
+
+.qr-modal-btn:hover {
+  opacity: 0.85;
+}
