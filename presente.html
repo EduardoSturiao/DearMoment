@@ -195,6 +195,8 @@
   // Usa o cliente compartilhado (inicializado em supabase-client.js)
   const _sbClient = window.sb;
   const BUCKET = 'gift-images';
+  const MUSIC_SEARCH_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
 
   /* ── Busca o gift por ID na tabela `gifts` + JOIN com `gift_photos` ── */
   async function loadGiftFromSupabase(id) {
@@ -263,6 +265,10 @@
     const fromDb = await loadGiftFromSupabase(giftId);
     if (fromDb) {
       if (isExpired(fromDb)) { showExpired(); return null; }
+      // Fallback: busca preview URL se não foi salva (faixa sem preview no iTunes)
+      if (!fromDb.previewUrl && (fromDb.songName || fromDb.artistName)) {
+        fromDb.previewUrl = await fetchPreviewUrl(fromDb.songName, fromDb.artistName);
+      }
       return fromDb;
     }
 
@@ -294,6 +300,21 @@
       gift.photos = ['./assets/images/demo-couple.jpg', './assets/images/demo-cover.jpg'];
     }
     return gift;
+  }
+
+  /* Busca preview URL no iTunes quando não foi salva (ex: faixa sem preview) */
+  async function fetchPreviewUrl(songName, artistName) {
+    const q = [songName, artistName].filter(Boolean).join(' ').trim();
+    if (!q) return '';
+    try {
+      const res = await fetch(
+        `${MUSIC_SEARCH_URL}?q=${encodeURIComponent(q)}`,
+        { headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+      );
+      const data = await res.json();
+      const first = (data.results || [])[0];
+      return (first && first.previewUrl) ? first.previewUrl : '';
+    } catch (_) { return ''; }
   }
 
   resolveGift().then(g => { if (g) renderGift(g); });
