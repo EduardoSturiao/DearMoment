@@ -174,6 +174,18 @@
         // Inicia polling — o webhook é a única fonte de verdade para paid=true.
         // O frontend NUNCA grava paid=true diretamente.
         pollPaidStatus(mpGiftId);
+      } else if (mpStatus === 'pending') {
+        document.getElementById('payPanel').style.display = 'none';
+        document.getElementById('payConfirming').style.display = 'flex';
+        document.getElementById('payConfirming').innerHTML = `
+          <div style="text-align:center;padding:16px;">
+            <p style="color:#f0f0f0;font-size:15px;font-weight:600;margin:0 0 10px;">Pagamento em processamento</p>
+            <p style="color:#8892a4;font-size:13px;line-height:1.6;margin:0 0 20px;">
+              Seu pagamento está sendo processado.<br>
+              Quando confirmado, seu presente será ativado automaticamente.<br>
+              Acesse <a href="./meus-presentes.html" style="color:#ff6dba;">Meus Presentes</a> para acompanhar.
+            </p>
+          </div>`;
       } else if (mpStatus === 'rejected' || mpStatus === 'cancelled') {
         const btn = document.getElementById('btnPay');
         btn.insertAdjacentHTML('afterend',

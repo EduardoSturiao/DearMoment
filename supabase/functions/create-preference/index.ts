@@ -126,6 +126,7 @@ serve(async (req) => {
     const preference = {
       items,
       external_reference: giftId,
+      auto_return: 'approved',
       back_urls: {
         success: successUrl,
         failure: failureUrl,
