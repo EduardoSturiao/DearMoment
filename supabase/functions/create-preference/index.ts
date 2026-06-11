@@ -127,6 +127,9 @@ serve(async (req) => {
       items,
       external_reference: giftId,
       auto_return: 'approved',
+      payment_methods: {
+        excluded_payment_types: [{ id: 'ticket' }], // remove boleto bancário
+      },
       back_urls: {
         success: successUrl,
         failure: failureUrl,
