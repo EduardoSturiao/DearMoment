@@ -597,13 +597,16 @@
 
     /* Modal QR — copiar link */
     document.getElementById('qr-modal-copy').addEventListener('click', () => {
-      const canvas = document.getElementById('qr-art-canvas');
-      const url    = canvas.dataset.giftUrl || '';
+      const canvas  = document.getElementById('qr-art-canvas');
+      const url     = canvas.dataset.giftUrl || '';
+      const icon    = document.getElementById('qr-copy-icon');
+      const txtSpan = document.getElementById('qr-copy-text');
       navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('qr-modal-copy');
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+        icon.className    = 'fa-solid fa-check';
+        txtSpan.textContent = ' Copiado!';
         setTimeout(() => {
-          btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copiar link';
+          icon.className    = 'fa-solid fa-copy';
+          txtSpan.textContent = ' Copiar link';
         }, 2000);
       });
     });
