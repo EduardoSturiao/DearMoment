@@ -228,10 +228,8 @@
         if (!res.ok) throw new Error(data.error || 'Erro ao iniciar pagamento');
 
         // 3. Edge Function OK — redireciona para o MP
-        // Wizard state não é mais necessário; DearMoment_gifts é preservado para
-        // permitir retentativas caso o usuário volte sem pagar.
-        localStorage.removeItem('DearMoment_wizard_state');
-
+        // Wizard state e gifts são preservados para retentativas caso o usuário
+        // volte sem pagar. Limpeza acontece apenas em showSuccess().
         window.location.href = data.init_point;
 
       } catch (err) {
@@ -402,6 +400,7 @@
         const gifts = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
         localStorage.setItem('DearMoment_gifts', JSON.stringify(gifts.filter(g => g.id !== paidId)));
       }
+      localStorage.removeItem('DearMoment_wizard_state');
       localStorage.removeItem('DearMoment_last_gift_id');
       localStorage.removeItem('DearMoment_last_gift_meta');
       localStorage.removeItem('DearMoment_pending_plan');
