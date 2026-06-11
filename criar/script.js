@@ -591,11 +591,14 @@ function setupMusicSearch() {
     suggestionsList.style.cssText = '';
   }
 
-  const MUSIC_SEARCH_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
+  const MUSIC_SEARCH_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
 
   async function fetchSuggestions(query) {
     try {
-      const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`, {
+        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+      });
       if (!res.ok) throw new Error('api error');
       const data = await res.json();
       const tracks = (data.results || []).map(t => ({
