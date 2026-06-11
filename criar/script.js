@@ -130,6 +130,30 @@ const MENSAGENS_ALEATORIAS = [
 /* ═══════════════════════════════════════════════════════════════
    3. UTILIDADES
 ═══════════════════════════════════════════════════════════════ */
+
+/* Redimensiona e comprime foto antes de gravar no localStorage.
+   Mantém máximo 1200px e converte para JPEG — reduz de ~5MB para ~200KB por foto. */
+function compressImage(file, maxDimension = 1200, quality = 0.82) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width: w, height: h } = img;
+      if (w > maxDimension || h > maxDimension) {
+        if (w > h) { h = Math.round(h * maxDimension / w); w = maxDimension; }
+        else       { w = Math.round(w * maxDimension / h); h = maxDimension; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fileToBase64(file).then(resolve); };
+    img.src = url;
+  });
+}
+
 function showToast(msg, duration = 2500) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
@@ -429,7 +453,7 @@ function setupPhotoUpload() {
     if (!toAdd.length) return;
 
     for (const file of toAdd) {
-      const b64 = await fileToBase64(file);
+      const b64 = await compressImage(file);
       state.photos.push(b64);
       state.photoCaptions.push('');
     }
@@ -495,7 +519,7 @@ function setupExtraPhotoUpload() {
   input.addEventListener('change', async () => {
     const file = input.files[0];
     if (!file || !file.type.startsWith('image/')) return;
-    state.extraPhoto = await fileToBase64(file);
+    state.extraPhoto = await compressImage(file);
     saveState();
     renderExtraPhoto();
     updatePreview();
@@ -591,14 +615,13 @@ function setupMusicSearch() {
     suggestionsList.style.cssText = '';
   }
 
-  const MUSIC_SEARCH_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
+  const MUSIC_SEARCH_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/music-search';
 
   async function fetchSuggestions(query) {
     try {
-      const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`, {
-        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-      });
+      // Sem Authorization header — função pública (--no-verify-jwt).
+      // Header customizado forçaria preflight CORS que browsers estritos bloqueiam.
+      const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error('api error');
       const data = await res.json();
       const tracks = (data.results || []).map(t => ({
