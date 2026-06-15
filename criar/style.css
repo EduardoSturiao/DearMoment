@@ -516,6 +516,35 @@ body {
   text-overflow: ellipsis;
 }
 
+.music-no-preview-msg {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-muted, #8892a4);
+  line-height: 1.4;
+  cursor: default;
+  text-align: center;
+  white-space: normal;
+}
+
+.photo-terms-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(255, 180, 0, 0.07);
+  border: 1px solid rgba(255, 180, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #a89060;
+  line-height: 1.5;
+}
+
+.photo-terms-warning span:first-child {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
 /* ── Etapa 9: Cápsulas ─────────────────────────────────────── */
 .capsulas-form {
   display: flex;

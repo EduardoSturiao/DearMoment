@@ -627,24 +627,42 @@ function setupMusicSearch() {
       const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error('api error');
       const data = await res.json();
-      const tracks = (data.results || []).map(t => ({
-        trackName:       t.trackName       || '',
-        artistName:      t.artistName      || '',
-        artworkUrl60:    t.artworkUrl60    || t.artworkUrl100 || '',
-        previewUrl:      t.previewUrl      || '',
-        trackTimeMillis: t.trackTimeMillis
-      }));
-      renderSuggestions(tracks);
+      const allResults = data.results || [];
+      // Filtra apenas músicas com prévia disponível — faixas sem previewUrl não podem
+      // ser tocadas no presente e causariam o player silenciosamente desabilitado.
+      const tracks = allResults
+        .filter(t => t.previewUrl)
+        .map(t => ({
+          trackName:       t.trackName       || '',
+          artistName:      t.artistName      || '',
+          artworkUrl60:    t.artworkUrl60    || t.artworkUrl100 || '',
+          previewUrl:      t.previewUrl,
+          trackTimeMillis: t.trackTimeMillis
+        }));
+      renderSuggestions(tracks, allResults.length);
     } catch (err) {
       console.error('Busca de música falhou:', err);
       suggestionsList.classList.add('hidden');
     }
   }
 
-  function renderSuggestions(tracks) {
+  function renderSuggestions(tracks, totalFound = 0) {
     suggestionsList.innerHTML = '';
     highlighted = -1;
-    if (!tracks.length) { suggestionsList.classList.add('hidden'); return; }
+
+    if (!tracks.length) {
+      if (totalFound > 0) {
+        // Resultados existem mas nenhum tem prévia disponível no iTunes
+        const li = document.createElement('li');
+        li.className = 'music-no-preview-msg';
+        li.textContent = 'Nenhuma prévia disponível para essa busca. Tente outro artista ou álbum.';
+        suggestionsList.appendChild(li);
+        showDropdown();
+      } else {
+        suggestionsList.classList.add('hidden');
+      }
+      return;
+    }
 
     tracks.forEach(track => {
       const li = document.createElement('li');

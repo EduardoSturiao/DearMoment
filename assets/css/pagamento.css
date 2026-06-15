@@ -430,3 +430,101 @@ body {
 .qr-placeholder div:nth-child(19) {
   background: rgba(255, 109, 186, 0.5);
 }
+
+/* ── Modal de Termos ─────────────────────────────────────── */
+.terms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.88);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.terms-modal-box {
+  background: #1a2332;
+  border: 1px solid rgba(255, 109, 186, 0.2);
+  border-radius: 16px;
+  padding: 32px 28px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.terms-modal-icon {
+  font-size: 36px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.terms-modal-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6dba;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.terms-modal-sub {
+  font-size: 14px;
+  color: #8892a4;
+  text-align: center;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.terms-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.terms-check-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #c8d0dc;
+  line-height: 1.5;
+}
+
+.terms-check-input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #ff6dba;
+  cursor: pointer;
+}
+
+.terms-accept-btn {
+  width: 100%;
+  padding: 14px;
+  background: #ff6dba;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.terms-accept-btn:disabled {
+  background: #2a3545;
+  color: #4a5568;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.terms-accept-btn:not(:disabled):hover {
+  opacity: 0.9;
+  transform: scale(0.99);
+}
