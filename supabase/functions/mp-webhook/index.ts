@@ -89,12 +89,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
+    const { data: giftData } = await db
+      .from('gifts')
+      .select('user_id')
+      .eq('id', giftId)
+      .single();
+
     const { error } = await db
       .from('gifts')
       .update({ paid: true })
       .eq('id', giftId);
 
     if (error) throw error;
+
+    await db.from('audit_log').insert({
+      action:   'gift_paid',
+      user_id:  giftData?.user_id ?? null,
+      gift_id:  giftId,
+      metadata: { payment_id: String(paymentId) },
+    });
 
     return new Response('ok', { status: 200 });
 

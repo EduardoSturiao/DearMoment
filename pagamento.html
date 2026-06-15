@@ -275,6 +275,25 @@
         });
 
         const data = await res.json();
+
+        if (res.status === 429) {
+          const seconds = data.retryAfter || 60;
+          btn.disabled = true;
+          let remaining = seconds;
+          btn.textContent = `Aguarde ${remaining}s para tentar novamente`;
+          const countdown = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+              clearInterval(countdown);
+              btn.textContent = 'Finalizar pagamento';
+              btn.disabled    = false;
+            } else {
+              btn.textContent = `Aguarde ${remaining}s para tentar novamente`;
+            }
+          }, 1000);
+          return;
+        }
+
         if (!res.ok) throw new Error(data.error || 'Erro ao iniciar pagamento');
 
         // 3. Edge Function OK — redireciona para o MP
@@ -350,24 +369,36 @@
       // 1. Upload das fotos da galeria
       for (let i = 0; i < (gift.photos || []).length; i++) {
         const src = gift.photos[i];
-        if (!src || !src.startsWith('data:')) continue;
-        const blob = dataUrlToBlob(src);
-        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-        const path = `${userId}/${giftId}/photo-${i}.${ext}`;
-        const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
-        // RLS no UPDATE = arquivo já existe de tentativa anterior — caminho ainda válido, continua
-        if (error && !error.message?.includes('row-level security')) throw error;
-        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+        if (!src) continue;
+        if (src.startsWith('data:')) {
+          // base64: usuário não estava logado no wizard — faz upload agora
+          const blob = dataUrlToBlob(src);
+          const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+          const path = `${userId}/${giftId}/photo-${i}.${ext}`;
+          const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+          // RLS no UPDATE = arquivo já existe de tentativa anterior — caminho ainda válido, continua
+          if (error && !error.message?.includes('row-level security')) throw error;
+          gift.photos[i] = path;
+          photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+        } else {
+          // storage_path: upload já feito no wizard — só registra na tabela
+          photoRows.push({ gift_id: giftId, storage_path: src, is_extra: false, position: i });
+        }
       }
 
       // 2. Upload da foto de capa (extra)
-      if (gift.extraPhoto && gift.extraPhoto.startsWith('data:')) {
-        const blob = dataUrlToBlob(gift.extraPhoto);
-        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-        const path = `${userId}/${giftId}/cover.${ext}`;
-        const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
-        if (error && !error.message?.includes('row-level security')) throw error;
-        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+      if (gift.extraPhoto) {
+        if (gift.extraPhoto.startsWith('data:')) {
+          const blob = dataUrlToBlob(gift.extraPhoto);
+          const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+          const path = `${userId}/${giftId}/cover.${ext}`;
+          const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+          if (error && !error.message?.includes('row-level security')) throw error;
+          gift.extraPhoto = path;
+          photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+        } else {
+          photoRows.push({ gift_id: giftId, storage_path: gift.extraPhoto, is_extra: true, position: 0 });
+        }
       }
 
       // 3. UPSERT na tabela gifts (paid: false — o webhook confirma depois)
@@ -403,6 +434,22 @@
         const { error: photoErr } = await db.from('gift_photos').insert(photoRows);
         if (photoErr) throw photoErr;
       }
+
+      // Substitui base64 por storage_path no localStorage — fotos já estão no Supabase Storage
+      try {
+        const wizState = JSON.parse(localStorage.getItem('DearMoment_wizard_state') || '{}');
+        if (Array.isArray(wizState.photos)) wizState.photos = gift.photos.slice();
+        if (gift.extraPhoto) wizState.extraPhoto = gift.extraPhoto;
+        localStorage.setItem('DearMoment_wizard_state', JSON.stringify(wizState));
+
+        const storedGifts = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
+        const gIdx = storedGifts.findIndex(g => g.id === giftId);
+        if (gIdx !== -1) {
+          storedGifts[gIdx].photos     = gift.photos.slice();
+          storedGifts[gIdx].extraPhoto = gift.extraPhoto;
+          localStorage.setItem('DearMoment_gifts', JSON.stringify(storedGifts));
+        }
+      } catch (_) {}
 
       return giftId;
     }

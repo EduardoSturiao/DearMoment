@@ -9,10 +9,12 @@
 /* ═══════════════════════════════════════════════════════════════
    1. ESTADO GLOBAL
 ═══════════════════════════════════════════════════════════════ */
-const STORAGE_KEY = 'DearMoment_wizard_state';
-const TOTAL_STEPS = 9;
+const STORAGE_KEY  = 'DearMoment_wizard_state';
+const TOTAL_STEPS  = 9;
 const FLOW_VERSION = 2;
 const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
+const BUCKET       = 'gift-images';
+const SUPABASE_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
 
 const TEMPLATE_META = {
   stories: { label: 'Stories do Instagram', finalUrl: '../presente/index.html' },
@@ -41,6 +43,7 @@ const state = {
   capsulas:        ['', '', '', ''],
   extraPhoto:      null,
   selectedPlan:    '',
+  giftId:          '',
 };
 
 function loadState() {
@@ -49,6 +52,10 @@ function loadState() {
     if (saved) Object.assign(state, JSON.parse(saved));
     migrateLegacyWizardState();
   } catch (_) {}
+  if (!state.giftId) {
+    state.giftId = generateId();
+    saveState();
+  }
 }
 
 function migrateLegacyWizardState() {
@@ -178,6 +185,20 @@ function escapeHtml(str) {
 
 function normalizeStr(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, b64] = dataUrl.split(',');
+  const mime  = header.match(/:(.*?);/)[1];
+  const bstr  = atob(b64);
+  const u8arr = new Uint8Array(bstr.length);
+  for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
+  return new Blob([u8arr], { type: mime });
+}
+
+function photoSrc(src) {
+  if (!src || src.startsWith('data:')) return src;
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${src}`;
 }
 
 function fileToBase64(file) {
@@ -455,9 +476,27 @@ function setupPhotoUpload() {
     const toAdd = files.filter(f => f.type.startsWith('image/')).slice(0, slots);
     if (!toAdd.length) return;
 
+    let userId = null;
+    if (window.sb) {
+      const { data } = await window.sb.auth.getSession();
+      userId = data && data.session ? data.session.user.id : null;
+    }
+
     for (const file of toAdd) {
       const b64 = await compressImage(file);
-      state.photos.push(b64);
+
+      if (userId) {
+        const idx  = state.photos.length;
+        const path = `${userId}/${state.giftId}/photo-${idx}.jpg`;
+        const { error } = await window.sb.storage
+          .from(BUCKET)
+          .upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg', upsert: true });
+        if (error) { showToast('Erro ao salvar foto. Tente novamente.'); continue; }
+        state.photos.push(path);
+      } else {
+        state.photos.push(b64);
+      }
+
       state.photoCaptions.push('');
     }
 
@@ -479,7 +518,7 @@ function setupPhotoUpload() {
       const captionVal = (state.photoCaptions[i] || '').replace(/"/g, '&quot;');
       wrap.innerHTML = `
         <div class="photo-thumb">
-          <img src="${src}" alt="Foto ${i + 1}" loading="lazy" />
+          <img src="${photoSrc(src)}" alt="Foto ${i + 1}" loading="lazy" />
           <button class="btn-remove" data-index="${i}" title="Remover foto">✕</button>
         </div>
         <input class="photo-caption-input" type="text" maxlength="40" placeholder="Legenda (opcional)" value="${captionVal}" data-index="${i}" />
@@ -496,6 +535,10 @@ function setupPhotoUpload() {
   }
 
   function removePhoto(index) {
+    const src = state.photos[index];
+    if (src && !src.startsWith('data:') && window.sb) {
+      window.sb.storage.from(BUCKET).remove([src]);
+    }
     state.photos.splice(index, 1);
     if (Array.isArray(state.photoCaptions)) state.photoCaptions.splice(index, 1);
     saveState();
@@ -522,7 +565,25 @@ function setupExtraPhotoUpload() {
   input.addEventListener('change', async () => {
     const file = input.files[0];
     if (!file || !file.type.startsWith('image/')) return;
-    state.extraPhoto = await compressImage(file);
+    const b64 = await compressImage(file);
+
+    let userId = null;
+    if (window.sb) {
+      const { data } = await window.sb.auth.getSession();
+      userId = data && data.session ? data.session.user.id : null;
+    }
+
+    if (userId) {
+      const path = `${userId}/${state.giftId}/cover.jpg`;
+      const { error } = await window.sb.storage
+        .from(BUCKET)
+        .upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg', upsert: true });
+      if (error) { showToast('Erro ao salvar foto de destaque. Tente novamente.'); input.value = ''; return; }
+      state.extraPhoto = path;
+    } else {
+      state.extraPhoto = b64;
+    }
+
     saveState();
     renderExtraPhoto();
     updatePreview();
@@ -531,6 +592,9 @@ function setupExtraPhotoUpload() {
 
   btnRemove.addEventListener('click', e => {
     e.stopPropagation();
+    if (state.extraPhoto && !state.extraPhoto.startsWith('data:') && window.sb) {
+      window.sb.storage.from(BUCKET).remove([state.extraPhoto]);
+    }
     state.extraPhoto = null;
     saveState();
     renderExtraPhoto();
@@ -539,7 +603,7 @@ function setupExtraPhotoUpload() {
 
   function renderExtraPhoto() {
     if (state.extraPhoto) {
-      img.src = state.extraPhoto;
+      img.src = photoSrc(state.extraPhoto);
       preview.classList.remove('hidden');
       placeholder.classList.add('hidden');
     } else {
@@ -910,7 +974,7 @@ function generateId() {
 }
 
 function saveGift() {
-  const id = generateId();
+  const id = state.giftId;
 
   localStorage.setItem('DearMoment_last_gift_id', id);
   localStorage.setItem('DearMoment_last_gift_meta', JSON.stringify({

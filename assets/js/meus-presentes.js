@@ -487,6 +487,13 @@
         if (error) throw error;
       }
 
+      await db.from('audit_log').insert({
+        action:   isReceived ? 'saved_gift_removed' : 'gift_deleted',
+        user_id:  currentUserId,
+        gift_id:  giftId,
+        metadata: isReceived ? null : { storage_paths_removed: allPaths.length },
+      });
+
       cardEl.style.opacity = '0';
       setTimeout(() => {
         cardEl.remove();
