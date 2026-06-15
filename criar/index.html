@@ -338,6 +338,66 @@
             </div>
           </div>
 
+          <!-- Auth inline — aparece quando usuário clica em um plano sem estar logado -->
+          <div id="wizard-auth-card" class="wizard-auth-card hidden">
+            <button class="wizard-auth-back" id="wizardAuthBack">← Voltar aos planos</button>
+            <p class="wizard-auth-title">Para finalizar, entre ou crie sua conta</p>
+
+            <div class="wizard-auth-tabs">
+              <button class="wizard-auth-tab active" data-tab="login">Entrar</button>
+              <button class="wizard-auth-tab" data-tab="signup">Criar conta</button>
+            </div>
+
+            <!-- Painel login -->
+            <div class="wizard-auth-panel" id="wizardAuthLogin">
+              <div class="wizard-auth-field">
+                <label>E-mail</label>
+                <input type="email" id="wizardLoginEmail" placeholder="seu@email.com" autocomplete="email" />
+              </div>
+              <div class="wizard-auth-field">
+                <label>Senha</label>
+                <input type="password" id="wizardLoginPassword" placeholder="Sua senha" autocomplete="current-password" />
+              </div>
+              <p class="wizard-auth-error hidden" id="wizardLoginError"></p>
+              <button class="wizard-auth-btn" id="wizardLoginBtn">Entrar</button>
+            </div>
+
+            <!-- Painel cadastro -->
+            <div class="wizard-auth-panel hidden" id="wizardAuthSignup">
+              <div id="wizardSignupForm">
+                <div class="wizard-auth-field">
+                  <label>E-mail</label>
+                  <input type="email" id="wizardSignupEmail" placeholder="seu@email.com" autocomplete="email" />
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Senha</label>
+                  <input type="password" id="wizardSignupPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Confirmar senha</label>
+                  <input type="password" id="wizardSignupConfirm" placeholder="Repita a senha" autocomplete="new-password" />
+                </div>
+                <p class="wizard-auth-error hidden" id="wizardSignupError"></p>
+                <button class="wizard-auth-btn" id="wizardSignupBtn">Criar conta</button>
+              </div>
+
+              <!-- Verificação OTP -->
+              <div id="wizardSignupOtp" class="hidden">
+                <div class="wizard-auth-otp-info">
+                  <span>📬</span>
+                  <p>Enviamos um código de 6 dígitos para <strong id="wizardOtpEmail"></strong>. Verifique sua caixa de entrada.</p>
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Código de confirmação</label>
+                  <input type="text" id="wizardOtpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+                </div>
+                <p class="wizard-auth-error hidden" id="wizardOtpError"></p>
+                <button class="wizard-auth-btn" id="wizardOtpBtn">Confirmar</button>
+                <button class="wizard-auth-resend" id="wizardOtpResend">Reenviar código</button>
+              </div>
+            </div>
+          </div>
+
           <!-- FAQ -->
           <div class="faq-section">
             <h3>Dúvidas frequentes</h3>

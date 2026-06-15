@@ -353,18 +353,157 @@ async function openFinalGift(planId) {
   saveState();
   localStorage.setItem('DearMoment_pending_plan', planId);
 
-  // Checa sessão real do Supabase: logado vai pro pagamento, senão pro login
   let loggedIn = false;
   if (window.sb) {
     const { data } = await window.sb.auth.getSession();
     loggedIn = !!(data && data.session);
   }
 
-  document.body.style.opacity = '0';
-  document.body.style.transition = 'opacity 0.4s ease';
-  setTimeout(() => {
-    window.location.href = loggedIn ? '../pagamento.html' : '../login.html';
-  }, 400);
+  if (loggedIn) {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => { window.location.href = '../pagamento.html'; }, 400);
+    return;
+  }
+
+  // Não logado → mostrar card de auth inline (FIX-2)
+  document.querySelector('.plans-grid').classList.add('hidden');
+  document.querySelector('.faq-section').classList.add('hidden');
+  document.getElementById('btnPreviewGift').classList.add('hidden');
+  document.getElementById('wizard-auth-card').classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH INLINE — FIX-2 (wizard sem redirect para login/cadastro)
+═══════════════════════════════════════════════════════════════ */
+function setupWizardAuth() {
+  const card        = document.getElementById('wizard-auth-card');
+  const tabs        = card.querySelectorAll('.wizard-auth-tab');
+  const panelLogin  = document.getElementById('wizardAuthLogin');
+  const panelSignup = document.getElementById('wizardAuthSignup');
+
+  function showPlans() {
+    card.classList.add('hidden');
+    document.querySelector('.plans-grid').classList.remove('hidden');
+    document.querySelector('.faq-section').classList.remove('hidden');
+    document.getElementById('btnPreviewGift').classList.remove('hidden');
+  }
+
+  function redirectToPagamento() {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => { window.location.href = '../pagamento.html'; }, 400);
+  }
+
+  document.getElementById('wizardAuthBack').addEventListener('click', showPlans);
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isLogin = tab.dataset.tab === 'login';
+      panelLogin.classList.toggle('hidden', !isLogin);
+      panelSignup.classList.toggle('hidden', isLogin);
+    });
+  });
+
+  /* ── Login ── */
+  document.getElementById('wizardLoginBtn').addEventListener('click', async () => {
+    const btn     = document.getElementById('wizardLoginBtn');
+    const errorEl = document.getElementById('wizardLoginError');
+    const email   = document.getElementById('wizardLoginEmail').value.trim();
+    const pass    = document.getElementById('wizardLoginPassword').value;
+
+    errorEl.classList.add('hidden');
+    if (!email || !pass) { errorEl.textContent = 'Preencha e-mail e senha.'; errorEl.classList.remove('hidden'); return; }
+
+    btn.disabled = true; btn.textContent = 'Entrando...';
+
+    const { error } = await window.sb.auth.signInWithPassword({ email, password: pass });
+
+    if (error) {
+      errorEl.textContent = /Email not confirmed/i.test(error.message)
+        ? 'Confirme seu e-mail antes de entrar.'
+        : 'E-mail ou senha inválidos.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Entrar';
+      return;
+    }
+
+    btn.textContent = 'Redirecionando...';
+    redirectToPagamento();
+  });
+
+  /* ── Cadastro ── */
+  let signupEmail = '';
+
+  document.getElementById('wizardSignupBtn').addEventListener('click', async () => {
+    const btn     = document.getElementById('wizardSignupBtn');
+    const errorEl = document.getElementById('wizardSignupError');
+    const email   = document.getElementById('wizardSignupEmail').value.trim();
+    const pass    = document.getElementById('wizardSignupPassword').value;
+    const confirm = document.getElementById('wizardSignupConfirm').value;
+
+    errorEl.classList.add('hidden');
+    if (!email)          { errorEl.textContent = 'Digite seu e-mail.'; errorEl.classList.remove('hidden'); return; }
+    if (pass.length < 6) { errorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errorEl.classList.remove('hidden'); return; }
+    if (pass !== confirm) { errorEl.textContent = 'As senhas não coincidem.'; errorEl.classList.remove('hidden'); return; }
+
+    btn.disabled = true; btn.textContent = 'Criando conta...';
+
+    const { error } = await window.sb.auth.signUp({ email, password: pass });
+
+    if (error) {
+      errorEl.textContent = /already registered/i.test(error.message)
+        ? 'Este e-mail já está cadastrado. Use a aba "Entrar".'
+        : 'Erro ao criar conta. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Criar conta';
+      return;
+    }
+
+    signupEmail = email;
+    document.getElementById('wizardOtpEmail').textContent = email;
+    document.getElementById('wizardSignupForm').classList.add('hidden');
+    document.getElementById('wizardSignupOtp').classList.remove('hidden');
+  });
+
+  /* ── Verificação OTP ── */
+  document.getElementById('wizardOtpBtn').addEventListener('click', async () => {
+    const btn     = document.getElementById('wizardOtpBtn');
+    const errorEl = document.getElementById('wizardOtpError');
+    const token   = document.getElementById('wizardOtpCode').value.trim();
+
+    errorEl.classList.add('hidden');
+    if (!token || token.length < 6) {
+      errorEl.textContent = 'Digite o código de 6 dígitos.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Verificando...';
+
+    const { error } = await window.sb.auth.verifyOtp({ email: signupEmail, token, type: 'signup' });
+
+    if (error) {
+      errorEl.textContent = 'Código inválido ou expirado. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Confirmar';
+      return;
+    }
+
+    btn.textContent = 'Redirecionando...';
+    redirectToPagamento();
+  });
+
+  /* ── Reenviar código ── */
+  document.getElementById('wizardOtpResend').addEventListener('click', async () => {
+    const btn = document.getElementById('wizardOtpResend');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    await window.sb.auth.resend({ email: signupEmail, type: 'signup' });
+    btn.textContent = 'Código reenviado!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Reenviar código'; }, 3000);
+  });
 }
 
 /* Stub — mantido para não quebrar chamadas em bindInputs/setupAutocomplete/etc. */
@@ -1052,6 +1191,7 @@ function init() {
   setupNavigation();
   setupPlanSelection();
   setupPlanButtons();
+  setupWizardAuth();
 
   showStep(state.currentStep);
 
