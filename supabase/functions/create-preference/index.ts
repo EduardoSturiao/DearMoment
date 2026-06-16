@@ -151,10 +151,10 @@ serve(async (req) => {
       currency_id: 'BRL',
     }];
 
-    const preference = {
+    const successIsHttps = successUrl?.startsWith('https://');
+    const preference: Record<string, unknown> = {
       items,
       external_reference: giftId,
-      auto_return: 'approved',
       payment_methods: {
         excluded_payment_types: [{ id: 'ticket' }], // remove boleto bancário
       },
@@ -165,6 +165,7 @@ serve(async (req) => {
       },
       notification_url: `https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/mp-webhook`,
     };
+    if (successIsHttps) preference.auto_return = 'approved';
 
     const accessToken = Deno.env.get('MP_ACCESS_TOKEN');
     const res = await fetch('https://api.mercadopago.com/checkout/preferences', {

@@ -407,6 +407,14 @@ function setupWizardAuth() {
     });
   });
 
+  /* ── Toggle visibilidade de senha ── */
+  document.querySelectorAll('.wizard-auth-eye').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+  });
+
   /* ── Login ── */
   document.getElementById('wizardLoginBtn').addEventListener('click', async () => {
     const btn     = document.getElementById('wizardLoginBtn');

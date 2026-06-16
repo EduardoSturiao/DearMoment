@@ -2920,6 +2920,30 @@ body {
 }
 .wizard-auth-field input:focus { border-color: var(--pink); }
 
+.wizard-auth-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.wizard-auth-password-wrap input {
+  width: 100%;
+  padding-right: 40px;
+}
+.wizard-auth-eye {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+.wizard-auth-eye:hover { color: var(--pink); }
+.wizard-auth-eye svg { width: 18px; height: 18px; }
+
 .wizard-auth-error {
   font-size: 12px;
   color: #f87171;

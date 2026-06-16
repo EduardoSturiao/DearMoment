@@ -356,7 +356,12 @@
               </div>
               <div class="wizard-auth-field">
                 <label>Senha</label>
-                <input type="password" id="wizardLoginPassword" placeholder="Sua senha" autocomplete="current-password" />
+                <div class="wizard-auth-password-wrap">
+                  <input type="password" id="wizardLoginPassword" placeholder="Sua senha" autocomplete="current-password" />
+                  <button type="button" class="wizard-auth-eye" data-target="wizardLoginPassword" aria-label="Mostrar senha">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
               </div>
               <p class="wizard-auth-error hidden" id="wizardLoginError"></p>
               <button class="wizard-auth-btn" id="wizardLoginBtn">Entrar</button>
@@ -371,11 +376,21 @@
                 </div>
                 <div class="wizard-auth-field">
                   <label>Senha</label>
-                  <input type="password" id="wizardSignupPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                  <div class="wizard-auth-password-wrap">
+                    <input type="password" id="wizardSignupPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                    <button type="button" class="wizard-auth-eye" data-target="wizardSignupPassword" aria-label="Mostrar senha">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
                 </div>
                 <div class="wizard-auth-field">
                   <label>Confirmar senha</label>
-                  <input type="password" id="wizardSignupConfirm" placeholder="Repita a senha" autocomplete="new-password" />
+                  <div class="wizard-auth-password-wrap">
+                    <input type="password" id="wizardSignupConfirm" placeholder="Repita a senha" autocomplete="new-password" />
+                    <button type="button" class="wizard-auth-eye" data-target="wizardSignupConfirm" aria-label="Mostrar senha">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
                 </div>
                 <p class="wizard-auth-error hidden" id="wizardSignupError"></p>
                 <button class="wizard-auth-btn" id="wizardSignupBtn">Criar conta</button>
