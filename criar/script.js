@@ -21,7 +21,7 @@ const TOTAL_STEPS  = 9;
 const FLOW_VERSION = 2;
 const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
 const BUCKET       = 'gift-images';
-const SUPABASE_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
+const SUPABASE_URL = window.SUPABASE_URL || 'https://imiwhgrjwgydedbfdlkn.supabase.co';
 
 const TEMPLATE_META = {
   stories: { label: 'Stories do Instagram', finalUrl: '../presente/index.html' },
