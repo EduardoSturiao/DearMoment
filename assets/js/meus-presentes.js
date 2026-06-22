@@ -309,6 +309,17 @@
     kebabActiveId = giftId;
     dd.style.display = 'block';
 
+    /* Atualiza estado do botão Editar conforme o tipo/plano do presente */
+    const gift    = giftsData.find(g => g.id === giftId);
+    const editBtn = document.getElementById('mp-dd-edit');
+    if (editBtn && gift) {
+      const is24hExpired = gift.plan === '24h' && gift.createdAt &&
+        (new Date(gift.createdAt).getTime() + 86400000 < Date.now());
+      editBtn.style.display = gift.isReceived ? 'none' : '';
+      editBtn.disabled      = is24hExpired;
+      editBtn.title         = is24hExpired ? 'Presente expirado — não é possível editar' : '';
+    }
+
     const ddW = dd.offsetWidth  || 200;
     const ddH = dd.offsetHeight || 96;
 
@@ -510,6 +521,80 @@
   }
 
   /* ──────────────────────────────────────────────────────────
+     Edição de presente
+  ────────────────────────────────────────────────────────── */
+
+  async function editGift(giftId) {
+    const gift = giftsData.find(g => g.id === giftId);
+    if (!gift || gift.isReceived) return;
+
+    try {
+      const { data, error } = await db
+        .from('gifts')
+        .select('*, gift_photos(storage_path, is_extra, position)')
+        .eq('id', giftId)
+        .single();
+
+      if (error || !data) {
+        alert('Erro ao carregar o presente. Tente novamente.');
+        return;
+      }
+
+      const photos        = Array.isArray(data.gift_photos) ? data.gift_photos : [];
+      const galleryPhotos = photos
+        .filter(p => !p.is_extra)
+        .sort((a, b) => a.position - b.position);
+      const coverPhoto    = photos.find(p => p.is_extra);
+
+      /* Armazenar os storage_paths diretamente — o wizard (M1) usa photoSrc()
+         para construir a URL, esperando paths e não URLs completas. */
+      const photoPaths     = galleryPhotos.map(p => p.storage_path);
+      const extraPhotoPath = coverPhoto ? coverPhoto.storage_path : null;
+
+      const photoCaptions = Array.isArray(data.photo_captions)
+        ? data.photo_captions
+        : photoPaths.map(() => '');
+
+      const wizardState = {
+        flowVersion:      2,
+        currentStep:      3, /* Pula o step 2 (nomes) — não editáveis */
+        giftId:           giftId,
+        giftType:         data.gift_type      || 'amoroso',
+        selectedTemplate: data.template       || 'spotify',
+        name1:            data.name1          || '',
+        name2:            data.name2          || '',
+        startDate:        data.start_date     || '',
+        city:             data.city           || '',
+        title:            data.title          || '',
+        youtubeId:        data.youtube_id     || '',
+        youtubeQuery:     (data.song_name && data.artist_name)
+                            ? `${data.song_name} ${data.artist_name}`
+                            : '',
+        previewUrl:       data.preview_url    || '',
+        musicDuration:    data.music_duration || 0,
+        songName:         data.song_name      || '',
+        artistName:       data.artist_name    || '',
+        photos:           photoPaths,
+        photoCaptions,
+        message:          data.message        || '',
+        capsulas:         Array.isArray(data.capsulas) ? data.capsulas : ['', '', '', ''],
+        extraPhoto:       extraPhotoPath,
+        selectedPlan:     data.plan           || '',
+        editMode:         true,
+        editCreatedAt:    data.created_at,
+      };
+
+      localStorage.setItem('DearMoment_wizard_state', JSON.stringify(wizardState));
+      localStorage.setItem('DearMoment_last_gift_id', giftId);
+
+      window.location.href = `./criar/?edit=${encodeURIComponent(giftId)}`;
+    } catch (err) {
+      console.error('Erro ao carregar presente para edição:', err);
+      alert('Erro ao carregar o presente. Tente novamente.');
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────
      Init
   ────────────────────────────────────────────────────────── */
 
@@ -559,6 +644,10 @@
 
       const giftId = kebabActiveId;
       closeKebabDropdown();
+
+      if (btn.dataset.action === 'edit') {
+        editGift(giftId);
+      }
 
       if (btn.dataset.action === 'qr') {
         showQrModal(giftId);

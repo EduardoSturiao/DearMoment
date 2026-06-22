@@ -7,6 +7,13 @@
 'use strict';
 
 /* ═══════════════════════════════════════════════════════════════
+   0. MODO EDIÇÃO
+═══════════════════════════════════════════════════════════════ */
+const _urlParams   = new URLSearchParams(window.location.search);
+const EDIT_GIFT_ID = _urlParams.get('edit') || null;
+const isEditMode   = !!EDIT_GIFT_ID;
+
+/* ═══════════════════════════════════════════════════════════════
    1. ESTADO GLOBAL
 ═══════════════════════════════════════════════════════════════ */
 const STORAGE_KEY  = 'DearMoment_wizard_state';
@@ -294,6 +301,18 @@ function showStep(n) {
     navFooter.style.display = '';
     navFooter.classList.remove('hidden-final');
     document.getElementById('btnNext').style.display = isFinal ? 'none' : '';
+  }
+
+  /* No step-final em modo edição: mostra painel de salvar, oculta planos/FAQ */
+  if (isFinal && isEditMode) {
+    const plansGrid  = document.querySelector('.plans-grid');
+    const faqSection = document.querySelector('.faq-section');
+    const editPanel  = document.getElementById('editSavePanel');
+    const subtitle   = document.getElementById('finalSubtitle');
+    if (plansGrid)  plansGrid.style.display  = 'none';
+    if (faqSection) faqSection.style.display = 'none';
+    if (editPanel)  editPanel.style.display  = 'flex';
+    if (subtitle)   subtitle.textContent     = 'Revise cada etapa e salve as alterações quando estiver pronto.';
   }
 }
 
@@ -633,12 +652,16 @@ function setupPhotoUpload() {
       const b64 = await compressImage(file);
 
       if (userId) {
-        const idx  = state.photos.length;
-        const path = `${userId}/${state.giftId}/photo-${idx}.jpg`;
-        const { error } = await window.sb.storage
-          .from(BUCKET)
-          .upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg', upsert: true });
-        if (error) { showToast('Erro ao salvar foto. Tente novamente.'); continue; }
+        const idx    = state.photos.length;
+        /* Em edit mode usa timestamp para garantir INSERT limpo (sem upsert/UPDATE),
+           evitando conflito com arquivos já existentes no Storage do presente original. */
+        const suffix = isEditMode ? `-${Date.now()}` : '';
+        const path   = `${userId}/${state.giftId}/photo-${idx}${suffix}.jpg`;
+        const opts   = isEditMode
+          ? { contentType: 'image/jpeg' }
+          : { contentType: 'image/jpeg', upsert: true };
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), opts);
+        if (error) { console.error('Storage upload error:', error); showToast('Erro ao salvar foto. Tente novamente.'); continue; }
         state.photos.push(path);
       } else {
         state.photos.push(b64);
@@ -721,11 +744,13 @@ function setupExtraPhotoUpload() {
     }
 
     if (userId) {
-      const path = `${userId}/${state.giftId}/cover.jpg`;
-      const { error } = await window.sb.storage
-        .from(BUCKET)
-        .upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg', upsert: true });
-      if (error) { showToast('Erro ao salvar foto de destaque. Tente novamente.'); input.value = ''; return; }
+      const suffix = isEditMode ? `-${Date.now()}` : '';
+      const path   = `${userId}/${state.giftId}/cover${suffix}.jpg`;
+      const opts   = isEditMode
+        ? { contentType: 'image/jpeg' }
+        : { contentType: 'image/jpeg', upsert: true };
+      const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), opts);
+      if (error) { console.error('Storage upload error:', error); showToast('Erro ao salvar foto de destaque. Tente novamente.'); input.value = ''; return; }
       state.extraPhoto = path;
     } else {
       state.extraPhoto = b64;
@@ -972,14 +997,18 @@ function setupPlanSelection() {
 
   const btnPreview = document.getElementById('btnPreviewGift');
   if (btnPreview) {
-    btnPreview.addEventListener('click', () => {
-      const giftId       = localStorage.getItem('DearMoment_last_gift_id');
-      const templateMeta = getTemplateMeta(getFinalTemplate());
-      const url = giftId
-        ? `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`
-        : templateMeta.finalUrl;
-      window.location.href = url;
-    });
+    if (isEditMode) {
+      btnPreview.style.display = 'none';
+    } else {
+      btnPreview.addEventListener('click', () => {
+        const giftId       = localStorage.getItem('DearMoment_last_gift_id');
+        const templateMeta = getTemplateMeta(getFinalTemplate());
+        const url = giftId
+          ? `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`
+          : templateMeta.finalUrl;
+        window.location.href = url;
+      });
+    }
   }
 
 }
@@ -1121,6 +1150,7 @@ function generateId() {
 }
 
 function saveGift() {
+  if (isEditMode) return; // em edição o save acontece em finalizeEditInSupabase()
   const id = state.giftId;
 
   localStorage.setItem('DearMoment_last_gift_id', id);
@@ -1185,7 +1215,131 @@ function setupNavigation() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   17. INICIALIZAÇÃO
+   17. MODO EDIÇÃO — salvar alterações
+═══════════════════════════════════════════════════════════════ */
+
+async function finalizeEditInSupabase() {
+  const giftId = state.giftId;
+  if (!giftId) return;
+
+  const btn     = document.getElementById('btnSaveEdit');
+  const btnText = document.getElementById('btnSaveEditText');
+  if (btn) { btn.disabled = true; btnText.textContent = 'Salvando...'; }
+
+  try {
+    const { data: userData } = await window.sb.auth.getUser();
+    const userId = userData && userData.user ? userData.user.id : null;
+    if (!userId) throw new Error('Sessão expirada. Faça login novamente.');
+
+    const photoRows = [];
+
+    /* Fotos da galeria.
+       No M1, state.photos contém storage_paths (ex: uid/gid/photo-0.jpg).
+       base64 só ocorre como fallback sem login — impossível no modo edição,
+       mas tratamos como segurança. */
+    for (let i = 0; i < state.photos.length; i++) {
+      const src = state.photos[i];
+      if (!src) continue;
+      if (src.startsWith('data:')) {
+        const blob = dataUrlToBlob(src);
+        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const path = `${userId}/${giftId}/photo-${i}.${ext}`;
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+        if (error && !error.message?.includes('row-level security')) throw error;
+        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+      } else {
+        /* Já é um storage_path — usar diretamente, sem re-upload */
+        photoRows.push({ gift_id: giftId, storage_path: src, is_extra: false, position: i });
+      }
+    }
+
+    /* Foto de capa */
+    if (state.extraPhoto) {
+      if (state.extraPhoto.startsWith('data:')) {
+        const blob = dataUrlToBlob(state.extraPhoto);
+        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const path = `${userId}/${giftId}/cover.${ext}`;
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+        if (error && !error.message?.includes('row-level security')) throw error;
+        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+      } else {
+        photoRows.push({ gift_id: giftId, storage_path: state.extraPhoto, is_extra: true, position: 0 });
+      }
+    }
+
+    /* UPDATE no gift — não toca em paid nem created_at */
+    const giftRow = {
+      name1:          state.name1        || null,
+      name2:          state.name2        || null,
+      start_date:     state.startDate    || null,
+      city:           state.city         || null,
+      title:          state.title        || null,
+      template:       getFinalTemplate(),
+      youtube_id:     state.youtubeId    || null,
+      song_name:      state.songName     || null,
+      artist_name:    state.artistName   || null,
+      preview_url:    state.previewUrl   || null,
+      music_duration: state.musicDuration || null,
+      photo_captions: Array.isArray(state.photoCaptions) ? state.photoCaptions : [],
+      message:        state.message      || null,
+      capsulas:       Array.isArray(state.capsulas) ? state.capsulas : [],
+      gift_type:      state.giftType     || 'amoroso',
+    };
+    const { error: giftErr } = await window.sb.from('gifts')
+      .update(giftRow)
+      .eq('id', giftId)
+      .eq('user_id', userId);
+    if (giftErr) throw giftErr;
+
+    /* Substitui gift_photos */
+    await window.sb.from('gift_photos').delete().eq('gift_id', giftId);
+    if (photoRows.length) {
+      const { error: photoErr } = await window.sb.from('gift_photos').insert(photoRows);
+      if (photoErr) throw photoErr;
+    }
+
+    /* Limpa localStorage e redireciona para o presente */
+    localStorage.removeItem('DearMoment_wizard_state');
+    localStorage.removeItem('DearMoment_last_gift_id');
+    localStorage.removeItem('DearMoment_last_gift_meta');
+    localStorage.removeItem('DearMoment_pending_plan');
+
+    window.location.href = `../presente.html?id=${encodeURIComponent(giftId)}`;
+
+  } catch (err) {
+    console.error('Erro ao salvar edição:', err);
+    showToast('Erro ao salvar. Tente novamente.');
+    if (btn) { btn.disabled = false; btnText.textContent = 'Salvar alterações'; }
+  }
+}
+
+function setupEditMode() {
+  if (!isEditMode) return;
+
+  /* Valida que o state carregado corresponde ao ID da URL */
+  if (!state.editMode || state.giftId !== EDIT_GIFT_ID) {
+    localStorage.removeItem('DearMoment_wizard_state');
+    window.location.href = '../meus-presentes.html';
+    return;
+  }
+
+  const btnSave   = document.getElementById('btnSaveEdit');
+  const btnCancel = document.getElementById('btnCancelEdit');
+
+  if (btnSave)   btnSave.addEventListener('click', finalizeEditInSupabase);
+  if (btnCancel) {
+    btnCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('DearMoment_wizard_state');
+      localStorage.removeItem('DearMoment_last_gift_id');
+      localStorage.removeItem('DearMoment_last_gift_meta');
+      window.location.href = '../meus-presentes.html';
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   18. INICIALIZAÇÃO
 ═══════════════════════════════════════════════════════════════ */
 function init() {
   loadState();
@@ -1200,6 +1354,7 @@ function init() {
   setupPlanSelection();
   setupPlanButtons();
   setupWizardAuth();
+  setupEditMode();
 
   showStep(state.currentStep);
 

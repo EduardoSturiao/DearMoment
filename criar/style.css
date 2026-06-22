@@ -2991,3 +2991,43 @@ body {
   text-align: center;
 }
 .wizard-auth-resend:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Painel de salvar — modo edição ─────────────────────────── */
+.edit-save-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0 8px;
+}
+
+.edit-save-desc {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.btn-save-edit {
+  width: 100%;
+  padding: 14px;
+  background: var(--pink);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.btn-save-edit:hover:not(:disabled) { opacity: 0.88; }
+.btn-save-edit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-cancel-edit {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.btn-cancel-edit:hover { color: var(--text); }

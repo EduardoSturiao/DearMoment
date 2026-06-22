@@ -6,8 +6,8 @@
    então o login feito em login.html vale em todas as páginas.
 ================================================================ */
 (function () {
-  const SUPABASE_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
+  const SUPABASE_URL  = 'https://iudhvwqjqhotdojairek.supabase.co';
+  const SUPABASE_ANON = 'sb_publishable_ptgjjkUN-hRWvpX9vnqg4Q_rd9loiZF';
 
   window.sb = (window.supabase && window.supabase.createClient)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)

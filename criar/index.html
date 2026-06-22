@@ -303,8 +303,17 @@
           <div class="final-top">
             <div class="final-emoji">🎉</div>
             <h2>Ficou incrível!</h2>
-            <p>Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
+            <p id="finalSubtitle">Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
             <button class="btn-preview-gift" id="btnPreviewGift" type="button">👁 Ver como ficou</button>
+          </div>
+
+          <!-- Painel de salvar — modo edição (oculto por padrão) -->
+          <div class="edit-save-panel" id="editSavePanel" style="display:none;">
+            <p class="edit-save-desc">Revise as alterações acima e salve quando estiver pronto.</p>
+            <button class="btn-save-edit" id="btnSaveEdit">
+              <span id="btnSaveEditText">Salvar alterações</span>
+            </button>
+            <a href="../meus-presentes.html" class="btn-cancel-edit" id="btnCancelEdit">Cancelar e voltar</a>
           </div>
 
           <!-- Planos -->

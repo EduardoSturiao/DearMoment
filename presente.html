@@ -274,7 +274,7 @@
 
     // 2. Wizard state (preview antes do pagamento)
     const fromWizard = getGiftFromWizardState(giftId, lastGiftId);
-    if (fromWizard) return suplementaDemo(fromWizard);
+    if (fromWizard) { fromWizard._isPreview = true; return suplementaDemo(fromWizard); }
 
     // 3. Demo fallback
     return {
@@ -291,6 +291,7 @@
       extraPhoto: './assets/images/demo-cover.jpg',
       giftType: 'amoroso',
       createdAt: new Date().toISOString(),
+      _isPreview: true,
     };
   }
 
@@ -782,7 +783,12 @@
     setupCapsulasCarta(g);
     setupCarousel(g);
     if (hasConstellation) setupConstellation(g.startDate);
-    setupSaveWidget(giftId);
+    if (g._isPreview) {
+      const w = document.getElementById('gcSaveWidget');
+      if (w) w.style.display = 'none';
+    } else {
+      setupSaveWidget(giftId);
+    }
   }
 
   /* ── 3. Navegação entre telas ───────────────────────── */

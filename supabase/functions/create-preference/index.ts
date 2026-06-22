@@ -163,7 +163,7 @@ serve(async (req) => {
         failure: failureUrl,
         pending: pendingUrl,
       },
-      notification_url: `https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/mp-webhook`,
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mp-webhook`,
     };
     if (successIsHttps) preference.auto_return = 'approved';
 
