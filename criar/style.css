@@ -2895,6 +2895,27 @@ body {
 
 .wizard-auth-panel { display: flex; flex-direction: column; gap: 12px; }
 
+.wizard-auth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.wizard-auth-gender {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.wizard-auth-gender-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.wizard-auth-gender-opt input[type="radio"] { accent-color: var(--pink); cursor: pointer; }
+
 .wizard-auth-field {
   display: flex;
   flex-direction: column;

@@ -465,20 +465,31 @@ function setupWizardAuth() {
   let signupEmail = '';
 
   document.getElementById('wizardSignupBtn').addEventListener('click', async () => {
-    const btn     = document.getElementById('wizardSignupBtn');
-    const errorEl = document.getElementById('wizardSignupError');
-    const email   = document.getElementById('wizardSignupEmail').value.trim();
-    const pass    = document.getElementById('wizardSignupPassword').value;
-    const confirm = document.getElementById('wizardSignupConfirm').value;
+    const btn       = document.getElementById('wizardSignupBtn');
+    const errorEl   = document.getElementById('wizardSignupError');
+    const firstName = document.getElementById('wizardSignupFirstName').value.trim();
+    const lastName  = document.getElementById('wizardSignupLastName').value.trim();
+    const birthdate = document.getElementById('wizardSignupBirthdate').value;
+    const email     = document.getElementById('wizardSignupEmail').value.trim();
+    const pass      = document.getElementById('wizardSignupPassword').value;
+    const confirm   = document.getElementById('wizardSignupConfirm').value;
+    const gender    = document.querySelector('input[name="wizardGender"]:checked')?.value || '';
 
     errorEl.classList.add('hidden');
-    if (!email)          { errorEl.textContent = 'Digite seu e-mail.'; errorEl.classList.remove('hidden'); return; }
-    if (pass.length < 6) { errorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errorEl.classList.remove('hidden'); return; }
+    if (!firstName)       { errorEl.textContent = 'Digite seu primeiro nome.'; errorEl.classList.remove('hidden'); return; }
+    if (!lastName)        { errorEl.textContent = 'Digite seu último nome.'; errorEl.classList.remove('hidden'); return; }
+    if (!birthdate)       { errorEl.textContent = 'Informe sua data de nascimento.'; errorEl.classList.remove('hidden'); return; }
+    if (!email)           { errorEl.textContent = 'Digite seu e-mail.'; errorEl.classList.remove('hidden'); return; }
+    if (pass.length < 6)  { errorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errorEl.classList.remove('hidden'); return; }
     if (pass !== confirm) { errorEl.textContent = 'As senhas não coincidem.'; errorEl.classList.remove('hidden'); return; }
 
     btn.disabled = true; btn.textContent = 'Criando conta...';
 
-    const { error } = await window.sb.auth.signUp({ email, password: pass });
+    const { error } = await window.sb.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { first_name: firstName, last_name: lastName, birthdate, gender } },
+    });
 
     if (error) {
       errorEl.textContent = /already registered/i.test(error.message)
