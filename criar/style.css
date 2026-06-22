@@ -2900,6 +2900,11 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+@media (max-width: 400px) {
+  .wizard-auth-row {
+    grid-template-columns: 1fr;
+  }
+}
 
 .wizard-auth-gender {
   display: flex;
