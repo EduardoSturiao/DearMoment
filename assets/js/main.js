@@ -32,6 +32,8 @@ const form = document.querySelector('#form');
 
 if (form) { // não executa em páginas sem formulário
 
+let _otpSignupEmail = '';
+
 form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -150,18 +152,75 @@ form.addEventListener('submit', async function (e) {
         return;
     }
 
-    // Com confirmação de e-mail DESLIGADA, signUp já devolve sessão → loga direto.
-    const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
-    document.body.classList.add('fade-out');
-    setTimeout(() => {
-        if (data.session) {
+    if (data.session) {
+        // Confirmação desligada — sessão imediata.
+        const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
+        document.body.classList.add('fade-out');
+        setTimeout(() => {
             window.location.href = pendingPlan ? './pagamento.html' : './index.html';
-        } else {
-            // Confirmação de e-mail LIGADA → precisa confirmar antes de logar.
-            window.location.href = './login.html?verifique=1';
-        }
-    }, 500);
+        }, 500);
+    } else {
+        // Confirmação por código OTP — exibe painel na mesma página.
+        _otpSignupEmail = email;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+        form.style.display = 'none';
+        document.getElementById('otp-email-display').textContent = email;
+        document.getElementById('otp-panel').style.display = 'flex';
+    }
 })
+
+/* ── OTP handlers (cadastro.html) ── */
+const otpSubmitBtn = document.getElementById('otp-submit');
+const otpResendBtn = document.getElementById('otp-resend');
+
+if (otpSubmitBtn) {
+    otpSubmitBtn.addEventListener('click', async () => {
+        const token   = document.getElementById('otp-code').value.trim();
+        const errorEl = document.getElementById('otp-error');
+        errorEl.textContent = '';
+
+        if (token.length < 6) {
+            errorEl.textContent = 'Digite o código de 6 dígitos.';
+            return;
+        }
+
+        otpSubmitBtn.disabled = true;
+        otpSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
+
+        const { error } = await window.sb.auth.verifyOtp({
+            email: _otpSignupEmail,
+            token,
+            type: 'signup'
+        });
+
+        if (error) {
+            errorEl.textContent = 'Código inválido ou expirado. Tente novamente.';
+            otpSubmitBtn.disabled = false;
+            otpSubmitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar código';
+            return;
+        }
+
+        const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
+        document.body.classList.add('fade-out');
+        setTimeout(() => {
+            window.location.href = pendingPlan ? './pagamento.html' : './index.html';
+        }, 500);
+    });
+}
+
+if (otpResendBtn) {
+    otpResendBtn.addEventListener('click', async () => {
+        otpResendBtn.disabled = true;
+        otpResendBtn.textContent = 'Enviando...';
+        await window.sb.auth.resend({ email: _otpSignupEmail, type: 'signup' });
+        otpResendBtn.textContent = 'Código reenviado!';
+        setTimeout(() => {
+            otpResendBtn.disabled = false;
+            otpResendBtn.textContent = 'Reenviar código';
+        }, 3000);
+    });
+}
 
 } // fim do if (form)
 

@@ -1212,6 +1212,10 @@ function navigateNext() {
 }
 
 function navigateBack() {
+  if (isEditMode && state.currentStep <= 3) {
+    showToast('Os nomes não podem ser alterados na edição');
+    return;
+  }
   if (state.currentStep > 1) {
     state.currentStep--;
     showStep(state.currentStep);
