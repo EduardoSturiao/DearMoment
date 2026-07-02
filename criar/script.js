@@ -663,15 +663,12 @@ function setupPhotoUpload() {
       const b64 = await compressImage(file);
 
       if (userId) {
-        const idx    = state.photos.length;
-        /* Em edit mode usa timestamp para garantir INSERT limpo (sem upsert/UPDATE),
-           evitando conflito com arquivos já existentes no Storage do presente original. */
-        const suffix = isEditMode ? `-${Date.now()}` : '';
-        const path   = `${userId}/${state.giftId}/photo-${idx}${suffix}.jpg`;
-        const opts   = isEditMode
-          ? { contentType: 'image/jpeg' }
-          : { contentType: 'image/jpeg', upsert: true };
-        const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), opts);
+        const idx  = state.photos.length;
+        /* Nome sempre único (timestamp) — reaproveitar photo-<idx>.jpg depois de
+           remover uma foto faz o navegador exibir a versão antiga em cache, já
+           que a URL fica idêntica à de um arquivo que ele acabou de baixar. */
+        const path = `${userId}/${state.giftId}/photo-${idx}-${Date.now()}.jpg`;
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg' });
         if (error) { console.error('Storage upload error:', error); showToast('Erro ao salvar foto. Tente novamente.'); continue; }
         state.photos.push(path);
       } else {
@@ -755,12 +752,10 @@ function setupExtraPhotoUpload() {
     }
 
     if (userId) {
-      const suffix = isEditMode ? `-${Date.now()}` : '';
-      const path   = `${userId}/${state.giftId}/cover${suffix}.jpg`;
-      const opts   = isEditMode
-        ? { contentType: 'image/jpeg' }
-        : { contentType: 'image/jpeg', upsert: true };
-      const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), opts);
+      /* Nome sempre único (timestamp) — mesma razão do upload da galeria:
+         evita que o navegador reexiba uma imagem antiga em cache na mesma URL. */
+      const path = `${userId}/${state.giftId}/cover-${Date.now()}.jpg`;
+      const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg' });
       if (error) { console.error('Storage upload error:', error); showToast('Erro ao salvar foto de destaque. Tente novamente.'); input.value = ''; return; }
       state.extraPhoto = path;
     } else {
