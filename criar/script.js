@@ -1170,7 +1170,8 @@ function saveGift() {
   }));
 
   try {
-    const gifts = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
+    const gifts     = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
+    const existingIdx = gifts.findIndex(g => g.id === id);
     const gift = {
       id,
       name1:           state.name1,
@@ -1192,9 +1193,14 @@ function saveGift() {
       extraPhoto:      state.extraPhoto,
       giftType:        state.giftType,
       paid:            false,
-      createdAt:       new Date().toISOString(),
+      createdAt:       existingIdx !== -1 ? gifts[existingIdx].createdAt : new Date().toISOString(),
     };
-    gifts.push(gift);
+    /* Substitui a entrada existente em vez de empilhar — passar pela etapa
+       final mais de uma vez (ex: voltar e corrigir algo antes de pagar)
+       nunca deve deixar duas entradas com o mesmo id no array, senão
+       pagamento.html acaba lendo a versão desatualizada. */
+    if (existingIdx !== -1) gifts[existingIdx] = gift;
+    else gifts.push(gift);
     localStorage.setItem(GIFTS_KEY, JSON.stringify(gifts));
   } catch (_) {}
 }
