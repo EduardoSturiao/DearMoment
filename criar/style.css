@@ -2920,7 +2920,7 @@ body {
   color: var(--text-muted);
   cursor: pointer;
 }
-.wizard-auth-gender-opt input[type="radio"] { accent-color: var(--pink); cursor: pointer; }
+.wizard-auth-gender-opt input[type="radio"] { width: auto; accent-color: var(--pink); cursor: pointer; }
 
 .wizard-auth-field {
   display: flex;
