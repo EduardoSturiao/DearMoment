@@ -2947,6 +2947,10 @@ body {
   outline: none;
   transition: border-color var(--transition);
 }
+.wizard-auth-field input[type="date"] {
+  font-size: 13px;
+  padding-right: 6px;
+}
 .wizard-auth-field input:focus { border-color: var(--pink); }
 
 .wizard-auth-password-wrap {
