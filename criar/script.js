@@ -485,7 +485,7 @@ function setupWizardAuth() {
 
     btn.disabled = true; btn.textContent = 'Criando conta...';
 
-    const { error } = await window.sb.auth.signUp({
+    const { data, error } = await window.sb.auth.signUp({
       email,
       password: pass,
       options: { data: { first_name: firstName, last_name: lastName, birthdate, gender } },
@@ -495,6 +495,13 @@ function setupWizardAuth() {
       errorEl.textContent = /already registered/i.test(error.message)
         ? 'Este e-mail já está cadastrado. Use a aba "Entrar".'
         : 'Erro ao criar conta. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Criar conta';
+      return;
+    }
+
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      errorEl.textContent = 'Este e-mail já está cadastrado. Use a aba "Entrar".';
       errorEl.classList.remove('hidden');
       btn.disabled = false; btn.textContent = 'Criar conta';
       return;

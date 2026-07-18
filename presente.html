@@ -726,7 +726,16 @@
                   <p class="gc-auth-error" id="gcCadError"></p>
                   <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnCadastrar" type="button"><span aria-hidden="true">✦</span> Criar conta e salvar</button>
                 </div>
-                <p class="gc-auth-confirm-note" id="gcAuthConfirmNote" style="display:none">Conta criada! Confirme seu e-mail para ativar o acesso.</p>
+                <div id="gcCadOtp" class="gc-auth-form" style="display:none">
+                  <div class="gc-auth-otp-info">
+                    <span>📬</span>
+                    <p>Enviamos um código de 6 dígitos para <strong id="gcOtpEmail"></strong>. Verifique sua caixa de entrada.</p>
+                  </div>
+                  <input type="text" id="gcOtpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" class="gc-auth-input">
+                  <p class="gc-auth-error" id="gcOtpError"></p>
+                  <button class="gc-despedida-btn gc-despedida-secondary" id="gcOtpBtn" type="button"><span aria-hidden="true">✦</span> Confirmar código</button>
+                  <button class="gc-auth-resend" id="gcOtpResend" type="button">Reenviar código</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1847,6 +1856,8 @@
 
     showState('gcSaveAuth');
 
+    let signupEmail = '';
+
     const tabEntrar    = document.getElementById('gcTabEntrar');
     const tabCadastrar = document.getElementById('gcTabCadastrar');
     const formEntrar   = document.getElementById('gcFormEntrar');
@@ -1909,16 +1920,54 @@
         btn.innerHTML = '<span aria-hidden="true">✦</span> Criar conta e salvar';
         return;
       }
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        errEl.textContent = 'Este e-mail já está cadastrado. Use a aba "Entrar".';
+        btn.disabled = false;
+        btn.innerHTML = '<span aria-hidden="true">✦</span> Criar conta e salvar';
+        return;
+      }
       if (data.session) {
         showState('gcSaveLoading');
         await persistSave(data.user.id);
         showState('gcSaveDone');
       } else {
-        localStorage.setItem('DearMoment_pending_gift_save', id);
-        document.getElementById('gcAuthConfirmNote').style.display = '';
+        signupEmail = email;
+        document.getElementById('gcOtpEmail').textContent = email;
         document.getElementById('gcAuthTabs').style.display = 'none';
         formCadastrar.style.display = 'none';
+        document.getElementById('gcCadOtp').style.display = '';
       }
+    });
+
+    document.getElementById('gcOtpBtn').addEventListener('click', async () => {
+      const btn     = document.getElementById('gcOtpBtn');
+      const errorEl = document.getElementById('gcOtpError');
+      const token   = document.getElementById('gcOtpCode').value.trim();
+      errorEl.textContent = '';
+      if (!token || token.length < 6) {
+        errorEl.textContent = 'Digite o código de 6 dígitos.';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      const { data, error } = await _sbClient.auth.verifyOtp({ email: signupEmail, token, type: 'signup' });
+      if (error) {
+        errorEl.textContent = 'Código inválido ou expirado. Tente novamente.';
+        btn.disabled = false;
+        btn.innerHTML = '<span aria-hidden="true">✦</span> Confirmar código';
+        return;
+      }
+      document.getElementById('gcCadOtp').style.display = 'none';
+      showState('gcSaveLoading');
+      await persistSave(data.user.id);
+      showState('gcSaveDone');
+    });
+
+    document.getElementById('gcOtpResend').addEventListener('click', async () => {
+      const btn = document.getElementById('gcOtpResend');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+      await _sbClient.auth.resend({ email: signupEmail, type: 'signup' });
+      btn.textContent = 'Código reenviado!';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Reenviar código'; }, 3000);
     });
   }
   </script>

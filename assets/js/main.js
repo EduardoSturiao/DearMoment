@@ -152,6 +152,14 @@ form.addEventListener('submit', async function (e) {
         return;
     }
 
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+        emailErrorSpan.innerHTML = `${errorIcon} Este e-mail já possui uma conta. Faça login.`;
+        document.getElementById('email').closest('.input-box').classList.add('invalid');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+        return;
+    }
+
     if (data.session) {
         // Confirmação desligada — sessão imediata.
         const pendingPlan = localStorage.getItem('DearMoment_pending_plan');
