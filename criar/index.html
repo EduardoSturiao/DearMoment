@@ -172,6 +172,10 @@
           </div>
           <div class="photos-grid" id="photosGrid"></div>
           <div class="photos-count"><span id="photosCountNum">0</span>/6 fotos adicionadas</div>
+          <div class="photo-terms-warning">
+            <span>⚠️</span>
+            <span>Não envie fotos íntimas ou sensíveis. Você é o único responsável pelo conteúdo inserido no presente.</span>
+          </div>
           <div class="step-tip">
             <span class="step-tip-icon">👆</span>
             <span class="step-tip-text">As fotos formam uma <strong>galeria deslizante</strong>. Quem recebe pode tocar em qualquer foto para ver em tela cheia.</span>
@@ -219,6 +223,10 @@
               <img id="extraPhotoImg" src="" alt="Foto de capa" />
               <button class="btn-remove-extra" id="btnRemoveExtra" title="Remover foto">✕</button>
             </div>
+          </div>
+          <div class="photo-terms-warning">
+            <span>⚠️</span>
+            <span>Não envie fotos íntimas ou sensíveis. Você é o único responsável pelo conteúdo inserido no presente.</span>
           </div>
           <div class="step-tip">
             <span class="step-tip-icon">🎵</span>
@@ -295,8 +303,17 @@
           <div class="final-top">
             <div class="final-emoji">🎉</div>
             <h2>Ficou incrível!</h2>
-            <p>Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
+            <p id="finalSubtitle">Você acabou de criar um presente único e inesquecível.<br>Agora escolha como deseja entregar:</p>
             <button class="btn-preview-gift" id="btnPreviewGift" type="button">👁 Ver como ficou</button>
+          </div>
+
+          <!-- Painel de salvar — modo edição (oculto por padrão) -->
+          <div class="edit-save-panel" id="editSavePanel" style="display:none;">
+            <p class="edit-save-desc">Revise as alterações acima e salve quando estiver pronto.</p>
+            <button class="btn-save-edit" id="btnSaveEdit">
+              <span id="btnSaveEditText">Salvar alterações</span>
+            </button>
+            <a href="../meus-presentes.html" class="btn-cancel-edit" id="btnCancelEdit">Cancelar e voltar</a>
           </div>
 
           <!-- Planos -->
@@ -327,6 +344,105 @@
                 <li>⬜ Edição ilimitada</li>
               </ul>
               <button class="btn-plan" data-plan="24h">Escolher esse plano</button>
+            </div>
+          </div>
+
+          <!-- Auth inline — aparece quando usuário clica em um plano sem estar logado -->
+          <div id="wizard-auth-card" class="wizard-auth-card hidden">
+            <button class="wizard-auth-back" id="wizardAuthBack">← Voltar aos planos</button>
+            <p class="wizard-auth-title">Para finalizar, entre ou crie sua conta</p>
+
+            <div class="wizard-auth-tabs">
+              <button class="wizard-auth-tab active" data-tab="login">Entrar</button>
+              <button class="wizard-auth-tab" data-tab="signup">Criar conta</button>
+            </div>
+
+            <!-- Painel login -->
+            <div class="wizard-auth-panel" id="wizardAuthLogin">
+              <div class="wizard-auth-field">
+                <label>E-mail</label>
+                <input type="email" id="wizardLoginEmail" placeholder="seu@email.com" autocomplete="email" />
+              </div>
+              <div class="wizard-auth-field">
+                <label>Senha</label>
+                <div class="wizard-auth-password-wrap">
+                  <input type="password" id="wizardLoginPassword" placeholder="Sua senha" autocomplete="current-password" />
+                  <button type="button" class="wizard-auth-eye" data-target="wizardLoginPassword" aria-label="Mostrar senha">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <p class="wizard-auth-error hidden" id="wizardLoginError"></p>
+              <button class="wizard-auth-btn" id="wizardLoginBtn">Entrar</button>
+            </div>
+
+            <!-- Painel cadastro -->
+            <div class="wizard-auth-panel hidden" id="wizardAuthSignup">
+              <div id="wizardSignupForm">
+                <div class="wizard-auth-row">
+                  <div class="wizard-auth-field">
+                    <label>Primeiro nome</label>
+                    <input type="text" id="wizardSignupFirstName" placeholder="Nome" autocomplete="given-name" />
+                  </div>
+                  <div class="wizard-auth-field">
+                    <label>Último nome</label>
+                    <input type="text" id="wizardSignupLastName" placeholder="Sobrenome" autocomplete="family-name" />
+                  </div>
+                </div>
+                <div class="wizard-auth-row">
+                  <div class="wizard-auth-field">
+                    <label>Nascimento</label>
+                    <input type="date" id="wizardSignupBirthdate" autocomplete="bday" />
+                  </div>
+                  <div class="wizard-auth-field">
+                    <label>E-mail</label>
+                    <input type="email" id="wizardSignupEmail" placeholder="seu@email.com" autocomplete="email" />
+                  </div>
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Gênero</label>
+                  <div class="wizard-auth-gender">
+                    <label class="wizard-auth-gender-opt"><input type="radio" name="wizardGender" value="female"> Feminino</label>
+                    <label class="wizard-auth-gender-opt"><input type="radio" name="wizardGender" value="male"> Masculino</label>
+                    <label class="wizard-auth-gender-opt"><input type="radio" name="wizardGender" value="other"> Outro</label>
+                  </div>
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Senha</label>
+                  <div class="wizard-auth-password-wrap">
+                    <input type="password" id="wizardSignupPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                    <button type="button" class="wizard-auth-eye" data-target="wizardSignupPassword" aria-label="Mostrar senha">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Confirmar senha</label>
+                  <div class="wizard-auth-password-wrap">
+                    <input type="password" id="wizardSignupConfirm" placeholder="Repita a senha" autocomplete="new-password" />
+                    <button type="button" class="wizard-auth-eye" data-target="wizardSignupConfirm" aria-label="Mostrar senha">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <p class="wizard-auth-error hidden" id="wizardSignupError"></p>
+                <button class="wizard-auth-btn" id="wizardSignupBtn">Criar conta</button>
+              </div>
+
+              <!-- Verificação OTP -->
+              <div id="wizardSignupOtp" class="hidden">
+                <div class="wizard-auth-otp-info">
+                  <span>📬</span>
+                  <p>Enviamos um código de 6 dígitos para <strong id="wizardOtpEmail"></strong>. Verifique sua caixa de entrada.</p>
+                </div>
+                <div class="wizard-auth-field">
+                  <label>Código de confirmação</label>
+                  <input type="text" id="wizardOtpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+                </div>
+                <p class="wizard-auth-error hidden" id="wizardOtpError"></p>
+                <button class="wizard-auth-btn" id="wizardOtpBtn">Confirmar</button>
+                <button class="wizard-auth-resend" id="wizardOtpResend">Reenviar código</button>
+              </div>
             </div>
           </div>
 

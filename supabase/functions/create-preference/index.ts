@@ -63,6 +63,34 @@ serve(async (req) => {
     });
   }
 
+  // ── 2. Rate limiting — máx 5 tentativas por usuário a cada 60 segundos ──
+  const adminDb = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
+
+  const windowStart = new Date(Date.now() - 60_000).toISOString();
+
+  const { count } = await adminDb
+    .from('payment_attempts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('created_at', windowStart);
+
+  if ((count ?? 0) >= 5) {
+    return new Response(JSON.stringify({ error: 'rate_limit', retryAfter: 60 }), {
+      status: 429,
+      headers: { ...cors, 'Content-Type': 'application/json', 'Retry-After': '60' },
+    });
+  }
+
+  await adminDb.from('payment_attempts').insert({ user_id: user.id });
+
+  // Limpa tentativas com mais de 1 hora para não acumular dados desnecessários
+  adminDb.from('payment_attempts')
+    .delete()
+    .lt('created_at', new Date(Date.now() - 3_600_000).toISOString());
+
   try {
     const body = await req.json();
     const { plan, giftId, successUrl, failureUrl, pendingUrl } = body;
@@ -123,10 +151,10 @@ serve(async (req) => {
       currency_id: 'BRL',
     }];
 
-    const preference = {
+    const successIsHttps = successUrl?.startsWith('https://');
+    const preference: Record<string, unknown> = {
       items,
       external_reference: giftId,
-      auto_return: 'approved',
       payment_methods: {
         excluded_payment_types: [{ id: 'ticket' }], // remove boleto bancário
       },
@@ -135,8 +163,9 @@ serve(async (req) => {
         failure: failureUrl,
         pending: pendingUrl,
       },
-      notification_url: `https://imiwhgrjwgydedbfdlkn.supabase.co/functions/v1/mp-webhook`,
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mp-webhook`,
     };
+    if (successIsHttps) preference.auto_return = 'approved';
 
     const accessToken = Deno.env.get('MP_ACCESS_TOKEN');
     const res = await fetch('https://api.mercadopago.com/checkout/preferences', {

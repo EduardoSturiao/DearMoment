@@ -808,6 +808,7 @@ body {
   display: block;
   width: 100%;
   height: 100%;
+  border-radius: 50%; /* iOS Safari ignora overflow:hidden do pai em <canvas> */
 }
 
 /* Arco SVG animado — anel que acende ao entrar na tela */
@@ -2529,6 +2530,30 @@ body {
   min-height: 16px;
   text-align: center;
 }
+.gc-auth-otp-info {
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.5;
+}
+.gc-auth-otp-info span { font-size: 18px; flex-shrink: 0; }
+.gc-auth-otp-info strong { color: #fff; }
+.gc-auth-resend {
+  background: none;
+  border: none;
+  color: #ff6dba;
+  font-family: var(--font-b, 'Sora', sans-serif);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: center;
+}
+.gc-auth-resend:disabled { opacity: 0.5; cursor: not-allowed; }
 .gc-auth-confirm-note {
   font-size: 13px;
   color: rgba(255,255,255,0.7);

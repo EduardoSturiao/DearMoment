@@ -516,6 +516,35 @@ body {
   text-overflow: ellipsis;
 }
 
+.music-no-preview-msg {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-muted, #8892a4);
+  line-height: 1.4;
+  cursor: default;
+  text-align: center;
+  white-space: normal;
+}
+
+.photo-terms-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(255, 180, 0, 0.07);
+  border: 1px solid rgba(255, 180, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #a89060;
+  line-height: 1.5;
+}
+
+.photo-terms-warning span:first-child {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
 /* ── Etapa 9: Cápsulas ─────────────────────────────────────── */
 .capsulas-form {
   display: flex;
@@ -2808,3 +2837,230 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Auth inline (FIX-2) ─────────────────────────────────────── */
+.wizard-auth-card {
+  background: var(--dark-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wizard-auth-back {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color var(--transition);
+}
+.wizard-auth-back:hover { color: var(--text); }
+
+.wizard-auth-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+
+.wizard-auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.wizard-auth-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 0;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color var(--transition), border-color var(--transition);
+}
+.wizard-auth-tab.active {
+  color: var(--pink);
+  border-bottom-color: var(--pink);
+}
+
+.wizard-auth-panel { display: flex; flex-direction: column; gap: 12px; }
+
+.wizard-auth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 400px) {
+  .wizard-auth-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wizard-auth-gender {
+  display: flex;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.wizard-auth-gender-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.wizard-auth-gender-opt input[type="radio"] { width: auto; accent-color: var(--pink); cursor: pointer; }
+
+.wizard-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.wizard-auth-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.wizard-auth-field input {
+  width: 100%;
+  background: var(--dark-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.wizard-auth-field input[type="date"] {
+  font-size: 13px;
+  padding-right: 6px;
+}
+.wizard-auth-field input:focus { border-color: var(--pink); }
+
+.wizard-auth-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.wizard-auth-password-wrap input {
+  width: 100%;
+  padding-right: 40px;
+}
+.wizard-auth-eye {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+.wizard-auth-eye:hover { color: var(--pink); }
+.wizard-auth-eye svg { width: 18px; height: 18px; }
+
+.wizard-auth-error {
+  font-size: 12px;
+  color: #f87171;
+  margin: -4px 0;
+}
+
+.wizard-auth-btn {
+  background: var(--pink);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px;
+  cursor: pointer;
+  transition: opacity var(--transition);
+  margin-top: 4px;
+}
+.wizard-auth-btn:hover  { opacity: 0.88; }
+.wizard-auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.wizard-auth-otp-info {
+  background: var(--dark-4);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.wizard-auth-otp-info span { font-size: 20px; flex-shrink: 0; }
+.wizard-auth-otp-info strong { color: var(--text); }
+
+.wizard-auth-resend {
+  background: none;
+  border: none;
+  color: var(--pink);
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: center;
+}
+.wizard-auth-resend:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Painel de salvar — modo edição ─────────────────────────── */
+.edit-save-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0 8px;
+}
+
+.edit-save-desc {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.btn-save-edit {
+  width: 100%;
+  padding: 14px;
+  background: var(--pink);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.btn-save-edit:hover:not(:disabled) { opacity: 0.88; }
+.btn-save-edit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-cancel-edit {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.btn-cancel-edit:hover { color: var(--text); }

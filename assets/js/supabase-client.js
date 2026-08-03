@@ -9,6 +9,7 @@
   const SUPABASE_URL  = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltaXdoZ3Jqd2d5ZGVkYmZkbGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjA5NjksImV4cCI6MjA5MDg5Njk2OX0.icJRjTMGsjOa_-Nff0QExYeDA5jqoAMh5DHR1drtxCA';
 
+  window.SUPABASE_URL = SUPABASE_URL;
   window.sb = (window.supabase && window.supabase.createClient)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
     : null;
@@ -17,18 +18,4 @@
     console.error('[SoulMates] SDK do Supabase não carregou antes de supabase-client.js');
     return;
   }
-
-  /* Auto-salva presente pendente após confirmação de e-mail */
-  window.sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      const pendingId = localStorage.getItem('DearMoment_pending_gift_save');
-      if (pendingId) {
-        localStorage.removeItem('DearMoment_pending_gift_save');
-        await window.sb.from('saved_gifts').insert({
-          user_id: session.user.id,
-          gift_id: pendingId,
-        });
-      }
-    }
-  });
 })();

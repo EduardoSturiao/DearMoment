@@ -122,14 +122,61 @@
 
   </main>
 
+  <!-- Modal de aceite de termos -->
+  <div id="termsModal" class="terms-modal-overlay" style="display:none;">
+    <div class="terms-modal-box">
+      <div class="terms-modal-icon">📋</div>
+      <h3 class="terms-modal-title">Antes de continuar</h3>
+      <p class="terms-modal-sub">Confirme os itens abaixo para finalizar seu presente.</p>
+      <div class="terms-checks">
+        <label class="terms-check-label">
+          <input type="checkbox" id="termsCheck1" class="terms-check-input">
+          <span>Confirmo que tenho autorização de todas as pessoas que aparecem nas fotos do presente.</span>
+        </label>
+        <label class="terms-check-label">
+          <input type="checkbox" id="termsCheck2" class="terms-check-input">
+          <span>Declaro que o conteúdo inserido não contém imagens íntimas ou sensíveis, e assumo total responsabilidade pelo material enviado.</span>
+        </label>
+      </div>
+      <button class="terms-accept-btn" id="btnAcceptTerms" disabled>Concordo e quero continuar →</button>
+    </div>
+  </div>
+
   <script>
+    /* ── Aceite de termos ───────────────────────────────── */
+    let termsAcceptedAt = null;
+
+    (function setupTermsModal() {
+      const mpStatus = new URLSearchParams(window.location.search).get('status');
+      const returningFromMP = ['approved', 'pending', 'rejected', 'cancelled'].includes(mpStatus);
+      if (returningFromMP) return;
+
+      const modal     = document.getElementById('termsModal');
+      const check1    = document.getElementById('termsCheck1');
+      const check2    = document.getElementById('termsCheck2');
+      const btnAccept = document.getElementById('btnAcceptTerms');
+
+      modal.style.display = 'flex';
+
+      function updateBtn() {
+        btnAccept.disabled = !(check1.checked && check2.checked);
+      }
+      check1.addEventListener('change', updateBtn);
+      check2.addEventListener('change', updateBtn);
+
+      btnAccept.addEventListener('click', () => {
+        termsAcceptedAt = new Date().toISOString();
+        modal.style.display = 'none';
+      });
+    })();
+
     /* ── Dados dos planos ───────────────────────────────── */
     const PLAN_DATA = {
       vitalicio: { label: 'Plano Vitalício', price: 29.90, badge: '⭐ Mais popular' },
       '24h':     { label: 'Plano 24 Horas',  price: 19.90, badge: '24h' },
     };
 
-    const SUPABASE_URL = 'https://imiwhgrjwgydedbfdlkn.supabase.co';
+    const SUPABASE_URL = window.SUPABASE_URL || 'https://imiwhgrjwgydedbfdlkn.supabase.co';
     const EDGE_BASE    = `${SUPABASE_URL}/functions/v1`;
     const BUCKET       = 'gift-images';
     // Usa o cliente Supabase compartilhado (inicializado em supabase-client.js)
@@ -228,6 +275,25 @@
         });
 
         const data = await res.json();
+
+        if (res.status === 429) {
+          const seconds = data.retryAfter || 60;
+          btn.disabled = true;
+          let remaining = seconds;
+          btn.textContent = `Aguarde ${remaining}s para tentar novamente`;
+          const countdown = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+              clearInterval(countdown);
+              btn.textContent = 'Finalizar pagamento';
+              btn.disabled    = false;
+            } else {
+              btn.textContent = `Aguarde ${remaining}s para tentar novamente`;
+            }
+          }, 1000);
+          return;
+        }
+
         if (!res.ok) throw new Error(data.error || 'Erro ao iniciar pagamento');
 
         // 3. Edge Function OK — redireciona para o MP
@@ -303,24 +369,36 @@
       // 1. Upload das fotos da galeria
       for (let i = 0; i < (gift.photos || []).length; i++) {
         const src = gift.photos[i];
-        if (!src || !src.startsWith('data:')) continue;
-        const blob = dataUrlToBlob(src);
-        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-        const path = `${userId}/${giftId}/photo-${i}.${ext}`;
-        const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
-        // RLS no UPDATE = arquivo já existe de tentativa anterior — caminho ainda válido, continua
-        if (error && !error.message?.includes('row-level security')) throw error;
-        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+        if (!src) continue;
+        if (src.startsWith('data:')) {
+          // base64: usuário não estava logado no wizard — faz upload agora
+          const blob = dataUrlToBlob(src);
+          const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+          const path = `${userId}/${giftId}/photo-${i}.${ext}`;
+          const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+          // RLS no UPDATE = arquivo já existe de tentativa anterior — caminho ainda válido, continua
+          if (error && !error.message?.includes('row-level security')) throw error;
+          gift.photos[i] = path;
+          photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+        } else {
+          // storage_path: upload já feito no wizard — só registra na tabela
+          photoRows.push({ gift_id: giftId, storage_path: src, is_extra: false, position: i });
+        }
       }
 
       // 2. Upload da foto de capa (extra)
-      if (gift.extraPhoto && gift.extraPhoto.startsWith('data:')) {
-        const blob = dataUrlToBlob(gift.extraPhoto);
-        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-        const path = `${userId}/${giftId}/cover.${ext}`;
-        const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
-        if (error && !error.message?.includes('row-level security')) throw error;
-        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+      if (gift.extraPhoto) {
+        if (gift.extraPhoto.startsWith('data:')) {
+          const blob = dataUrlToBlob(gift.extraPhoto);
+          const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+          const path = `${userId}/${giftId}/cover.${ext}`;
+          const { error } = await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+          if (error && !error.message?.includes('row-level security')) throw error;
+          gift.extraPhoto = path;
+          photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+        } else {
+          photoRows.push({ gift_id: giftId, storage_path: gift.extraPhoto, is_extra: true, position: 0 });
+        }
       }
 
       // 3. UPSERT na tabela gifts (paid: false — o webhook confirma depois)
@@ -341,9 +419,11 @@
         photo_captions: Array.isArray(gift.photoCaptions) ? gift.photoCaptions : [],
         message:        gift.message || null,
         capsulas:       Array.isArray(gift.capsulas) ? gift.capsulas : [],
-        gift_type:      gift.giftType || 'amoroso',
-        plan:           planChosen || 'vitalicio',
-        paid:           false,
+        gift_type:         gift.giftType || 'amoroso',
+        plan:              planChosen || 'vitalicio',
+        paid:              false,
+        terms_accepted_at: termsAcceptedAt,
+        terms_version:     termsAcceptedAt ? 'v1' : null,
       };
       const { error: giftErr } = await db.from('gifts').upsert(giftRow);
       if (giftErr) throw giftErr;
@@ -354,6 +434,22 @@
         const { error: photoErr } = await db.from('gift_photos').insert(photoRows);
         if (photoErr) throw photoErr;
       }
+
+      // Substitui base64 por storage_path no localStorage — fotos já estão no Supabase Storage
+      try {
+        const wizState = JSON.parse(localStorage.getItem('DearMoment_wizard_state') || '{}');
+        if (Array.isArray(wizState.photos)) wizState.photos = gift.photos.slice();
+        if (gift.extraPhoto) wizState.extraPhoto = gift.extraPhoto;
+        localStorage.setItem('DearMoment_wizard_state', JSON.stringify(wizState));
+
+        const storedGifts = JSON.parse(localStorage.getItem('DearMoment_gifts') || '[]');
+        const gIdx = storedGifts.findIndex(g => g.id === giftId);
+        if (gIdx !== -1) {
+          storedGifts[gIdx].photos     = gift.photos.slice();
+          storedGifts[gIdx].extraPhoto = gift.extraPhoto;
+          localStorage.setItem('DearMoment_gifts', JSON.stringify(storedGifts));
+        }
+      } catch (_) {}
 
       return giftId;
     }

@@ -7,12 +7,21 @@
 'use strict';
 
 /* ═══════════════════════════════════════════════════════════════
+   0. MODO EDIÇÃO
+═══════════════════════════════════════════════════════════════ */
+const _urlParams   = new URLSearchParams(window.location.search);
+const EDIT_GIFT_ID = _urlParams.get('edit') || null;
+const isEditMode   = !!EDIT_GIFT_ID;
+
+/* ═══════════════════════════════════════════════════════════════
    1. ESTADO GLOBAL
 ═══════════════════════════════════════════════════════════════ */
-const STORAGE_KEY = 'DearMoment_wizard_state';
-const TOTAL_STEPS = 9;
+const STORAGE_KEY  = 'DearMoment_wizard_state';
+const TOTAL_STEPS  = 9;
 const FLOW_VERSION = 2;
 const DEFAULT_PREVIEW_DURATION_SECONDS = 30;
+const BUCKET       = 'gift-images';
+const SUPABASE_URL = window.SUPABASE_URL || 'https://imiwhgrjwgydedbfdlkn.supabase.co';
 
 const TEMPLATE_META = {
   stories: { label: 'Stories do Instagram', finalUrl: '../presente/index.html' },
@@ -41,6 +50,7 @@ const state = {
   capsulas:        ['', '', '', ''],
   extraPhoto:      null,
   selectedPlan:    '',
+  giftId:          '',
 };
 
 function loadState() {
@@ -49,6 +59,10 @@ function loadState() {
     if (saved) Object.assign(state, JSON.parse(saved));
     migrateLegacyWizardState();
   } catch (_) {}
+  if (!state.giftId) {
+    state.giftId = generateId();
+    saveState();
+  }
 }
 
 function migrateLegacyWizardState() {
@@ -180,6 +194,20 @@ function normalizeStr(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
+function dataUrlToBlob(dataUrl) {
+  const [header, b64] = dataUrl.split(',');
+  const mime  = header.match(/:(.*?);/)[1];
+  const bstr  = atob(b64);
+  const u8arr = new Uint8Array(bstr.length);
+  for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
+  return new Blob([u8arr], { type: mime });
+}
+
+function photoSrc(src) {
+  if (!src || src.startsWith('data:')) return src;
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${src}`;
+}
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -274,6 +302,18 @@ function showStep(n) {
     navFooter.classList.remove('hidden-final');
     document.getElementById('btnNext').style.display = isFinal ? 'none' : '';
   }
+
+  /* No step-final em modo edição: mostra painel de salvar, oculta planos/FAQ */
+  if (isFinal && isEditMode) {
+    const plansGrid  = document.querySelector('.plans-grid');
+    const faqSection = document.querySelector('.faq-section');
+    const editPanel  = document.getElementById('editSavePanel');
+    const subtitle   = document.getElementById('finalSubtitle');
+    if (plansGrid)  plansGrid.style.display  = 'none';
+    if (faqSection) faqSection.style.display = 'none';
+    if (editPanel)  editPanel.style.display  = 'flex';
+    if (subtitle)   subtitle.textContent     = 'Revise cada etapa e salve as alterações quando estiver pronto.';
+  }
 }
 
 function updateProgress(n) {
@@ -332,18 +372,183 @@ async function openFinalGift(planId) {
   saveState();
   localStorage.setItem('DearMoment_pending_plan', planId);
 
-  // Checa sessão real do Supabase: logado vai pro pagamento, senão pro login
   let loggedIn = false;
   if (window.sb) {
     const { data } = await window.sb.auth.getSession();
     loggedIn = !!(data && data.session);
   }
 
-  document.body.style.opacity = '0';
-  document.body.style.transition = 'opacity 0.4s ease';
-  setTimeout(() => {
-    window.location.href = loggedIn ? '../pagamento.html' : '../login.html';
-  }, 400);
+  if (loggedIn) {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => { window.location.href = '../pagamento.html'; }, 400);
+    return;
+  }
+
+  // Não logado → mostrar card de auth inline (FIX-2)
+  document.querySelector('.plans-grid').classList.add('hidden');
+  document.querySelector('.faq-section').classList.add('hidden');
+  document.getElementById('btnPreviewGift').classList.add('hidden');
+  document.getElementById('wizard-auth-card').classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH INLINE — FIX-2 (wizard sem redirect para login/cadastro)
+═══════════════════════════════════════════════════════════════ */
+function setupWizardAuth() {
+  const card        = document.getElementById('wizard-auth-card');
+  const tabs        = card.querySelectorAll('.wizard-auth-tab');
+  const panelLogin  = document.getElementById('wizardAuthLogin');
+  const panelSignup = document.getElementById('wizardAuthSignup');
+
+  function showPlans() {
+    card.classList.add('hidden');
+    document.querySelector('.plans-grid').classList.remove('hidden');
+    document.querySelector('.faq-section').classList.remove('hidden');
+    document.getElementById('btnPreviewGift').classList.remove('hidden');
+  }
+
+  function redirectToPagamento() {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => { window.location.href = '../pagamento.html'; }, 400);
+  }
+
+  document.getElementById('wizardAuthBack').addEventListener('click', showPlans);
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isLogin = tab.dataset.tab === 'login';
+      panelLogin.classList.toggle('hidden', !isLogin);
+      panelSignup.classList.toggle('hidden', isLogin);
+    });
+  });
+
+  /* ── Toggle visibilidade de senha ── */
+  document.querySelectorAll('.wizard-auth-eye').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+  });
+
+  /* ── Login ── */
+  document.getElementById('wizardLoginBtn').addEventListener('click', async () => {
+    const btn     = document.getElementById('wizardLoginBtn');
+    const errorEl = document.getElementById('wizardLoginError');
+    const email   = document.getElementById('wizardLoginEmail').value.trim();
+    const pass    = document.getElementById('wizardLoginPassword').value;
+
+    errorEl.classList.add('hidden');
+    if (!email || !pass) { errorEl.textContent = 'Preencha e-mail e senha.'; errorEl.classList.remove('hidden'); return; }
+
+    btn.disabled = true; btn.textContent = 'Entrando...';
+
+    const { error } = await window.sb.auth.signInWithPassword({ email, password: pass });
+
+    if (error) {
+      errorEl.textContent = /Email not confirmed/i.test(error.message)
+        ? 'Confirme seu e-mail antes de entrar.'
+        : 'E-mail ou senha inválidos.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Entrar';
+      return;
+    }
+
+    btn.textContent = 'Redirecionando...';
+    redirectToPagamento();
+  });
+
+  /* ── Cadastro ── */
+  let signupEmail = '';
+
+  document.getElementById('wizardSignupBtn').addEventListener('click', async () => {
+    const btn       = document.getElementById('wizardSignupBtn');
+    const errorEl   = document.getElementById('wizardSignupError');
+    const firstName = document.getElementById('wizardSignupFirstName').value.trim();
+    const lastName  = document.getElementById('wizardSignupLastName').value.trim();
+    const birthdate = document.getElementById('wizardSignupBirthdate').value;
+    const email     = document.getElementById('wizardSignupEmail').value.trim();
+    const pass      = document.getElementById('wizardSignupPassword').value;
+    const confirm   = document.getElementById('wizardSignupConfirm').value;
+    const gender    = document.querySelector('input[name="wizardGender"]:checked')?.value || '';
+
+    errorEl.classList.add('hidden');
+    if (!firstName)       { errorEl.textContent = 'Digite seu primeiro nome.'; errorEl.classList.remove('hidden'); return; }
+    if (!lastName)        { errorEl.textContent = 'Digite seu último nome.'; errorEl.classList.remove('hidden'); return; }
+    if (!birthdate)       { errorEl.textContent = 'Informe sua data de nascimento.'; errorEl.classList.remove('hidden'); return; }
+    if (!email)           { errorEl.textContent = 'Digite seu e-mail.'; errorEl.classList.remove('hidden'); return; }
+    if (pass.length < 6)  { errorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errorEl.classList.remove('hidden'); return; }
+    if (pass !== confirm) { errorEl.textContent = 'As senhas não coincidem.'; errorEl.classList.remove('hidden'); return; }
+
+    btn.disabled = true; btn.textContent = 'Criando conta...';
+
+    const { data, error } = await window.sb.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { first_name: firstName, last_name: lastName, birthdate, gender } },
+    });
+
+    if (error) {
+      errorEl.textContent = /already registered/i.test(error.message)
+        ? 'Este e-mail já está cadastrado. Use a aba "Entrar".'
+        : 'Erro ao criar conta. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Criar conta';
+      return;
+    }
+
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      errorEl.textContent = 'Este e-mail já está cadastrado. Use a aba "Entrar".';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Criar conta';
+      return;
+    }
+
+    signupEmail = email;
+    document.getElementById('wizardOtpEmail').textContent = email;
+    document.getElementById('wizardSignupForm').classList.add('hidden');
+    document.getElementById('wizardSignupOtp').classList.remove('hidden');
+  });
+
+  /* ── Verificação OTP ── */
+  document.getElementById('wizardOtpBtn').addEventListener('click', async () => {
+    const btn     = document.getElementById('wizardOtpBtn');
+    const errorEl = document.getElementById('wizardOtpError');
+    const token   = document.getElementById('wizardOtpCode').value.trim();
+
+    errorEl.classList.add('hidden');
+    if (!token || token.length < 6) {
+      errorEl.textContent = 'Digite o código de 6 dígitos.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Verificando...';
+
+    const { error } = await window.sb.auth.verifyOtp({ email: signupEmail, token, type: 'signup' });
+
+    if (error) {
+      errorEl.textContent = 'Código inválido ou expirado. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Confirmar';
+      return;
+    }
+
+    btn.textContent = 'Redirecionando...';
+    redirectToPagamento();
+  });
+
+  /* ── Reenviar código ── */
+  document.getElementById('wizardOtpResend').addEventListener('click', async () => {
+    const btn = document.getElementById('wizardOtpResend');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    await window.sb.auth.resend({ email: signupEmail, type: 'signup' });
+    btn.textContent = 'Código reenviado!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Reenviar código'; }, 3000);
+  });
 }
 
 /* Stub — mantido para não quebrar chamadas em bindInputs/setupAutocomplete/etc. */
@@ -455,9 +660,28 @@ function setupPhotoUpload() {
     const toAdd = files.filter(f => f.type.startsWith('image/')).slice(0, slots);
     if (!toAdd.length) return;
 
+    let userId = null;
+    if (window.sb) {
+      const { data } = await window.sb.auth.getSession();
+      userId = data && data.session ? data.session.user.id : null;
+    }
+
     for (const file of toAdd) {
       const b64 = await compressImage(file);
-      state.photos.push(b64);
+
+      if (userId) {
+        const idx  = state.photos.length;
+        /* Nome sempre único (timestamp) — reaproveitar photo-<idx>.jpg depois de
+           remover uma foto faz o navegador exibir a versão antiga em cache, já
+           que a URL fica idêntica à de um arquivo que ele acabou de baixar. */
+        const path = `${userId}/${state.giftId}/photo-${idx}-${Date.now()}.jpg`;
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg' });
+        if (error) { console.error('Storage upload error:', error); showToast('Erro ao salvar foto. Tente novamente.'); continue; }
+        state.photos.push(path);
+      } else {
+        state.photos.push(b64);
+      }
+
       state.photoCaptions.push('');
     }
 
@@ -479,7 +703,7 @@ function setupPhotoUpload() {
       const captionVal = (state.photoCaptions[i] || '').replace(/"/g, '&quot;');
       wrap.innerHTML = `
         <div class="photo-thumb">
-          <img src="${src}" alt="Foto ${i + 1}" loading="lazy" />
+          <img src="${photoSrc(src)}" alt="Foto ${i + 1}" loading="lazy" />
           <button class="btn-remove" data-index="${i}" title="Remover foto">✕</button>
         </div>
         <input class="photo-caption-input" type="text" maxlength="40" placeholder="Legenda (opcional)" value="${captionVal}" data-index="${i}" />
@@ -496,6 +720,10 @@ function setupPhotoUpload() {
   }
 
   function removePhoto(index) {
+    const src = state.photos[index];
+    if (src && !src.startsWith('data:') && window.sb) {
+      window.sb.storage.from(BUCKET).remove([src]);
+    }
     state.photos.splice(index, 1);
     if (Array.isArray(state.photoCaptions)) state.photoCaptions.splice(index, 1);
     saveState();
@@ -522,7 +750,25 @@ function setupExtraPhotoUpload() {
   input.addEventListener('change', async () => {
     const file = input.files[0];
     if (!file || !file.type.startsWith('image/')) return;
-    state.extraPhoto = await compressImage(file);
+    const b64 = await compressImage(file);
+
+    let userId = null;
+    if (window.sb) {
+      const { data } = await window.sb.auth.getSession();
+      userId = data && data.session ? data.session.user.id : null;
+    }
+
+    if (userId) {
+      /* Nome sempre único (timestamp) — mesma razão do upload da galeria:
+         evita que o navegador reexiba uma imagem antiga em cache na mesma URL. */
+      const path = `${userId}/${state.giftId}/cover-${Date.now()}.jpg`;
+      const { error } = await window.sb.storage.from(BUCKET).upload(path, dataUrlToBlob(b64), { contentType: 'image/jpeg' });
+      if (error) { console.error('Storage upload error:', error); showToast('Erro ao salvar foto de destaque. Tente novamente.'); input.value = ''; return; }
+      state.extraPhoto = path;
+    } else {
+      state.extraPhoto = b64;
+    }
+
     saveState();
     renderExtraPhoto();
     updatePreview();
@@ -531,6 +777,9 @@ function setupExtraPhotoUpload() {
 
   btnRemove.addEventListener('click', e => {
     e.stopPropagation();
+    if (state.extraPhoto && !state.extraPhoto.startsWith('data:') && window.sb) {
+      window.sb.storage.from(BUCKET).remove([state.extraPhoto]);
+    }
     state.extraPhoto = null;
     saveState();
     renderExtraPhoto();
@@ -539,7 +788,7 @@ function setupExtraPhotoUpload() {
 
   function renderExtraPhoto() {
     if (state.extraPhoto) {
-      img.src = state.extraPhoto;
+      img.src = photoSrc(state.extraPhoto);
       preview.classList.remove('hidden');
       placeholder.classList.add('hidden');
     } else {
@@ -627,24 +876,42 @@ function setupMusicSearch() {
       const res = await fetch(`${MUSIC_SEARCH_URL}?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error('api error');
       const data = await res.json();
-      const tracks = (data.results || []).map(t => ({
-        trackName:       t.trackName       || '',
-        artistName:      t.artistName      || '',
-        artworkUrl60:    t.artworkUrl60    || t.artworkUrl100 || '',
-        previewUrl:      t.previewUrl      || '',
-        trackTimeMillis: t.trackTimeMillis
-      }));
-      renderSuggestions(tracks);
+      const allResults = data.results || [];
+      // Filtra apenas músicas com prévia disponível — faixas sem previewUrl não podem
+      // ser tocadas no presente e causariam o player silenciosamente desabilitado.
+      const tracks = allResults
+        .filter(t => t.previewUrl)
+        .map(t => ({
+          trackName:       t.trackName       || '',
+          artistName:      t.artistName      || '',
+          artworkUrl60:    t.artworkUrl60    || t.artworkUrl100 || '',
+          previewUrl:      t.previewUrl,
+          trackTimeMillis: t.trackTimeMillis
+        }));
+      renderSuggestions(tracks, allResults.length);
     } catch (err) {
       console.error('Busca de música falhou:', err);
       suggestionsList.classList.add('hidden');
     }
   }
 
-  function renderSuggestions(tracks) {
+  function renderSuggestions(tracks, totalFound = 0) {
     suggestionsList.innerHTML = '';
     highlighted = -1;
-    if (!tracks.length) { suggestionsList.classList.add('hidden'); return; }
+
+    if (!tracks.length) {
+      if (totalFound > 0) {
+        // Resultados existem mas nenhum tem prévia disponível no iTunes
+        const li = document.createElement('li');
+        li.className = 'music-no-preview-msg';
+        li.textContent = 'Nenhuma prévia disponível para essa busca. Tente outro artista ou álbum.';
+        suggestionsList.appendChild(li);
+        showDropdown();
+      } else {
+        suggestionsList.classList.add('hidden');
+      }
+      return;
+    }
 
     tracks.forEach(track => {
       const li = document.createElement('li');
@@ -743,14 +1010,18 @@ function setupPlanSelection() {
 
   const btnPreview = document.getElementById('btnPreviewGift');
   if (btnPreview) {
-    btnPreview.addEventListener('click', () => {
-      const giftId       = localStorage.getItem('DearMoment_last_gift_id');
-      const templateMeta = getTemplateMeta(getFinalTemplate());
-      const url = giftId
-        ? `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`
-        : templateMeta.finalUrl;
-      window.location.href = url;
-    });
+    if (isEditMode) {
+      btnPreview.style.display = 'none';
+    } else {
+      btnPreview.addEventListener('click', () => {
+        const giftId       = localStorage.getItem('DearMoment_last_gift_id');
+        const templateMeta = getTemplateMeta(getFinalTemplate());
+        const url = giftId
+          ? `${templateMeta.finalUrl}?id=${encodeURIComponent(giftId)}`
+          : templateMeta.finalUrl;
+        window.location.href = url;
+      });
+    }
   }
 
 }
@@ -892,7 +1163,8 @@ function generateId() {
 }
 
 function saveGift() {
-  const id = generateId();
+  if (isEditMode) return; // em edição o save acontece em finalizeEditInSupabase()
+  const id = state.giftId;
 
   localStorage.setItem('DearMoment_last_gift_id', id);
   localStorage.setItem('DearMoment_last_gift_meta', JSON.stringify({
@@ -900,7 +1172,8 @@ function saveGift() {
   }));
 
   try {
-    const gifts = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
+    const gifts     = JSON.parse(localStorage.getItem(GIFTS_KEY) || '[]');
+    const existingIdx = gifts.findIndex(g => g.id === id);
     const gift = {
       id,
       name1:           state.name1,
@@ -922,9 +1195,14 @@ function saveGift() {
       extraPhoto:      state.extraPhoto,
       giftType:        state.giftType,
       paid:            false,
-      createdAt:       new Date().toISOString(),
+      createdAt:       existingIdx !== -1 ? gifts[existingIdx].createdAt : new Date().toISOString(),
     };
-    gifts.push(gift);
+    /* Substitui a entrada existente em vez de empilhar — passar pela etapa
+       final mais de uma vez (ex: voltar e corrigir algo antes de pagar)
+       nunca deve deixar duas entradas com o mesmo id no array, senão
+       pagamento.html acaba lendo a versão desatualizada. */
+    if (existingIdx !== -1) gifts[existingIdx] = gift;
+    else gifts.push(gift);
     localStorage.setItem(GIFTS_KEY, JSON.stringify(gifts));
   } catch (_) {}
 }
@@ -942,6 +1220,10 @@ function navigateNext() {
 }
 
 function navigateBack() {
+  if (isEditMode && state.currentStep <= 3) {
+    showToast('Os nomes não podem ser alterados na edição');
+    return;
+  }
   if (state.currentStep > 1) {
     state.currentStep--;
     showStep(state.currentStep);
@@ -956,7 +1238,131 @@ function setupNavigation() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   17. INICIALIZAÇÃO
+   17. MODO EDIÇÃO — salvar alterações
+═══════════════════════════════════════════════════════════════ */
+
+async function finalizeEditInSupabase() {
+  const giftId = state.giftId;
+  if (!giftId) return;
+
+  const btn     = document.getElementById('btnSaveEdit');
+  const btnText = document.getElementById('btnSaveEditText');
+  if (btn) { btn.disabled = true; btnText.textContent = 'Salvando...'; }
+
+  try {
+    const { data: userData } = await window.sb.auth.getUser();
+    const userId = userData && userData.user ? userData.user.id : null;
+    if (!userId) throw new Error('Sessão expirada. Faça login novamente.');
+
+    const photoRows = [];
+
+    /* Fotos da galeria.
+       No M1, state.photos contém storage_paths (ex: uid/gid/photo-0.jpg).
+       base64 só ocorre como fallback sem login — impossível no modo edição,
+       mas tratamos como segurança. */
+    for (let i = 0; i < state.photos.length; i++) {
+      const src = state.photos[i];
+      if (!src) continue;
+      if (src.startsWith('data:')) {
+        const blob = dataUrlToBlob(src);
+        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const path = `${userId}/${giftId}/photo-${i}.${ext}`;
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+        if (error && !error.message?.includes('row-level security')) throw error;
+        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: false, position: i });
+      } else {
+        /* Já é um storage_path — usar diretamente, sem re-upload */
+        photoRows.push({ gift_id: giftId, storage_path: src, is_extra: false, position: i });
+      }
+    }
+
+    /* Foto de capa */
+    if (state.extraPhoto) {
+      if (state.extraPhoto.startsWith('data:')) {
+        const blob = dataUrlToBlob(state.extraPhoto);
+        const ext  = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+        const path = `${userId}/${giftId}/cover.${ext}`;
+        const { error } = await window.sb.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true });
+        if (error && !error.message?.includes('row-level security')) throw error;
+        photoRows.push({ gift_id: giftId, storage_path: path, is_extra: true, position: 0 });
+      } else {
+        photoRows.push({ gift_id: giftId, storage_path: state.extraPhoto, is_extra: true, position: 0 });
+      }
+    }
+
+    /* UPDATE no gift — não toca em paid nem created_at */
+    const giftRow = {
+      name1:          state.name1        || null,
+      name2:          state.name2        || null,
+      start_date:     state.startDate    || null,
+      city:           state.city         || null,
+      title:          state.title        || null,
+      template:       getFinalTemplate(),
+      youtube_id:     state.youtubeId    || null,
+      song_name:      state.songName     || null,
+      artist_name:    state.artistName   || null,
+      preview_url:    state.previewUrl   || null,
+      music_duration: state.musicDuration || null,
+      photo_captions: Array.isArray(state.photoCaptions) ? state.photoCaptions : [],
+      message:        state.message      || null,
+      capsulas:       Array.isArray(state.capsulas) ? state.capsulas : [],
+      gift_type:      state.giftType     || 'amoroso',
+    };
+    const { error: giftErr } = await window.sb.from('gifts')
+      .update(giftRow)
+      .eq('id', giftId)
+      .eq('user_id', userId);
+    if (giftErr) throw giftErr;
+
+    /* Substitui gift_photos */
+    await window.sb.from('gift_photos').delete().eq('gift_id', giftId);
+    if (photoRows.length) {
+      const { error: photoErr } = await window.sb.from('gift_photos').insert(photoRows);
+      if (photoErr) throw photoErr;
+    }
+
+    /* Limpa localStorage e redireciona para o presente */
+    localStorage.removeItem('DearMoment_wizard_state');
+    localStorage.removeItem('DearMoment_last_gift_id');
+    localStorage.removeItem('DearMoment_last_gift_meta');
+    localStorage.removeItem('DearMoment_pending_plan');
+
+    window.location.href = `../presente.html?id=${encodeURIComponent(giftId)}`;
+
+  } catch (err) {
+    console.error('Erro ao salvar edição:', err);
+    showToast('Erro ao salvar. Tente novamente.');
+    if (btn) { btn.disabled = false; btnText.textContent = 'Salvar alterações'; }
+  }
+}
+
+function setupEditMode() {
+  if (!isEditMode) return;
+
+  /* Valida que o state carregado corresponde ao ID da URL */
+  if (!state.editMode || state.giftId !== EDIT_GIFT_ID) {
+    localStorage.removeItem('DearMoment_wizard_state');
+    window.location.href = '../meus-presentes.html';
+    return;
+  }
+
+  const btnSave   = document.getElementById('btnSaveEdit');
+  const btnCancel = document.getElementById('btnCancelEdit');
+
+  if (btnSave)   btnSave.addEventListener('click', finalizeEditInSupabase);
+  if (btnCancel) {
+    btnCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('DearMoment_wizard_state');
+      localStorage.removeItem('DearMoment_last_gift_id');
+      localStorage.removeItem('DearMoment_last_gift_meta');
+      window.location.href = '../meus-presentes.html';
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   18. INICIALIZAÇÃO
 ═══════════════════════════════════════════════════════════════ */
 function init() {
   loadState();
@@ -970,6 +1376,8 @@ function init() {
   setupNavigation();
   setupPlanSelection();
   setupPlanButtons();
+  setupWizardAuth();
+  setupEditMode();
 
   showStep(state.currentStep);
 

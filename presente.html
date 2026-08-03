@@ -259,6 +259,16 @@
       </div>`;
   }
 
+  function showNotFound() {
+    root.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:32px;text-align:center;">
+        <div style="font-size:56px;margin-bottom:24px;">💔</div>
+        <h2 style="font-family:'Sora',sans-serif;color:#ff6dba;margin:0 0 12px;">Presente não encontrado</h2>
+        <p style="color:#8892a4;font-size:15px;line-height:1.6;max-width:300px;margin:0 0 32px;">Este link pode estar incorreto ou o presente pode ter sido removido pelo criador.</p>
+        <a href="./index.html" style="padding:12px 28px;background:#ff6dba;color:#fff;border-radius:10px;text-decoration:none;font-family:'Sora',sans-serif;font-size:15px;font-weight:600;">Criar meu presente →</a>
+      </div>`;
+  }
+
   /* ── Resolve gift por todas as fontes (Supabase → wizard state → demo) ── */
   async function resolveGift() {
     // 1. Supabase (gift pago)
@@ -274,9 +284,13 @@
 
     // 2. Wizard state (preview antes do pagamento)
     const fromWizard = getGiftFromWizardState(giftId, lastGiftId);
-    if (fromWizard) return suplementaDemo(fromWizard);
+    if (fromWizard) { fromWizard._isPreview = true; return suplementaDemo(fromWizard); }
 
-    // 3. Demo fallback
+    // 3. Um ID foi informado na URL mas não bateu em nenhuma fonte — presente
+    // excluído ou link incorreto, não deve cair no demo de vitrine.
+    if (giftId) { showNotFound(); return null; }
+
+    // 4. Nenhum ID informado — demo de vitrine
     return {
       id: 'demo',
       name1: 'Ana', name2: 'Pedro',
@@ -291,6 +305,7 @@
       extraPhoto: './assets/images/demo-cover.jpg',
       giftType: 'amoroso',
       createdAt: new Date().toISOString(),
+      _isPreview: true,
     };
   }
 
@@ -711,7 +726,16 @@
                   <p class="gc-auth-error" id="gcCadError"></p>
                   <button class="gc-despedida-btn gc-despedida-secondary" id="gcBtnCadastrar" type="button"><span aria-hidden="true">✦</span> Criar conta e salvar</button>
                 </div>
-                <p class="gc-auth-confirm-note" id="gcAuthConfirmNote" style="display:none">Conta criada! Confirme seu e-mail para ativar o acesso.</p>
+                <div id="gcCadOtp" class="gc-auth-form" style="display:none">
+                  <div class="gc-auth-otp-info">
+                    <span>📬</span>
+                    <p>Enviamos um código de 6 dígitos para <strong id="gcOtpEmail"></strong>. Verifique sua caixa de entrada.</p>
+                  </div>
+                  <input type="text" id="gcOtpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" class="gc-auth-input">
+                  <p class="gc-auth-error" id="gcOtpError"></p>
+                  <button class="gc-despedida-btn gc-despedida-secondary" id="gcOtpBtn" type="button"><span aria-hidden="true">✦</span> Confirmar código</button>
+                  <button class="gc-auth-resend" id="gcOtpResend" type="button">Reenviar código</button>
+                </div>
               </div>
             </div>
           </div>
@@ -782,7 +806,12 @@
     setupCapsulasCarta(g);
     setupCarousel(g);
     if (hasConstellation) setupConstellation(g.startDate);
-    setupSaveWidget(giftId);
+    if (g._isPreview) {
+      const w = document.getElementById('gcSaveWidget');
+      if (w) w.style.display = 'none';
+    } else {
+      setupSaveWidget(giftId);
+    }
   }
 
   /* ── 3. Navegação entre telas ───────────────────────── */
@@ -1664,7 +1693,7 @@
     }
 
     requestAnimationFrame(() => {
-      const S   = canvas.parentElement.clientWidth || 280;
+      const S   = canvas.parentElement.clientWidth || Math.min(272, Math.floor(window.innerWidth * 0.76));
       const dpr = window.devicePixelRatio || 1;
       canvas.width  = S * dpr; canvas.height = S * dpr;
       canvas.style.width = S+'px'; canvas.style.height = S+'px';
@@ -1827,6 +1856,8 @@
 
     showState('gcSaveAuth');
 
+    let signupEmail = '';
+
     const tabEntrar    = document.getElementById('gcTabEntrar');
     const tabCadastrar = document.getElementById('gcTabCadastrar');
     const formEntrar   = document.getElementById('gcFormEntrar');
@@ -1889,16 +1920,54 @@
         btn.innerHTML = '<span aria-hidden="true">✦</span> Criar conta e salvar';
         return;
       }
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        errEl.textContent = 'Este e-mail já está cadastrado. Use a aba "Entrar".';
+        btn.disabled = false;
+        btn.innerHTML = '<span aria-hidden="true">✦</span> Criar conta e salvar';
+        return;
+      }
       if (data.session) {
         showState('gcSaveLoading');
         await persistSave(data.user.id);
         showState('gcSaveDone');
       } else {
-        localStorage.setItem('DearMoment_pending_gift_save', id);
-        document.getElementById('gcAuthConfirmNote').style.display = '';
+        signupEmail = email;
+        document.getElementById('gcOtpEmail').textContent = email;
         document.getElementById('gcAuthTabs').style.display = 'none';
         formCadastrar.style.display = 'none';
+        document.getElementById('gcCadOtp').style.display = '';
       }
+    });
+
+    document.getElementById('gcOtpBtn').addEventListener('click', async () => {
+      const btn     = document.getElementById('gcOtpBtn');
+      const errorEl = document.getElementById('gcOtpError');
+      const token   = document.getElementById('gcOtpCode').value.trim();
+      errorEl.textContent = '';
+      if (!token || token.length < 6) {
+        errorEl.textContent = 'Digite o código de 6 dígitos.';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      const { data, error } = await _sbClient.auth.verifyOtp({ email: signupEmail, token, type: 'signup' });
+      if (error) {
+        errorEl.textContent = 'Código inválido ou expirado. Tente novamente.';
+        btn.disabled = false;
+        btn.innerHTML = '<span aria-hidden="true">✦</span> Confirmar código';
+        return;
+      }
+      document.getElementById('gcCadOtp').style.display = 'none';
+      showState('gcSaveLoading');
+      await persistSave(data.user.id);
+      showState('gcSaveDone');
+    });
+
+    document.getElementById('gcOtpResend').addEventListener('click', async () => {
+      const btn = document.getElementById('gcOtpResend');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+      await _sbClient.auth.resend({ email: signupEmail, type: 'signup' });
+      btn.textContent = 'Código reenviado!';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Reenviar código'; }, 3000);
     });
   }
   </script>

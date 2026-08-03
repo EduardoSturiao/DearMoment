@@ -1644,7 +1644,7 @@
     }
 
     requestAnimationFrame(() => {
-      const S   = canvas.parentElement.clientWidth || 280;
+      const S   = canvas.parentElement.clientWidth || Math.min(272, Math.floor(window.innerWidth * 0.76));
       const dpr = window.devicePixelRatio || 1;
       canvas.width  = S * dpr; canvas.height = S * dpr;
       canvas.style.width = S+'px'; canvas.style.height = S+'px';
